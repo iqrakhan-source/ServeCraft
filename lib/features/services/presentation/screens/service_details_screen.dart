@@ -4,12 +4,11 @@ import 'package:prop_crm/core/constants/app_typography.dart';
 import 'package:prop_crm/core/constants/route_names.dart';
 import 'package:prop_crm/core/utilities/formatters.dart';
 import 'package:prop_crm/core/widgets/app_button.dart';
-import 'package:prop_crm/core/widgets/app_card.dart';
 import 'package:prop_crm/core/widgets/app_error_view.dart';
 import 'package:prop_crm/core/widgets/app_loading_indicator.dart';
 import 'package:prop_crm/core/widgets/app_network_image.dart';
-import 'package:prop_crm/core/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
+
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
 import '../providers/service_details_provider.dart';
 
@@ -22,7 +21,8 @@ class ServiceDetailsScreen extends StatefulWidget {
   });
 
   @override
-  State<ServiceDetailsScreen> createState() => _ServiceDetailsScreenState();
+  State<ServiceDetailsScreen> createState() =>
+      _ServiceDetailsScreenState();
 }
 
 class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
@@ -31,6 +31,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context
           .read<ServiceDetailsProvider>()
@@ -40,312 +41,149 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final detailsProvider = context.watch<ServiceDetailsProvider>();
+    final provider = context.watch<ServiceDetailsProvider>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(
-        title: detailsProvider.service?.name ?? 'Service Details',
-        actions: [
-          IconButton(
-            icon: Icon(
-              _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-              color: _isFavorite ? AppColors.error : AppColors.textPrimary,
-              size: 22,
-            ),
-            tooltip: _isFavorite ? 'Remove from favorites' : 'Add to favorites',
-            onPressed: () {
-              setState(() {
-                _isFavorite = !_isFavorite;
-              });
-            },
-          ),
-        ],
-      ),
+
+      // ============================================================
+      // STICKY BOTTOM ACTION
+      // ============================================================
+
+      bottomNavigationBar: provider.service == null
+          ? null
+          : _buildBottomActionBar(provider),
+
       body: Builder(
         builder: (context) {
-          if (detailsProvider.isLoading) {
+          if (provider.isLoading) {
             return const Center(
-              child: AppLoadingIndicator(message: 'Loading details...'),
+              child: AppLoadingIndicator(
+                message: 'Loading service...',
+              ),
             );
           }
 
-          if (detailsProvider.hasError) {
+          if (provider.hasError) {
             return AppErrorView(
-              message: detailsProvider.errorMessage ??
+              message: provider.errorMessage ??
                   'Could not load service details',
-              onRetry: () =>
-                  detailsProvider.fetchServiceDetails(widget.serviceId),
+              onRetry: () {
+                provider.fetchServiceDetails(widget.serviceId);
+              },
             );
           }
 
-          final service = detailsProvider.service;
+          final service = provider.service;
+
           if (service == null) {
-            return const AppErrorView(message: 'Service not found');
+            return const AppErrorView(
+              message: 'Service not found',
+            );
           }
 
-          final selectedPackage = detailsProvider.selectedPackage;
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // ======================================================
+              // HERO IMAGE
+              // ======================================================
 
-          return Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              SliverAppBar(
+                expandedHeight: 280,
+                pinned: true,
+                backgroundColor: AppColors.surface,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                automaticallyImplyLeading: false,
+
+                leading: _buildCircleAction(
+                  icon: Icons.arrow_back_rounded,
+                  onTap: () => Navigator.pop(context),
+                ),
+
+                actions: [
+                  _buildCircleAction(
+                    icon: _isFavorite
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    iconColor: _isFavorite
+                        ? AppColors.error
+                        : AppColors.textPrimary,
+                    onTap: () {
+                      setState(() {
+                        _isFavorite = !_isFavorite;
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                ],
+
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      // Hero Service Photography
-                      SizedBox(
-                        height: 230,
+                      AppNetworkImage(
+                        imageUrl: service.image,
                         width: double.infinity,
-                        child: AppNetworkImage(
-                          imageUrl: service.image,
-                          width: double.infinity,
-                          height: 230,
-                          fit: BoxFit.cover,
-                          borderRadius: 0,
+                        height: 280,
+                        fit: BoxFit.cover,
+                        borderRadius: 0,
+                      ),
+
+                      // Bottom gradient
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withOpacity(0.15),
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.45),
+                              ],
+                              stops: const [
+                                0.0,
+                                0.45,
+                                1.0,
+                              ],
+                            ),
+                          ),
                         ),
                       ),
 
-                      Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Service Title
-                            Text(
-                              service.name,
-                              style: AppTypography.displayMedium.copyWith(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
+                      // Image badge
+                      Positioned(
+                        left: 16,
+                        bottom: 18,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 11,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.55),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.verified_rounded,
+                                size: 15,
+                                color: Colors.white,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-
-                            // Rating, Review Count, and Duration
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.successLight,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.star_rounded,
-                                        size: 15,
-                                        color: AppColors.success,
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        service.rating.toStringAsFixed(1),
-                                        style:
-                                            AppTypography.labelSmall.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.success,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'ServeCraft Verified',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '(${service.reviewCount} reviews)',
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  '•',
-                                  style: TextStyle(
-                                    color: AppColors.textTertiary,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Icon(
-                                  Icons.schedule_rounded,
-                                  size: 15,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  service.duration,
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Starting Price
-                            Text(
-                              '${AppFormatters.formatCurrency(service.startingPrice)} onwards',
-                              style: AppTypography.priceLarge.copyWith(
-                                color: AppColors.primary,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-
-                            // About Service
-                            Text(
-                              'About Service',
-                              style: AppTypography.titleMedium.copyWith(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              service.description,
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                                height: 1.5,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            // What's included checklist
-                            Text(
-                              "What's included",
-                              style: AppTypography.titleMedium.copyWith(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            ...[
-                              'Complete inspection & diagnosis by verified professional',
-                              'Hospital-grade sanitization chemicals and equipment',
-                              'Standard spare parts replacement guidance if needed',
-                              'Post-service clean-up & satisfaction inspection',
-                              '30-day ServeCraft service warranty & support',
-                            ].map(
-                              (item) => Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Icon(
-                                      Icons.check_circle_rounded,
-                                      size: 16,
-                                      color: AppColors.success,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Text(
-                                        item,
-                                        style: AppTypography.bodySmall.copyWith(
-                                          color: AppColors.textPrimary,
-                                          fontSize: 13,
-                                          height: 1.3,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 28),
-
-                            // Available Packages / Choose a package
-                            if (service.packages.isNotEmpty) ...[
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Available Packages',
-                                    style: AppTypography.titleMedium.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${service.packages.length} options',
-                                    style: AppTypography.bodySmall.copyWith(
-                                      color: AppColors.textTertiary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 14),
-                              ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: service.packages.length,
-                                separatorBuilder: (_, _) =>
-                                    const SizedBox(height: 12),
-                                itemBuilder: (context, index) {
-                                  final package = service.packages[index];
-                                  final isSelected =
-                                      selectedPackage?.id == package.id;
-
-                                  return _buildPackageCard(
-                                    package: package,
-                                    isSelected: isSelected,
-                                    onTap: () => detailsProvider
-                                        .selectPackage(package),
-                                  );
-                                },
                               ),
                             ],
-
-                            const SizedBox(height: 28),
-
-                            // ServeCraft Verified Experts trust card
-                            AppCard(
-                              backgroundColor: AppColors.surfaceMuted,
-                              borderRadius: 12,
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.verified_user_rounded,
-                                    color: AppColors.primary,
-                                    size: 26,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'ServeCraft Verified Experts',
-                                          style: AppTypography.titleSmall
-                                              .copyWith(
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'Background checked professionals with sanitized tools and 30-day warranty.',
-                                          style: AppTypography.bodySmall
-                                              .copyWith(
-                                            color: AppColors.textSecondary,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ],
@@ -353,66 +191,251 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                 ),
               ),
 
-              // Bottom Sticky Action Bar
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  border: const Border(
-                    top: BorderSide(color: AppColors.border, width: 1.0),
+              // ======================================================
+              // SERVICE INFORMATION
+              // ======================================================
+
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    18,
+                    20,
+                    18,
+                    0,
                   ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: AppColors.shadowMedium,
-                      offset: Offset(0, -4),
-                      blurRadius: 10,
-                    ),
-                  ],
-                ),
-                child: SafeArea(
-                  top: false,
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+                      // ------------------------------------------------
+                      // TITLE
+                      // ------------------------------------------------
+
+                      Text(
+                        service.name,
+                        style: AppTypography.displayMedium.copyWith(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // ------------------------------------------------
+                      // RATING + REVIEWS + TIME
+                      // ------------------------------------------------
+
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.successLight,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  size: 16,
+                                  color: AppColors.success,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  service.rating.toStringAsFixed(1),
+                                  style: AppTypography.labelSmall.copyWith(
+                                    color: AppColors.success,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(width: 8),
+
+                          Text(
+                            '${service.reviewCount} reviews',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+
+                          const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 9,
+                            ),
+                            child: Text(
+                              '•',
+                              style: TextStyle(
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                          ),
+
+                          const Icon(
+                            Icons.schedule_outlined,
+                            size: 16,
+                            color: AppColors.textSecondary,
+                          ),
+
+                          const SizedBox(width: 4),
+
+                          Text(
+                            service.duration,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // ------------------------------------------------
+                      // PRICE
+                      // ------------------------------------------------
+
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            'Total Price',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textTertiary,
+                            'Starting at ',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
                             ),
                           ),
                           Text(
                             AppFormatters.formatCurrency(
-                              selectedPackage?.price ?? service.startingPrice,
+                              service.startingPrice,
                             ),
                             style: AppTypography.priceLarge.copyWith(
-                              color: AppColors.primary,
+                              color: AppColors.textPrimary,
+                              fontSize: 22,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: AppButton(
-                          text: selectedPackage != null
-                              ? 'Select ${selectedPackage.name}'
-                              : 'Select Package',
-                          onPressed: () {
-                            Navigator.of(context).pushNamed(
-                              AppRoutes.packageSelection,
-                              arguments: {
-                                'serviceId': service.id,
-                                'serviceName': service.name,
-                                'packageId': selectedPackage?.id,
-                              },
+
+                      const SizedBox(height: 24),
+
+                      _buildDivider(),
+
+                      const SizedBox(height: 24),
+
+                      // =================================================
+                      // WHAT YOU'LL GET
+                      // =================================================
+
+                      Text(
+                        "What you'll get",
+                        style: AppTypography.titleLarge.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      _buildIncludedGrid(),
+
+                      const SizedBox(height: 24),
+
+                      // =================================================
+                      // ABOUT SERVICE
+                      // =================================================
+
+                      Text(
+                        'About this service',
+                        style: AppTypography.titleLarge.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+
+                      const SizedBox(height: 9),
+
+                      Text(
+                        service.description,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.55,
+                        ),
+                      ),
+
+                      const SizedBox(height: 26),
+
+                      _buildDivider(),
+
+                      const SizedBox(height: 24),
+
+                      // =================================================
+                      // PACKAGES
+                      // =================================================
+
+                      if (service.packages.isNotEmpty) ...[
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Choose a package',
+                              style: AppTypography.titleLarge.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            Text(
+                              '${service.packages.length} options',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        ...service.packages.map(
+                              (package) {
+                            final isSelected =
+                                provider.selectedPackage?.id ==
+                                    package.id;
+
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 12,
+                              ),
+                              child: _buildPackageCard(
+                                package: package,
+                                isSelected: isSelected,
+                                onTap: () {
+                                  provider.selectPackage(package);
+                                },
+                              ),
                             );
                           },
                         ),
-                      ),
+                      ],
+
+                      const SizedBox(height: 14),
+
+                      // =================================================
+                      // WHY SERVECRAFT
+                      // =================================================
+
+                      _buildWhyServeCraftCard(),
+
+                      const SizedBox(height: 110),
                     ],
                   ),
                 ),
@@ -424,141 +447,536 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
     );
   }
 
+  // ================================================================
+  // CIRCLE HEADER ACTION
+  // ================================================================
+
+  Widget _buildCircleAction({
+    required IconData icon,
+    required VoidCallback onTap,
+    Color? iconColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Material(
+        color: Colors.white.withOpacity(0.92),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 40,
+            height: 40,
+            child: Icon(
+              icon,
+              size: 20,
+              color: iconColor ?? AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ================================================================
+  // DIVIDER
+  // ================================================================
+
+  Widget _buildDivider() {
+    return const Divider(
+      height: 1,
+      thickness: 1,
+      color: AppColors.border,
+    );
+  }
+
+  // ================================================================
+  // WHAT YOU'LL GET
+  // ================================================================
+
+  Widget _buildIncludedGrid() {
+    final items = [
+      {
+        'icon': Icons.verified_user_outlined,
+        'title': 'Verified professional',
+      },
+      {
+        'icon': Icons.cleaning_services_outlined,
+        'title': 'Professional equipment',
+      },
+      {
+        'icon': Icons.schedule_outlined,
+        'title': 'On-time service',
+      },
+      {
+        'icon': Icons.support_agent_outlined,
+        'title': 'Service support',
+      },
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: items.length,
+      gridDelegate:
+      const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 2.7,
+      ),
+      itemBuilder: (context, index) {
+        final item = items[index];
+
+        return Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 10,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppColors.border,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(
+                  item['icon'] as IconData,
+                  size: 17,
+                  color: AppColors.primary,
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              Expanded(
+                child: Text(
+                  item['title'] as String,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    height: 1.25,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ================================================================
+  // PACKAGE CARD
+  // ================================================================
+
   Widget _buildPackageCard({
     required ServicePackageModel package,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEEF2FF) : AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-            width: isSelected ? 2.0 : 1.0,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primaryLight
+                : AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.border,
+              width: isSelected ? 1.5 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isSelected
+                    ? AppColors.shadowMedium
+                    : AppColors.shadow,
+                blurRadius: isSelected ? 10 : 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          boxShadow: isSelected
-              ? const [
-                  BoxShadow(
-                    color: Color(0x1A4F46E5),
-                    blurRadius: 6,
-                    offset: Offset(0, 2),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --------------------------------------------------------
+              // HEADER
+              // --------------------------------------------------------
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    isSelected
+                        ? Icons.radio_button_checked_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textTertiary,
+                    size: 22,
                   ),
-                ]
-              : const [
-                  BoxShadow(
-                    color: AppColors.shadow,
-                    blurRadius: 4,
-                    offset: Offset(0, 1),
-                  ),
-                ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Row: Title, check indicator, and Price
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Icon(
-                        isSelected
-                            ? Icons.check_circle_rounded
-                            : Icons.radio_button_unchecked_rounded,
-                        size: 20,
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.textTertiary,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+
+                  const SizedBox(width: 10),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          package.name,
+                          style:
+                          AppTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        Row(
                           children: [
-                            Text(
-                              package.name,
-                              style: AppTypography.titleMedium.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : AppColors.textPrimary,
-                                fontSize: 15,
-                              ),
+                            const Icon(
+                              Icons.schedule_outlined,
+                              size: 14,
+                              color: AppColors.textSecondary,
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(width: 4),
                             Text(
                               package.duration,
-                              style: AppTypography.bodySmall.copyWith(
+                              style:
+                              AppTypography.bodySmall.copyWith(
                                 color: AppColors.textSecondary,
-                                fontSize: 12,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  Text(
+                    AppFormatters.formatCurrency(
+                      package.price,
+                    ),
+                    style:
+                    AppTypography.priceMedium.copyWith(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 13),
+
+              // --------------------------------------------------------
+              // DESCRIPTION
+              // --------------------------------------------------------
+
+              Padding(
+                padding: const EdgeInsets.only(left: 32),
+                child: Text(
+                  package.description,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    height: 1.4,
                   ),
                 ),
-                Text(
-                  AppFormatters.formatCurrency(package.price),
+              ),
+
+              // --------------------------------------------------------
+              // FEATURES
+              // --------------------------------------------------------
+
+              if (package.features.isNotEmpty) ...[
+                const SizedBox(height: 12),
+
+                const Divider(
+                  height: 1,
+                  color: AppColors.border,
+                ),
+
+                const SizedBox(height: 10),
+
+                ...package.features.map(
+                      (feature) => Padding(
+                    padding: const EdgeInsets.only(
+                      left: 32,
+                      bottom: 6,
+                    ),
+                    child: Row(
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: AppColors.success,
+                        ),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Text(
+                            feature,
+                            style:
+                            AppTypography.bodySmall.copyWith(
+                              color: AppColors.textPrimary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ================================================================
+  // WHY SERVECRAFT
+  // ================================================================
+
+  Widget _buildWhyServeCraftCard() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.border,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.verified_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Text(
+                  'Why choose ServeCraft?',
                   style: AppTypography.titleMedium.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.textPrimary,
-                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          _buildTrustItem(
+            icon: Icons.person_search_outlined,
+            title: 'Verified professionals',
+            subtitle:
+            'Trusted service professionals for your home.',
+          ),
+
+          const SizedBox(height: 12),
+
+          _buildTrustItem(
+            icon: Icons.receipt_long_outlined,
+            title: 'Transparent pricing',
+            subtitle:
+            'See package pricing before you book.',
+          ),
+
+          const SizedBox(height: 12),
+
+          _buildTrustItem(
+            icon: Icons.support_agent_outlined,
+            title: 'Reliable support',
+            subtitle:
+            'We are here if you need help with your booking.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrustItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: AppColors.primary,
+        ),
+
+        const SizedBox(width: 10),
+
+        Expanded(
+          child: Column(
+            crossAxisAlignment:
+            CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: AppTypography.titleSmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+
+              const SizedBox(height: 2),
+
+              Text(
+                subtitle,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ================================================================
+  // BOTTOM ACTION BAR
+  // ================================================================
+
+  Widget _buildBottomActionBar(
+      ServiceDetailsProvider provider,
+      ) {
+    final service = provider.service!;
+
+    final selectedPackage = provider.selectedPackage;
+
+    final price =
+        selectedPackage?.price ?? service.startingPrice;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        18,
+        12,
+        18,
+        10,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          top: BorderSide(
+            color: AppColors.border,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowMedium,
+            blurRadius: 12,
+            offset: Offset(0, -3),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            // --------------------------------------------------------
+            // PRICE
+            // --------------------------------------------------------
+
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
+              children: [
+                Text(
+                  selectedPackage == null
+                      ? 'Starting from'
+                      : 'Selected package',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+
+                const SizedBox(height: 2),
+
+                Text(
+                  AppFormatters.formatCurrency(price),
+                  style: AppTypography.priceLarge.copyWith(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
 
-            // Description
-            Padding(
-              padding: const EdgeInsets.only(left: 30.0),
-              child: Text(
-                package.description,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Divider(height: 1, color: AppColors.border),
-            const SizedBox(height: 10),
+            const SizedBox(width: 18),
 
-            // Features Checklist
-            ...package.features.map(
-              (feat) => Padding(
-                padding: const EdgeInsets.only(left: 30.0, bottom: 4.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.check_rounded,
-                      size: 15,
-                      color: AppColors.success,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        feat,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textPrimary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            // --------------------------------------------------------
+            // CONTINUE
+            // --------------------------------------------------------
+
+            Expanded(
+              child: AppButton(
+                text: selectedPackage == null
+                    ? 'Choose Package'
+                    : 'Continue',
+                onPressed: () {
+                  Navigator.of(context).pushNamed(
+                    AppRoutes.packageSelection,
+                    arguments: {
+                      'serviceId': service.id,
+                      'serviceName': service.name,
+                      'packageId': selectedPackage?.id,
+                    },
+                  );
+                },
               ),
             ),
           ],

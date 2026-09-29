@@ -7,6 +7,7 @@ import '../core/widgets/custom_app_bar.dart';
 import '../features/auth/presentation/screens/complete_profile_screen.dart';
 import '../features/auth/presentation/screens/mobile_login_screen.dart';
 import '../features/auth/presentation/screens/otp_verification_screen.dart';
+import '../features/auth/presentation/screens/profile_screen.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/addresses/data/models/address_model.dart';
 import '../features/addresses/presentation/screens/add_address_screen.dart';
@@ -78,14 +79,15 @@ abstract class AppRouter {
 
       case AppRoutes.serviceListing: {
         final args = settings.arguments as Map<String, dynamic>?;
+
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => ServiceListingScreen(
-            categoryId: args?['categoryId'] as String?,
-            categoryName: args?['categoryName'] as String?,
+            category: args!['categoryName'],
           ),
         );
-      }
+
+    }
 
       case AppRoutes.serviceDetails: {
         final args = settings.arguments as Map<String, dynamic>?;
@@ -196,6 +198,11 @@ abstract class AppRouter {
       }
 
       case AppRoutes.profile:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const ProfileScreen(),
+        );
+
       case AppRoutes.editProfile:
         return _buildPlaceholderRoute(
           settings: settings,

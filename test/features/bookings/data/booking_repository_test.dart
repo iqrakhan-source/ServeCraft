@@ -161,6 +161,17 @@ void main() {
       expect(cancelled.isCancellable, isFalse);
     });
 
+    test('cancelBooking with named bookingId and reason arguments delegates correctly', () async {
+      final cancelled = await repository.cancelBooking(
+        bookingId: 'bk_seed_001',
+        reason: 'Booked by mistake',
+      );
+
+      expect(cancelled.id, 'bk_seed_001');
+      expect(cancelled.status, BookingStatus.cancelled);
+      expect(cancelled.cancellationReason, 'Booked by mistake');
+    });
+
     test('cancelBooking propagates error when remoteDataSource fails', () async {
       dataSource.shouldFail = true;
 

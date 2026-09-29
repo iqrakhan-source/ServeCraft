@@ -59,8 +59,8 @@ class _SplashScreenState extends State<SplashScreen>
       case AuthStatus.unauthenticated:
       case AuthStatus.error:
       default:
-        Navigator.of(context).pushReplacementNamed(AppRoutes.mobileLogin);
-        break;
+      Navigator.of(context).pushReplacementNamed(AppRoutes.mobileLogin);
+      break;
     }
   }
 

@@ -36,8 +36,16 @@ class BookingRepositoryImpl implements BookingRepository {
 
   @override
   Future<BookingModel> cancelBooking({
-    required CancelBookingRequestModel request,
+    CancelBookingRequestModel? request,
+    String? bookingId,
+    String? reason,
+    String? reasonNote,
   }) {
-    return remoteDataSource.cancelBooking(request: request);
+    return remoteDataSource.cancelBooking(
+      request: request,
+      bookingId: bookingId,
+      reason: reason,
+      reasonNote: reasonNote,
+    );
   }
 }

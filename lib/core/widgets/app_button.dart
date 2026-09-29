@@ -96,9 +96,14 @@ class AppButton extends StatelessWidget {
             icon!,
             const SizedBox(width: 8),
           ],
-          Text(
-            text,
-            style: AppTypography.buttonLarge.copyWith(color: foregroundColor),
+          Flexible(
+            child: Text(
+              text,
+              style: AppTypography.buttonLarge.copyWith(color: foregroundColor),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ],

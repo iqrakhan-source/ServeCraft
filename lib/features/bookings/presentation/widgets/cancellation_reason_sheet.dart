@@ -118,7 +118,7 @@ class _CancellationReasonSheetState extends State<CancellationReasonSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Cancel Booking',
+                    'Cancel Booking?',
                     style: AppTypography.titleLarge.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -175,6 +175,14 @@ class _CancellationReasonSheetState extends State<CancellationReasonSheet> {
                           ),
                           const SizedBox(height: 4),
                           Text(
+                            'Cancelling this booking will change its status to Cancelled.',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
                             'Are you sure you want to cancel this booking? This action cannot be undone.',
                             style: AppTypography.labelSmall.copyWith(
                               color: AppColors.error,
@@ -191,10 +199,17 @@ class _CancellationReasonSheetState extends State<CancellationReasonSheet> {
 
               // Reason prompt
               Text(
-                'Please select a reason for cancellation:',
+                'Why are you cancelling?',
                 style: AppTypography.titleSmall.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Please select a reason for cancellation:',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -311,27 +326,23 @@ class _CancellationReasonSheetState extends State<CancellationReasonSheet> {
               const SizedBox(height: 24),
 
               // Action buttons
-              Row(
+              Column(
                 children: [
-                  Expanded(
-                    child: AppButton(
-                      text: 'Keep Booking',
-                      variant: AppButtonVariant.secondary,
-                      onPressed: isCancelling
-                          ? null
-                          : () => Navigator.of(context).pop(false),
-                    ),
+                  AppButton(
+                    text: 'Confirm Cancellation',
+                    variant: AppButtonVariant.danger,
+                    isLoading: isCancelling,
+                    onPressed: _selectedReason == null || isCancelling
+                        ? null
+                        : _handleConfirm,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: AppButton(
-                      text: 'Cancel Booking',
-                      variant: AppButtonVariant.danger,
-                      isLoading: isCancelling,
-                      onPressed: _selectedReason == null || isCancelling
-                          ? null
-                          : _handleConfirm,
-                    ),
+                  const SizedBox(height: 10),
+                  AppButton(
+                    text: 'Keep Booking',
+                    variant: AppButtonVariant.secondary,
+                    onPressed: isCancelling
+                        ? null
+                        : () => Navigator.of(context).pop(false),
                   ),
                 ],
               ),

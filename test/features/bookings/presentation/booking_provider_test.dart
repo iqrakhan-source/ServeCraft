@@ -342,6 +342,69 @@ void main() {
         expect(provider.cancellationState.isInitial, isTrue);
         expect(provider.cancellationError, isNull);
       });
+
+      test('cancellation loading state transitions properly', () async {
+        await provider.loadBookings();
+        await provider.loadBookingDetails('bk_seed_001');
+
+        expect(provider.isCancelling, isFalse);
+
+        final cancelFuture = provider.cancelBooking(
+          bookingId: 'bk_seed_001',
+          reason: 'Changed my plans',
+        );
+
+        expect(provider.isCancelling, isTrue);
+        expect(provider.cancellationState.isLoading, isTrue);
+
+        final result = await cancelFuture;
+        expect(result, isNotNull);
+        expect(provider.isCancelling, isFalse);
+        expect(provider.cancellationState.isSuccess, isTrue);
+      });
+
+      test('duplicate submission prevention ignores concurrent calls', () async {
+        await provider.loadBookings();
+
+        // Fire first cancellation
+        final firstFuture = provider.cancelBooking(
+          bookingId: 'bk_seed_001',
+          reason: 'Changed my plans',
+        );
+
+        // Immediate second cancellation while first is in-flight
+        final secondResult = await provider.cancelBooking(
+          bookingId: 'bk_seed_001',
+          reason: 'Booked by mistake',
+        );
+
+        // Second should be rejected immediately due to isCancelling guard
+        expect(secondResult, isNull);
+
+        final firstResult = await firstFuture;
+        expect(firstResult, isNotNull);
+        expect(firstResult?.cancellationReason, 'Changed my plans');
+      });
+
+      test('failed cancellation does not change booking status in selectedBooking or list', () async {
+        await provider.loadBookings();
+        await provider.loadBookingDetails('bk_seed_001');
+
+        expect(provider.selectedBooking?.status, BookingStatus.confirmed);
+        dataSource.shouldFail = true;
+
+        final result = await provider.cancelBooking(
+          bookingId: 'bk_seed_001',
+          reason: 'Changed my plans',
+        );
+
+        expect(result, isNull);
+        expect(provider.selectedBooking?.status, BookingStatus.confirmed);
+        expect(provider.detailsState.data?.status, BookingStatus.confirmed);
+
+        final matchInList = provider.bookings.firstWhere((b) => b.id == 'bk_seed_001');
+        expect(matchInList.status, BookingStatus.confirmed);
+      });
     });
   });
 }

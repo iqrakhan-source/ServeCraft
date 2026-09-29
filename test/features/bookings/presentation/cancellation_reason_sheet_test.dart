@@ -109,7 +109,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Cancel Booking'), findsNWidgets(2)); // Title and Button
+      expect(find.text('Cancel Booking?'), findsOneWidget); // Title
+      expect(find.text('Confirm Cancellation'), findsOneWidget); // Confirm button
+      expect(find.text('Why are you cancelling?'), findsOneWidget);
       expect(find.text('Full Home Deep Clean'), findsOneWidget);
       expect(find.text('Changed my plans'), findsOneWidget);
       expect(find.text('Booked by mistake'), findsOneWidget);
@@ -134,7 +136,7 @@ void main() {
 
       // Before selecting a reason:
       // Tapping Cancel Booking should not trigger any action
-      final cancelBtnFinder = find.widgetWithText(ElevatedButton, 'Cancel Booking');
+      final cancelBtnFinder = find.widgetWithText(ElevatedButton, 'Confirm Cancellation');
       expect(cancelBtnFinder, findsOneWidget);
       final elevatedButton = tester.widget<ElevatedButton>(cancelBtnFinder);
       expect(elevatedButton.onPressed, isNull);
@@ -200,8 +202,8 @@ void main() {
       await tester.tap(find.text('Changed my plans'));
       await tester.pumpAndSettle();
 
-      // Tap Cancel Booking
-      final cancelBtnFinder = find.widgetWithText(ElevatedButton, 'Cancel Booking');
+      // Tap Confirm Cancellation
+      final cancelBtnFinder = find.widgetWithText(ElevatedButton, 'Confirm Cancellation');
       await tester.tap(cancelBtnFinder);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
@@ -262,8 +264,8 @@ void main() {
       await tester.tap(find.text('Changed my plans'));
       await tester.pumpAndSettle();
 
-      // Tap Cancel Booking
-      final cancelBtnFinder = find.widgetWithText(ElevatedButton, 'Cancel Booking');
+      // Tap Confirm Cancellation
+      final cancelBtnFinder = find.widgetWithText(ElevatedButton, 'Confirm Cancellation');
       await tester.tap(cancelBtnFinder);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));

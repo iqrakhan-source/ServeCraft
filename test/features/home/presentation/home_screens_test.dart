@@ -158,8 +158,9 @@ void main() {
 
       await tester.pumpWidget(
         buildTestApp(const ServiceListingScreen(
-          categoryId: 'cat_cleaning',
-          categoryName: 'Home Cleaning',
+        //  categoryId: 'cat_cleaning',
+          //categoryName: 'Home Cleaning',
+          category: '',
         )),
       );
       await tester.pump();

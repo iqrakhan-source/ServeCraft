@@ -205,6 +205,66 @@ void main() {
           throwsA(isA<UnexpectedException>()),
         );
       });
+
+      test('Cancels pending booking successfully and accepts cancellation reason', () async {
+        final original = await dataSource.getBookingById('bk_seed_001');
+        final pendingBooking = original.copyWith(
+          id: 'bk_pending_test',
+          status: BookingStatus.pending,
+        );
+        dataSource.addBooking(pendingBooking);
+
+        final result = await dataSource.cancelBooking(
+          bookingId: 'bk_pending_test',
+          reason: 'Schedule no longer works',
+        );
+
+        expect(result.id, 'bk_pending_test');
+        expect(result.status, BookingStatus.cancelled);
+        expect(result.cancellationReason, 'Schedule no longer works');
+      });
+
+      test('Throws BadRequestException when attempting to cancel an already cancelled booking', () async {
+        final original = await dataSource.getBookingById('bk_seed_001');
+        final cancelledBooking = original.copyWith(
+          id: 'bk_already_cancelled',
+          status: BookingStatus.cancelled,
+        );
+        dataSource.addBooking(cancelledBooking);
+
+        expect(
+          () => dataSource.cancelBooking(
+            bookingId: 'bk_already_cancelled',
+            reason: 'Booked by mistake',
+          ),
+          throwsA(isA<BadRequestException>()),
+        );
+      });
+
+      test('Cancelling booking preserves all other fields unchanged', () async {
+        final original = await dataSource.getBookingById('bk_seed_001');
+
+        final result = await dataSource.cancelBooking(
+          request: const CancelBookingRequestModel(
+            bookingId: 'bk_seed_001',
+            reason: 'Found another service',
+          ),
+        );
+
+        expect(result.id, equals(original.id));
+        expect(result.bookingReference, equals(original.bookingReference));
+        expect(result.service, equals(original.service));
+        expect(result.package, equals(original.package));
+        expect(result.address, equals(original.address));
+        expect(result.scheduledDate, equals(original.scheduledDate));
+        expect(result.timeSlot, equals(original.timeSlot));
+        expect(result.paymentMethod, equals(original.paymentMethod));
+        expect(result.pricing, equals(original.pricing));
+        expect(result.createdAt, equals(original.createdAt));
+        expect(result.status, equals(BookingStatus.cancelled));
+        expect(result.cancellationReason, equals('Found another service'));
+        expect(result.cancelledAt, isNotNull);
+      });
     });
   });
 }

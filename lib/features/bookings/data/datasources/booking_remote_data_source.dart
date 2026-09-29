@@ -22,7 +22,10 @@ abstract class BookingRemoteDataSource {
     PaymentMethodModel? paymentMethod,
   });
   Future<BookingModel> cancelBooking({
-    required CancelBookingRequestModel request,
+    CancelBookingRequestModel? request,
+    String? bookingId,
+    String? reason,
+    String? reasonNote,
   });
 }
 
@@ -79,11 +82,21 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<BookingModel> cancelBooking({
-    required CancelBookingRequestModel request,
+    CancelBookingRequestModel? request,
+    String? bookingId,
+    String? reason,
+    String? reasonNote,
   }) async {
+    final effectiveRequest = request ??
+        CancelBookingRequestModel(
+          bookingId: bookingId ?? '',
+          reason: reason ?? '',
+          reasonNote: reasonNote,
+        );
+
     final response = await apiService.post<BookingModel>(
-      ApiConstants.cancelBooking(request.bookingId),
-      data: request.toJson(),
+      ApiConstants.cancelBooking(effectiveRequest.bookingId),
+      data: effectiveRequest.toJson(),
       fromJson: (json) => BookingModel.fromJson(json as Map<String, dynamic>),
     );
 
@@ -354,10 +367,24 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
     return createdBooking;
   }
 
+  void addBooking(BookingModel booking) {
+    _bookings.add(booking);
+  }
+
   @override
   Future<BookingModel> cancelBooking({
-    required CancelBookingRequestModel request,
+    CancelBookingRequestModel? request,
+    String? bookingId,
+    String? reason,
+    String? reasonNote,
   }) async {
+    final effectiveRequest = request ??
+        CancelBookingRequestModel(
+          bookingId: bookingId ?? '',
+          reason: reason ?? '',
+          reasonNote: reasonNote,
+        );
+
     await Future.delayed(const Duration(milliseconds: 150));
 
     if (shouldFail) {
@@ -367,7 +394,7 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
     }
 
     final index = _bookings.indexWhere(
-      (b) => b.id == request.bookingId || b.bookingReference == request.bookingId,
+      (b) => b.id == effectiveRequest.bookingId || b.bookingReference == effectiveRequest.bookingId,
     );
 
     if (index == -1) {
@@ -384,8 +411,8 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
 
     final updatedBooking = targetBooking.copyWith(
       status: BookingStatus.cancelled,
-      cancellationReason: request.reason,
-      cancellationNote: request.reasonNote,
+      cancellationReason: effectiveRequest.reason,
+      cancellationNote: effectiveRequest.reasonNote,
       cancelledAt: DateTime.now(),
     );
 

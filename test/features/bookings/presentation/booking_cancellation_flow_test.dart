@@ -68,8 +68,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify CancellationReasonSheet opened
-    expect(find.text('Are you sure you want to cancel this booking? This action cannot be undone.'), findsOneWidget);
-    expect(find.text('Please select a reason for cancellation:'), findsOneWidget);
+    expect(find.textContaining('Are you sure you want to cancel this booking? This action cannot be undone.'), findsOneWidget);
+    expect(find.text('Why are you cancelling?'), findsOneWidget);
 
     // 4. Select cancellation reason
     await tester.tap(find.text('Changed my plans'));
@@ -78,7 +78,7 @@ void main() {
     // 5. Confirm cancellation inside sheet
     final confirmBtn = find.descendant(
       of: find.byType(CancellationReasonSheet),
-      matching: find.widgetWithText(ElevatedButton, 'Cancel Booking'),
+      matching: find.widgetWithText(ElevatedButton, 'Confirm Cancellation'),
     );
     await tester.tap(confirmBtn);
     await tester.pump();

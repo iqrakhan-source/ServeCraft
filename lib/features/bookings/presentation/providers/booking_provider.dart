@@ -232,16 +232,26 @@ class BookingProvider extends ChangeNotifier {
 
   /// Cancels an active/eligible booking (Phase 5A)
   Future<BookingModel?> cancelBooking({
-    required CancelBookingRequestModel request,
+    CancelBookingRequestModel? request,
+    String? bookingId,
+    String? reason,
+    String? reasonNote,
   }) async {
     // 1. Guard against concurrent cancellations
     if (isCancelling) return null;
+
+    final effectiveRequest = request ??
+        CancelBookingRequestModel(
+          bookingId: bookingId ?? '',
+          reason: reason ?? '',
+          reasonNote: reasonNote,
+        );
 
     _cancellationState = ViewState.loading();
     notifyListeners();
 
     try {
-      final updatedBooking = await repository.cancelBooking(request: request);
+      final updatedBooking = await repository.cancelBooking(request: effectiveRequest);
 
       // 2. Synchronize selected booking & details state if currently focused
       if (_selectedBooking != null &&

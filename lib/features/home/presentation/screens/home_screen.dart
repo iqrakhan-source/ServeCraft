@@ -1,16 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
-import 'package:prop_crm/core/widgets/app_card.dart';
-import 'package:prop_crm/core/widgets/app_empty_state.dart';
-import 'package:prop_crm/core/widgets/app_error_view.dart';
-import 'package:prop_crm/core/widgets/app_loading_indicator.dart';
-import 'package:provider/provider.dart';
-import '../providers/home_provider.dart';
-import '../widgets/banner_carousel.dart';
-import '../widgets/category_strip.dart';
-import '../widgets/featured_services_section.dart';
-import '../widgets/home_header.dart';
+import 'package:prop_crm/core/constants/route_names.dart';
+import 'package:prop_crm/features/home/presentation/screens/story_section.dart';
+import 'package:prop_crm/features/services/presentation/screens/service_listing_screen.dart';
+
 import '../widgets/home_search_bar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,272 +17,935 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HomeProvider>().fetchHomeData();
-    });
+  final PageController _pageController = PageController();
+
+  int _currentBanner = 0;
+  Timer? _bannerTimer;
+
+  // ============================================================
+  // BANNER IMAGES
+  // ============================================================
+
+  final List<String> _headerImages = [
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c',
+    'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea',
+    'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0',
+  ];
+
+  // ============================================================
+  // SERVICES
+  // ============================================================
+
+  final List<Map<String, String>> _services = [
+    {
+      'title': 'Cleaning',
+      'image':
+      'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=300',
+    },
+    {
+      'title': 'Plumbing',
+      'image':
+      'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=300',
+    },
+    {
+      'title': 'Electrical',
+      'image':
+      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300',
+    },
+    {
+      'title': 'AC Service',
+      'image':
+      'https://images.unsplash.com/photo-1631545806609-7c8d7e5f4b5f?w=300',
+    },
+    {
+      'title': 'Painting',
+      'image':
+      'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=300',
+    },
+    {
+      'title': 'Carpentry',
+      'image':
+      'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=300',
+    },
+    {
+      'title': 'Pest Control',
+      'image':
+      'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=300',
+    },
+    {
+      'title': 'More',
+      'image':
+      'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300',
+    },
+  ];
+
+  // ============================================================
+  // NEW & NOTEWORTHY
+  // ============================================================
+
+  final List<Map<String, String>> _newServices = [
+    {
+      'title': 'Full Home Cleaning',
+      'image':
+      'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600',
+      'price': '₹999',
+      'rating': '4.8',
+      'time': '2 hrs',
+    },
+    {
+      'title': 'AC Service & Repair',
+      'image':
+      'https://images.unsplash.com/photo-1631545806609-7c8d7e5f4b5f?w=600',
+      'price': '₹499',
+      'rating': '4.7',
+      'time': '1 hr',
+    },
+    {
+      'title': 'Bathroom Cleaning',
+      'image':
+      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600',
+      'price': '₹399',
+      'rating': '4.9',
+      'time': '1 hr',
+    },
+    {
+      'title': 'Home Painting',
+      'image':
+      'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=600',
+      'price': '₹1,499',
+      'rating': '4.8',
+      'time': '4 hrs',
+    },
+  ];
+
+  // ============================================================
+  // MOST BOOKED
+  // ============================================================
+
+  final List<Map<String, String>> _mostBooked = [
+    {
+      'title': 'Deep Home Cleaning',
+      'image':
+      'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600',
+      'price': '₹799',
+      'rating': '4.9',
+      'time': '2 hrs',
+    },
+    {
+      'title': 'Kitchen Cleaning',
+      'image':
+      'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=600',
+      'price': '₹499',
+      'rating': '4.8',
+      'time': '1 hr',
+    },
+    {
+      'title': 'Fan & Light Repair',
+      'image':
+      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600',
+      'price': '₹299',
+      'rating': '4.7',
+      'time': '45 mins',
+    },
+    {
+      'title': 'Bathroom Deep Cleaning',
+      'image':
+      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600',
+      'price': '₹599',
+      'rating': '4.9',
+      'time': '1.5 hrs',
+    },
+  ];
+
+  // ============================================================
+  // AUTO SLIDE
+  // ============================================================
+
+  void _startBannerAutoSlide() {
+    _bannerTimer = Timer.periodic(
+      const Duration(seconds: 3),
+          (_) {
+        if (!mounted || !_pageController.hasClients) {
+          return;
+        }
+
+        final nextPage = (_currentBanner + 1) % _headerImages.length;
+
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+        );
+      },
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
-    final homeProvider = context.watch<HomeProvider>();
+  void initState() {
+    super.initState();
+    _startBannerAutoSlide();
+  }
 
+  @override
+  void dispose() {
+    _bannerTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Builder(
-          builder: (context) {
-            if (homeProvider.isLoading || homeProvider.homeState.isInitial) {
-              return _buildLoadingState();
-            }
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            // ======================================================
+            // HEADER
+            // ======================================================
 
-            if (homeProvider.hasError) {
-              return AppErrorView(
-                message: homeProvider.errorMessage ??
-                    'Could not load home recommendations',
-                onRetry: () => homeProvider.fetchHomeData(forceRefresh: true),
-              );
-            }
+            SliverAppBar(
+              pinned: true,
+              floating: false,
+              snap: false,
 
-            if (homeProvider.isEmpty) {
-              return AppEmptyState(
-                icon: Icons.storefront_outlined,
-                title: 'No Services Right Now',
-                subtitle:
-                    'Our catalog is refreshing. Please check back shortly.',
-                actionText: 'Refresh',
-                onActionPressed: () =>
-                    homeProvider.fetchHomeData(forceRefresh: true),
-              );
-            }
+              automaticallyImplyLeading: false,
 
-            final data = homeProvider.homeData;
-            if (data == null) {
-              return _buildLoadingState();
-            }
+              backgroundColor: AppColors.surface,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
 
-            return RefreshIndicator(
-              onRefresh: () => homeProvider.fetchHomeData(forceRefresh: true),
-              color: AppColors.primary,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 1. Header with Location & Notification
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.0),
-                      child: HomeHeader(),
-                    ),
-                    const SizedBox(height: 16),
+              expandedHeight: 128,
+              toolbarHeight: 64,
 
-                    // 2. Search Bar
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.0),
-                      child: HomeSearchBar(),
-                    ),
-                    const SizedBox(height: 22),
+              flexibleSpace: LayoutBuilder(
+                builder: (context, constraints) {
+                  final topPadding = MediaQuery.of(context).padding.top;
 
-                    // 3. Categories (lightweight horizontal scroll)
-                    CategoryStrip(categories: data.categories),
-                    const SizedBox(height: 24),
+                  final currentHeight = constraints.biggest.height;
 
-                    // 4. Promotional Banners Carousel (photography-led)
-                    BannerCarousel(banners: data.banners),
-                    const SizedBox(height: 28),
+                  const double expandedHeight = 128;
+                  const double collapsedHeight = 64;
 
-                    // 5. Popular Services Carousel
-                    FeaturedServicesSection(services: data.popularServices),
-                    const SizedBox(height: 28),
+                  final collapseProgress =
+                  ((currentHeight - collapsedHeight) /
+                      (expandedHeight - collapsedHeight))
+                      .clamp(0.0, 1.0);
 
-                    // 6. Recommended / Quality Assurance Card
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: AppCard(
-                        backgroundColor: AppColors.surface,
-                        borderRadius: 12,
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: const BoxDecoration(
-                                color: AppColors.primaryLight,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.shield_outlined,
-                                color: AppColors.primary,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                  return Container(
+                    color: AppColors.surface,
+                    child: Stack(
+                      children: [
+                        // =====================================================
+                        // UPPER LOCATION HEADER
+                        // =====================================================
+
+                        Positioned(
+                          top: topPadding + 10,
+                          left: 16,
+                          right: 16,
+                          child: Opacity(
+                            opacity: collapseProgress,
+                            child: SizedBox(
+                              height: 42,
+                              child: Row(
                                 children: [
-                                  Text(
-                                    'ServeCraft Quality Assurance',
-                                    style: AppTypography.titleSmall.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 13,
+                                  // LOCATION
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryLight,
+                                      borderRadius:
+                                      BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.location_on_outlined,
+                                      color: AppColors.primary,
+                                      size: 21,
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Verified professionals • On-time service • Transparent pricing guaranteed.',
-                                    style: AppTypography.bodySmall.copyWith(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 11,
+
+                                  const SizedBox(width: 10),
+
+                                  // ADDRESS
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Your location',
+                                          style: AppTypography.bodySmall
+                                              .copyWith(
+                                            fontSize: 11,
+                                            color:
+                                            AppColors.textSecondary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Your Address',
+                                          maxLines: 1,
+                                          overflow:
+                                          TextOverflow.ellipsis,
+                                          style: AppTypography.bodyMedium
+                                              .copyWith(
+                                            color:
+                                            AppColors.textPrimary,
+                                            fontWeight:
+                                            FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                  ),
+
+                                  const SizedBox(width: 8),
+
+                                  // NOTIFICATION
+                                  _buildSliverHeaderIcon(
+                                    icon:
+                                    Icons.notifications_none_rounded,
+                                    onTap: () {},
+                                  ),
+
+                                  const SizedBox(width: 8),
+
+                                  // PROFILE
+                                  _buildSliverHeaderIcon(
+                                    icon:
+                                    Icons.person_outline_rounded,
+                                    onTap: () {},
                                   ),
                                 ],
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+
+                        // =====================================================
+                        // SEARCH BAR
+                        // =====================================================
+
+                        Positioned(
+                          left: 16,
+                          right: 16,
+
+                          // Moves from below the header
+                          // to the top as the app bar collapses.
+                          top: Tween<double>(
+                            begin: topPadding + 62,
+                            end: topPadding + 8,
+                          ).transform(
+                            1 - collapseProgress,
+                          ),
+
+                          child: const SizedBox(
+                            height: 48,
+                            child: HomeSearchBar(),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                  ],
+                  );
+                },
+              ),
+            ),
+
+            // ======================================================
+            // SERVICES
+            // ======================================================
+
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  28,
+                  16,
+                  0,
+                ),
+                child: _buildServicesSection(),
+              ),
+            ),
+
+            // ======================================================
+            // PROMOTIONAL BANNER
+            // ======================================================
+
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  28,
+                  16,
+                  0,
+                ),
+                child: _buildPromoBanner(),
+              ),
+            ),
+
+            // ======================================================
+            // NEW & NOTEWORTHY
+            // ======================================================
+
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  30,
+                  0,
+                  0,
+                ),
+                child: _buildServiceSection(
+                  title: 'New & Noteworthy',
+                  services: _newServices,
                 ),
               ),
-            );
-          },
+            ),
+
+            // ======================================================
+            // CURATED STORIES
+            // ======================================================
+
+            const SliverToBoxAdapter(
+              child: CuratedStoriesSection(),
+            ),
+
+            // ======================================================
+            // MOST BOOKED
+            // ======================================================
+
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  30,
+                  0,
+                  100,
+                ),
+                child: _buildServiceSection(
+                  title: 'Most Booked',
+                  services: _mostBooked,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildLoadingState() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20.0),
+  // ============================================================
+  // HEADER ICON
+  // ============================================================
+
+  Widget _buildSliverHeaderIcon({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.border,
+          ),
+        ),
+        child: Icon(
+          icon,
+          color: AppColors.textPrimary,
+          size: 21,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // SERVICES SECTION
+  // ============================================================
+
+  Widget _buildServicesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Services',
+              style: AppTypography.titleLarge.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.categories,
+                );
+              },
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+              ),
+              child: Text(
+                'View all',
+                style: AppTypography.buttonMedium.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 16),
+
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _services.length,
+          gridDelegate:
+          const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 18,
+            childAspectRatio: 0.82,
+          ),
+          itemBuilder: (context, index) {
+            final service = _services[index];
+
+            return _buildServiceItem(
+              title: service['title']!,
+              image: service['image']!,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // SERVICE ITEM
+  // ============================================================
+
+  Widget _buildServiceItem({
+    required String title,
+    required String image,
+  }) {
+    return InkWell(
+      onTap: () {
+        if (title == 'More') {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.categories,
+          );
+          return;
+        }
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ServiceListingScreen(
+              category: title,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Skeleton
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  AppSkeleton(height: 36, width: 36, borderRadius: 10),
-                  SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppSkeleton(height: 16, width: 70),
-                      SizedBox(height: 4),
-                      AppSkeleton(height: 12, width: 140),
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: AppColors.border,
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Image.network(
+              image,
+              width: 68,
+              height: 68,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) {
+                return const Icon(
+                  Icons.home_repair_service_outlined,
+                  color: AppColors.primary,
+                  size: 28,
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 7),
+
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodySmall.copyWith(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // PROMOTIONAL BANNER
+  // ============================================================
+
+  Widget _buildPromoBanner() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: SizedBox(
+        height: 190,
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _pageController,
+              itemCount: _headerImages.length,
+              onPageChanged: (index) {
+                if (!mounted) return;
+
+                setState(() {
+                  _currentBanner = index;
+                });
+              },
+              itemBuilder: (context, index) {
+                return Image.network(
+                  _headerImages[index],
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) {
+                    return Container(
+                      color: AppColors.primary,
+                    );
+                  },
+                );
+              },
+            ),
+
+            // GRADIENT
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Colors.black.withOpacity(0.70),
+                      Colors.black.withOpacity(0.10),
                     ],
                   ),
-                ],
+                ),
               ),
-              AppSkeleton(height: 40, width: 40, borderRadius: 10),
-            ],
-          ),
-          const SizedBox(height: 16),
+            ),
 
-          // Search Bar Skeleton
-          const AppSkeleton(height: 48, width: double.infinity, borderRadius: 12),
-          const SizedBox(height: 22),
-
-          // Categories Skeleton
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              AppSkeleton(height: 18, width: 90),
-              AppSkeleton(height: 14, width: 50),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(
-              4,
-              (index) => const Column(
+            // TEXT
+            Positioned(
+              left: 18,
+              top: 24,
+              right: 100,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppSkeleton(height: 56, width: 56, borderRadius: 28),
-                  SizedBox(height: 8),
-                  AppSkeleton(height: 10, width: 50),
+                  Text(
+                    'MAKE YOUR HOME',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: Colors.white.withOpacity(0.85),
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1,
+                    ),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  Text(
+                    'Feel brand new',
+                    style: AppTypography.titleLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  Text(
+                    'Professional home services at your doorstep.',
+                    maxLines: 2,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  InkWell(
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.categories,
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'Book Now',
+                        style: AppTypography.buttonMedium.copyWith(
+                          color: AppColors.primary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 24),
 
-          // Banner Skeleton
-          const AppSkeleton(height: 160, width: double.infinity, borderRadius: 14),
-          const SizedBox(height: 28),
+            // DOTS
+            Positioned(
+              bottom: 14,
+              left: 18,
+              child: Row(
+                children: List.generate(
+                  _headerImages.length,
+                      (index) {
+                    final bool active =
+                        index == _currentBanner;
 
-          // Popular Services Skeleton
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              AppSkeleton(height: 18, width: 120),
-              AppSkeleton(height: 14, width: 50),
-            ],
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      margin: const EdgeInsets.only(right: 5),
+                      width: active ? 18 : 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // SERVICE CAROUSEL SECTION
+  // ============================================================
+
+  Widget _buildServiceSection({
+    required String title,
+    required List<Map<String, String>> services,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16),
+          child: Text(
+            title,
+            style: AppTypography.titleLarge.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+        ),
+
+        const SizedBox(height: 14),
+
+        SizedBox(
+          height: 238,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(right: 16),
+            itemCount: services.length,
+            separatorBuilder: (_, __) =>
+            const SizedBox(width: 14),
+            itemBuilder: (context, index) {
+              final service = services[index];
+
+              return _buildPopularServiceCard(
+                title: service['title']!,
+                image: service['image']!,
+                price: service['price']!,
+                rating: service['rating']!,
+                time: service['time']!,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // SERVICE CARD
+  // ============================================================
+
+  Widget _buildPopularServiceCard({
+    required String title,
+    required String image,
+    required String price,
+    required String rating,
+    required String time,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ServiceListingScreen(
+              category: title,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: 190,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: AppColors.border,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // IMAGE
+            SizedBox(
+              height: 125,
+              width: double.infinity,
+              child: Image.network(
+                image,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) {
+                  return Container(
+                    color: AppColors.primaryLight,
+                    child: const Icon(
+                      Icons.home_repair_service_outlined,
+                      color: AppColors.primary,
+                      size: 32,
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // DETAILS
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                11,
+                10,
+                11,
+                10,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.titleSmall.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  child: const Column(
+
+                  const SizedBox(height: 7),
+
+                  Row(
                     children: [
-                      AppSkeleton(height: 110, width: double.infinity, borderRadius: 0),
-                      Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AppSkeleton(height: 12, width: 120),
-                            SizedBox(height: 6),
-                            AppSkeleton(height: 10, width: 80),
-                          ],
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 16,
+                        color: Colors.amber,
+                      ),
+
+                      const SizedBox(width: 3),
+
+                      Text(
+                        rating,
+                        style: AppTypography.bodySmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+
+                      const SizedBox(width: 7),
+
+                      Container(
+                        width: 3,
+                        height: 3,
+                        decoration: const BoxDecoration(
+                          color: Colors.grey,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+
+                      const SizedBox(width: 7),
+
+                      Expanded(
+                        child: Text(
+                          time,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+
+                  const SizedBox(height: 7),
+
+                  Text(
+                    'Starting $price',
+                    style: AppTypography.titleSmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                  child: const Column(
-                    children: [
-                      AppSkeleton(height: 110, width: double.infinity, borderRadius: 0),
-                      Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AppSkeleton(height: 12, width: 120),
-                            SizedBox(height: 6),
-                            AppSkeleton(height: 10, width: 80),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

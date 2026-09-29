@@ -16,6 +16,9 @@ abstract class BookingRepository {
   });
 
   Future<BookingModel> cancelBooking({
-    required CancelBookingRequestModel request,
+    CancelBookingRequestModel? request,
+    String? bookingId,
+    String? reason,
+    String? reasonNote,
   });
 }

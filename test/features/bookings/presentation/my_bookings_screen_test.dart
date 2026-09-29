@@ -245,7 +245,10 @@ class _EmptyBookingRepository implements BookingRepository {
 
   @override
   Future<BookingModel> cancelBooking({
-    required CancelBookingRequestModel request,
+    CancelBookingRequestModel? request,
+    String? bookingId,
+    String? reason,
+    String? reasonNote,
   }) async {
     throw UnimplementedError();
   }

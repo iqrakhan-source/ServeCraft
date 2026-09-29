@@ -15,7 +15,7 @@ class HomeHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Location Icon & Address Information
+        // SC Branding + Location / Address Information
         Expanded(
           child: InkWell(
             onTap: () {
@@ -27,82 +27,115 @@ class HomeHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             child: Row(
               children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(10),
+                // SC Branding Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'SC',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.location_on_rounded,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Home',
-                          style: AppTypography.titleSmall.copyWith(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Home',
+                            style: AppTypography.titleSmall.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 18,
                             color: AppColors.textPrimary,
                           ),
-                        ),
-                        const SizedBox(width: 2),
-                        const Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 18,
-                          color: AppColors.textPrimary,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      homeProvider.currentAddress,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        ],
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        homeProvider.currentAddress,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
 
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
 
         // Notification Bell
         Container(
-          width: 40,
-          height: 40,
+          width: 38,
+          height: 38,
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppColors.border),
           ),
           child: IconButton(
+            key: const Key('dashboard_notification_button'),
             padding: EdgeInsets.zero,
             icon: const Icon(
               Icons.notifications_none_rounded,
               color: AppColors.textPrimary,
               size: 20,
             ),
+            tooltip: 'Notifications',
             splashRadius: 20,
             onPressed: () {},
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        // Profile Icon Button
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: IconButton(
+            key: const Key('dashboard_profile_button'),
+            padding: EdgeInsets.zero,
+            icon: const Icon(
+              Icons.person_outline_rounded,
+              color: AppColors.textPrimary,
+              size: 20,
+            ),
+            tooltip: 'Profile',
+            splashRadius: 20,
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.profile);
+            },
           ),
         ),
       ],
