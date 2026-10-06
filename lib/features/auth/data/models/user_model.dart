@@ -4,6 +4,8 @@ class UserModel {
   final String phone;
   final String email;
   final String? profileImage;
+  final String? gender;
+  final String? dateOfBirth;
   final bool isProfileComplete;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -14,6 +16,8 @@ class UserModel {
     required this.phone,
     required this.email,
     this.profileImage,
+    this.gender,
+    this.dateOfBirth,
     required this.isProfileComplete,
     required this.createdAt,
     required this.updatedAt,
@@ -25,6 +29,8 @@ class UserModel {
     String? phone,
     String? email,
     String? profileImage,
+    String? gender,
+    String? dateOfBirth,
     bool? isProfileComplete,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -35,6 +41,8 @@ class UserModel {
       phone: phone ?? this.phone,
       email: email ?? this.email,
       profileImage: profileImage ?? this.profileImage,
+      gender: gender ?? this.gender,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       isProfileComplete: isProfileComplete ?? this.isProfileComplete,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -48,6 +56,8 @@ class UserModel {
       phone: json['phone'] as String? ?? '',
       email: json['email'] as String? ?? '',
       profileImage: json['profileImage'] as String?,
+      gender: json['gender'] as String?,
+      dateOfBirth: json['dateOfBirth'] as String?,
       isProfileComplete: json['isProfileComplete'] as bool? ?? false,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
@@ -65,6 +75,8 @@ class UserModel {
       'phone': phone,
       'email': email,
       'profileImage': profileImage,
+      'gender': gender,
+      'dateOfBirth': dateOfBirth,
       'isProfileComplete': isProfileComplete,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),

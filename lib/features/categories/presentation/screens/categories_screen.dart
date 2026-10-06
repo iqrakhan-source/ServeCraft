@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:prop_crm/core/constants/app_colors.dart';
-import 'package:prop_crm/core/constants/app_typography.dart';
-import 'package:prop_crm/core/constants/route_names.dart';
-import 'package:prop_crm/core/widgets/app_card.dart';
-import 'package:prop_crm/core/widgets/app_empty_state.dart';
-import 'package:prop_crm/core/widgets/app_error_view.dart';
-import 'package:prop_crm/core/widgets/app_loading_indicator.dart';
-import 'package:prop_crm/core/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_typography.dart';
+import '../../../../core/constants/route_names.dart';
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/app_loading_indicator.dart';
+import '../../../../core/widgets/app_network_image.dart';
+import '../../../../core/widgets/custom_app_bar.dart';
 import '../providers/category_provider.dart';
 
 class CategoriesScreen extends StatefulWidget {
-  const CategoriesScreen({super.key});
+  final bool isTab;
+
+  const CategoriesScreen({super.key, this.isTab = false});
 
   @override
   State<CategoriesScreen> createState() => _CategoriesScreenState();
@@ -36,26 +38,22 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   IconData _getCategoryIcon(String? iconName) {
-    if (iconName == null) return Icons.home_repair_service_outlined;
+    if (iconName == null) return Icons.spa_rounded;
     switch (iconName.toLowerCase()) {
-      case 'cleaning_services':
-        return Icons.cleaning_services_outlined;
-      case 'build':
-        return Icons.build_outlined;
-      case 'bolt':
-        return Icons.bolt_outlined;
-      case 'plumbing':
-        return Icons.plumbing_outlined;
-      case 'format_paint':
-        return Icons.format_paint_outlined;
-      case 'handyman':
-        return Icons.handyman_outlined;
-      case 'pest_control':
-        return Icons.pest_control_outlined;
+      case 'content_cut':
+        return Icons.content_cut_rounded;
+      case 'palette':
+        return Icons.palette_outlined;
+      case 'face':
+        return Icons.face_retouching_natural_rounded;
       case 'spa':
-        return Icons.spa_outlined;
+        return Icons.spa_rounded;
+      case 'brush':
+        return Icons.brush_rounded;
+      case 'auto_fix_high':
+        return Icons.auto_awesome_rounded;
       default:
-        return Icons.home_repair_service_outlined;
+        return Icons.spa_rounded;
     }
   }
 
@@ -65,13 +63,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(
-        title: 'All Categories',
+      appBar: CustomAppBar(
+        title: 'Salon Categories',
+        showBackButton: !widget.isTab,
       ),
       body: Builder(
         builder: (context) {
           if (categoryProvider.isLoading) {
-            return _buildLoadingGrid();
+            return const Center(child: AppLoadingIndicator());
           }
 
           if (categoryProvider.hasError) {
@@ -79,17 +78,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               message:
                   categoryProvider.errorMessage ?? 'Failed to load categories',
               onRetry: () =>
-                  categoryProvider.fetchCategories(forceRefresh: true),
-            );
-          }
-
-          if (categoryProvider.isEmpty) {
-            return AppEmptyState(
-              icon: Icons.category_outlined,
-              title: 'No Categories Available',
-              subtitle: 'Please check back later for service categories.',
-              actionText: 'Retry',
-              onActionPressed: () =>
                   categoryProvider.fetchCategories(forceRefresh: true),
             );
           }
@@ -107,226 +95,168 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           .contains(_searchQuery.toLowerCase()))
                   .toList();
 
-          return RefreshIndicator(
-            onRefresh: () =>
-                categoryProvider.fetchCategories(forceRefresh: true),
-            color: AppColors.primary,
-            child: Column(
-              children: [
-                // Search categories field
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (val) {
-                      setState(() {
-                        _searchQuery = val.trim();
-                      });
-                    },
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textPrimary,
+          return Column(
+            children: [
+              // Search categories input
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: AppColors.surface,
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                  decoration: InputDecoration(
+                    hintText: 'Search salon categories (Hair, Skin, Spa)...',
+                    hintStyle: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textTertiary,
+                      fontSize: 13,
                     ),
-                    decoration: InputDecoration(
-                      hintText: 'Search categories...',
-                      hintStyle: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                      prefixIcon: const Icon(
-                        Icons.search_rounded,
-                        color: AppColors.textTertiary,
-                        size: 20,
-                      ),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.close_rounded, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _searchQuery = '';
-                                });
-                              },
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: AppColors.surface,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: AppColors.primary,
-                          width: 1.5,
-                        ),
-                      ),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear_rounded, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: AppColors.surfaceMuted,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 16,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),
+              ),
 
-                // 2-column grid of moderate-sized category cards
-                Expanded(
-                  child: filteredCategories.isEmpty
-                      ? AppEmptyState(
-                          icon: Icons.search_off_rounded,
-                          title: 'No Matching Categories',
-                          subtitle: 'Try a different search term.',
-                          actionText: 'Clear Search',
-                          onActionPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchQuery = '';
-                            });
-                          },
-                        )
-                      : GridView.builder(
-                          padding: const EdgeInsets.all(16.0),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12.0,
-                            mainAxisSpacing: 12.0,
-                            childAspectRatio: 1.05,
-                          ),
-                          itemCount: filteredCategories.length,
-                          itemBuilder: (context, index) {
-                            final category = filteredCategories[index];
-                            final iconData = _getCategoryIcon(category.icon);
+              // Categories Grid
+              Expanded(
+                child: filteredCategories.isEmpty
+                    ? const AppEmptyState(
+                        title: 'No Categories Found',
+                        subtitle: 'Try searching for hair, facial, spa, or nails.',
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filteredCategories.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 14,
+                          childAspectRatio: 0.88,
+                        ),
+                        itemBuilder: (context, index) {
+                          final category = filteredCategories[index];
+                          final icon = _getCategoryIcon(category.icon);
 
-                            return AppCard(
-                              padding: const EdgeInsets.all(14.0),
-                              borderRadius: 12.0,
-                              onTap: () {
-                                categoryProvider.selectCategory(category);
-                                Navigator.of(context).pushNamed(
-                                  AppRoutes.serviceListing,
-                                  arguments: {
-                                    'categoryId': category.id,
-                                    'categoryName': category.name,
-                                  },
-                                );
-                              },
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  // Consistent Icon Container
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryLight,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Center(
-                                      child: Icon(
-                                        iconData,
-                                        size: 22,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-
-                                  // Category Details
-                                  Column(
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: AppColors.border),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: AppColors.shadow,
+                                  offset: Offset(0, 3),
+                                  blurRadius: 10,
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(18),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(18),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.serviceListing,
+                                    arguments: {'categoryName': category.name},
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(14.0),
+                                  child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
+                                      // Image with category icon pill
+                                      Stack(
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: AppNetworkImage(
+                                              imageUrl: category.image,
+                                              height: 105,
+                                              width: double.infinity,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 8,
+                                            left: 8,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.surface
+                                                    .withValues(alpha: 0.9),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Icon(
+                                                icon,
+                                                size: 16,
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
                                       Text(
                                         category.name,
                                         style:
                                             AppTypography.titleSmall.copyWith(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 13,
-                                          color: AppColors.textPrimary,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 3),
+                                      const SizedBox(height: 4),
                                       Text(
                                         category.description,
                                         style: AppTypography.bodySmall.copyWith(
                                           color: AppColors.textSecondary,
-                                          fontSize: 11,
-                                          height: 1.25,
+                                          fontSize: 10,
                                         ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),
-    );
-  }
-
-  Widget _buildLoadingGrid() {
-    return Column(
-      children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: AppSkeleton(
-            height: 48,
-            width: double.infinity,
-            borderRadius: 12,
-          ),
-        ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(16.0),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12.0,
-              mainAxisSpacing: 12.0,
-              childAspectRatio: 1.05,
-            ),
-            itemCount: 6,
-            itemBuilder: (context, index) {
-              return const AppCard(
-                padding: EdgeInsets.all(14),
-                borderRadius: 12.0,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppSkeleton(height: 44, width: 44, borderRadius: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AppSkeleton(height: 14, width: 100),
-                        SizedBox(height: 6),
-                        AppSkeleton(height: 10, width: 120),
-                        SizedBox(height: 4),
-                        AppSkeleton(height: 10, width: 80),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
     );
   }
 }

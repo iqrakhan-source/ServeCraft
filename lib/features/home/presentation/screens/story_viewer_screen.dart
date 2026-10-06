@@ -140,7 +140,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
             Image.network(
               story['image']!,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (context, error, stackTrace) {
                 return Container(
                   color: AppColors.surfaceDark,
                   child: const Center(
@@ -165,9 +165,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.55),
+                      Colors.black.withValues(alpha: 0.55),
                       Colors.transparent,
-                      Colors.black.withOpacity(0.75),
+                      Colors.black.withValues(alpha: 0.75),
                     ],
                     stops: const [
                       0.0,
@@ -233,7 +233,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
+                            color: Colors.white.withValues(alpha: 0.18),
                             borderRadius:
                             BorderRadius.circular(12),
                           ),
@@ -252,7 +252,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                             CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'ServeCraft',
+                                'Luxe Salon & Spa',
                                 style: AppTypography.titleSmall
                                     .copyWith(
                                   color: Colors.white,
@@ -307,7 +307,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
+                        color: Colors.white.withValues(alpha: 0.18),
                         borderRadius:
                         BorderRadius.circular(20),
                       ),
@@ -336,7 +336,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                     Text(
                       story['description']!,
                       style: AppTypography.bodyMedium.copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         height: 1.5,
                       ),
                     ),

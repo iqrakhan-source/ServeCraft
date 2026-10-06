@@ -15,11 +15,14 @@ abstract class AppRoutes {
 
   // Categories & Services
   static const String categories = '/categories';
+  static const String serviceSearch = '/services/search';
   static const String serviceListing = '/services/listing';
   static const String serviceDetails = '/services/details';
   static const String packageSelection = '/services/packages';
 
-  // Addresses & Checkout
+  // Branches & Checkout
+  static const String branchSelection = '/branches/selection';
+  static const String branchDetails = '/branches/details';
   static const String addressSelection = '/checkout/addresses';
   static const String addAddress = '/checkout/addresses/add';
   static const String dateTimeSelection = '/checkout/date-time';
@@ -31,8 +34,9 @@ abstract class AppRoutes {
   static const String myBookings = '/bookings/my-bookings';
   static const String bookingDetails = '/bookings/details';
 
-  // Profile & Reviews
+  // Profile, Notifications & Reviews
   static const String editProfile = '/profile/edit';
+  static const String notifications = '/notifications';
   static const String reviews = '/reviews';
   static const String addReview = '/reviews/add';
 }

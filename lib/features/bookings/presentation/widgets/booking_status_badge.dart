@@ -38,6 +38,11 @@ class BookingStatusBadge extends StatelessWidget {
         textColor = AppColors.error;
         iconData = Icons.cancel_rounded;
         break;
+      case BookingStatus.rescheduled:
+        bg = const Color(0xFFEDE9FE);
+        textColor = const Color(0xFF6D28D9);
+        iconData = Icons.update_rounded;
+        break;
     }
 
     return Container(

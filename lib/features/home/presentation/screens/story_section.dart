@@ -70,7 +70,7 @@ class CuratedStoriesSection extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(right: 16),
               itemCount: stories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 14),
+              separatorBuilder: (context, index) => const SizedBox(width: 14),
               itemBuilder: (context, index) {
                 final story = stories[index];
 
@@ -138,7 +138,7 @@ class _StoryCard extends StatelessWidget {
                 child: Image.network(
                   image,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) {
+                  errorBuilder: (context, error, stackTrace) {
                     return Container(
                       color: AppColors.surfaceMuted,
                       child: const Icon(

@@ -71,23 +71,37 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
                 const SizedBox(height: 24),
                 // App Logo mark
                 Container(
-                  width: 54,
-                  height: 54,
+                  width: 58,
+                  height: 58,
                   decoration: BoxDecoration(
                     color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(18),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 12,
+                        color: AppColors.primary.withValues(alpha: 0.25),
+                        blurRadius: 14,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.home_repair_service_rounded,
-                    size: 28,
-                    color: AppColors.textInverse,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const Icon(
+                        Icons.content_cut_rounded,
+                        size: 28,
+                        color: AppColors.textInverse,
+                      ),
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Icon(
+                          Icons.auto_awesome_rounded,
+                          size: 10,
+                          color: AppColors.secondary.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 32),

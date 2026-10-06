@@ -29,27 +29,20 @@ class MockPaymentRemoteDataSource implements PaymentRemoteDataSource {
   @override
   Future<List<PaymentMethodModel>> getPaymentMethods() async {
     // Simulate brief network latency
-    await Future.delayed(const Duration(milliseconds: 150));
+    await Future.delayed(const Duration(milliseconds: 100));
 
     return const [
       PaymentMethodModel(
-        id: 'pm_upi',
-        title: 'UPI',
-        subtitle: 'Pay using any UPI app',
+        id: 'pm_online',
+        title: 'Online Payment',
+        subtitle: 'Pay now via UPI (GPay, PhonePe, Paytm), Credit/Debit Card or Net Banking',
         type: PaymentMethodType.upi,
         isAvailable: true,
       ),
       PaymentMethodModel(
-        id: 'pm_card',
-        title: 'Credit / Debit Card',
-        subtitle: 'Credit or debit card',
-        type: PaymentMethodType.card,
-        isAvailable: true,
-      ),
-      PaymentMethodModel(
-        id: 'pm_cod',
-        title: 'Cash on Delivery',
-        subtitle: 'Pay after service completion',
+        id: 'pm_salon',
+        title: 'Pay at Salon',
+        subtitle: 'Pay at front desk reception after your appointment (Cash, Card, or UPI)',
         type: PaymentMethodType.cod,
         isAvailable: true,
       ),

@@ -12,6 +12,8 @@ class ServiceModel {
   final String duration;
   final bool isActive;
   final List<ServicePackageModel> packages;
+  final String genderTarget; // 'all', 'women', 'men'
+  final List<String> inclusions;
 
   const ServiceModel({
     required this.id,
@@ -22,10 +24,26 @@ class ServiceModel {
     this.rating = 4.8,
     this.reviewCount = 0,
     required this.startingPrice,
-    this.duration = '60 mins',
+    this.duration = '45 mins',
     this.isActive = true,
     this.packages = const [],
+    this.genderTarget = 'all',
+    this.inclusions = const [],
   });
+
+  /// Parse duration into integer minutes for scheduling slot calculation
+  int get durationInMinutes {
+    final match = RegExp(r'(\d+)').firstMatch(duration);
+    if (match != null) {
+      final value = int.parse(match.group(1)!);
+      if (duration.toLowerCase().contains('hr') ||
+          duration.toLowerCase().contains('hour')) {
+        return value * 60;
+      }
+      return value;
+    }
+    return 45;
+  }
 
   ServiceModel copyWith({
     String? id,
@@ -39,6 +57,8 @@ class ServiceModel {
     String? duration,
     bool? isActive,
     List<ServicePackageModel>? packages,
+    String? genderTarget,
+    List<String>? inclusions,
   }) {
     return ServiceModel(
       id: id ?? this.id,
@@ -52,6 +72,8 @@ class ServiceModel {
       duration: duration ?? this.duration,
       isActive: isActive ?? this.isActive,
       packages: packages ?? this.packages,
+      genderTarget: genderTarget ?? this.genderTarget,
+      inclusions: inclusions ?? this.inclusions,
     );
   }
 
@@ -64,6 +86,11 @@ class ServiceModel {
           .toList();
     }
 
+    List<String> parsedInclusions = [];
+    if (json['inclusions'] is List) {
+      parsedInclusions = List<String>.from(json['inclusions'] as List);
+    }
+
     return ServiceModel(
       id: json['id'] as String? ?? '',
       categoryId: json['categoryId'] as String? ?? '',
@@ -73,9 +100,11 @@ class ServiceModel {
       rating: (json['rating'] as num?)?.toDouble() ?? 4.8,
       reviewCount: json['reviewCount'] as int? ?? 0,
       startingPrice: (json['startingPrice'] as num?)?.toDouble() ?? 0.0,
-      duration: json['duration'] as String? ?? '60 mins',
+      duration: json['duration'] as String? ?? '45 mins',
       isActive: json['isActive'] as bool? ?? true,
       packages: parsedPackages,
+      genderTarget: json['genderTarget'] as String? ?? 'all',
+      inclusions: parsedInclusions,
     );
   }
 
@@ -92,6 +121,8 @@ class ServiceModel {
       'duration': duration,
       'isActive': isActive,
       'packages': packages.map((p) => p.toJson()).toList(),
+      'genderTarget': genderTarget,
+      'inclusions': inclusions,
     };
   }
 

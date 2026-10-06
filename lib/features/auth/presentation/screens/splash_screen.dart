@@ -87,23 +87,44 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                     children: [
                       Container(
-                        width: 90,
-                        height: 90,
+                        width: 96,
+                        height: 96,
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(24),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF8B5A42),
+                              Color(0xFF1C1917),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(28),
                           boxShadow: [
                             BoxShadow(
                               color: AppColors.primary.withValues(alpha: 0.35),
-                              blurRadius: 20,
+                              blurRadius: 24,
                               offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.home_repair_service_rounded,
-                          size: 48,
-                          color: AppColors.textInverse,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            const Icon(
+                              Icons.content_cut_rounded,
+                              size: 44,
+                              color: AppColors.textInverse,
+                            ),
+                            Positioned(
+                              top: 20,
+                              right: 20,
+                              child: Icon(
+                                Icons.auto_awesome_rounded,
+                                size: 16,
+                                color: AppColors.secondary.withValues(alpha: 0.9),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -112,7 +133,7 @@ class _SplashScreenState extends State<SplashScreen>
                         style: AppTypography.displayLarge.copyWith(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: -0.8,
+                          letterSpacing: -0.5,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -120,6 +141,7 @@ class _SplashScreenState extends State<SplashScreen>
                         AppStrings.appTagline,
                         style: AppTypography.bodyMedium.copyWith(
                           color: AppColors.textSecondary,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ],

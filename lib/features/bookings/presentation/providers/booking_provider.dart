@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/base/view_state.dart';
 import 'package:prop_crm/core/error/error_handler.dart';
 import 'package:prop_crm/features/booking_summary/data/models/booking_summary_model.dart';
+import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
+import 'package:prop_crm/features/date_time/data/models/time_slot_model.dart';
 import 'package:prop_crm/features/payment/data/models/payment_method_model.dart';
 import '../../data/models/booking_model.dart';
 import '../../data/models/cancel_booking_request_model.dart';
@@ -21,27 +23,35 @@ enum BookingFilter {
 class BookingProvider extends ChangeNotifier {
   final BookingRepository repository;
 
-  // Booking creation state (Phase 4E)
+  // Booking creation state
   ViewState<BookingModel> _bookingState = ViewState.initial();
   BookingModel? _createdBooking;
 
-  // Bookings list state (Phase 4F)
+  // Bookings list state
   ViewState<List<BookingModel>> _bookingsState = ViewState.initial();
   BookingFilter _activeFilter = BookingFilter.all;
 
-  // Booking details state (Phase 4F)
+  // Booking details state
   ViewState<BookingModel> _detailsState = ViewState.initial();
   BookingModel? _selectedBooking;
 
-  // Booking cancellation state (Phase 5A)
+  // Booking cancellation state
   ViewState<BookingModel> _cancellationState = ViewState.initial();
+
+  // Booking rescheduling state
+  ViewState<BookingModel> _rescheduleState = ViewState.initial();
 
   BookingProvider({required this.repository});
 
-  // Cancellation getters (Phase 5A)
+  // Cancellation getters
   ViewState<BookingModel> get cancellationState => _cancellationState;
   bool get isCancelling => _cancellationState.isLoading;
   String? get cancellationError => _cancellationState.errorMessage;
+
+  // Rescheduling getters
+  ViewState<BookingModel> get rescheduleState => _rescheduleState;
+  bool get isRescheduling => _rescheduleState.isLoading;
+  String? get rescheduleError => _rescheduleState.errorMessage;
 
   // Creation getters
   ViewState<BookingModel> get bookingState => _bookingState;
@@ -57,6 +67,12 @@ class BookingProvider extends ChangeNotifier {
   BookingFilter get activeFilter => _activeFilter;
   bool get isLoadingBookings => _bookingsState.isLoading;
   String? get bookingsErrorMessage => _bookingsState.errorMessage;
+  List<BookingModel> get upcomingBookings => bookings
+      .where((b) =>
+          b.status == BookingStatus.confirmed ||
+          b.status == BookingStatus.pending ||
+          b.status == BookingStatus.rescheduled)
+      .toList();
 
   // Booking details getters
   ViewState<BookingModel> get detailsState => _detailsState;
@@ -74,7 +90,8 @@ class BookingProvider extends ChangeNotifier {
         return list
             .where((b) =>
                 b.status == BookingStatus.confirmed ||
-                b.status == BookingStatus.pending)
+                b.status == BookingStatus.pending ||
+                b.status == BookingStatus.rescheduled)
             .toList();
       case BookingFilter.completed:
         return list
@@ -105,27 +122,20 @@ class BookingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await repository.getBookings();
-      _bookingsState = ViewState.success(result);
-      notifyListeners();
+      final list = await repository.getBookings();
+      _bookingsState = ViewState.success(list);
     } catch (e) {
       final appError = ErrorHandler.handleError(e);
       _bookingsState = ViewState.error(appError.message);
-      notifyListeners();
     }
-  }
 
-  /// Sets selected booking directly (e.g. from route argument for immediate rendering)
-  void setSelectedBooking(BookingModel? booking) {
-    _selectedBooking = booking;
-    if (booking != null) {
-      _detailsState = ViewState.success(booking);
-    }
     notifyListeners();
   }
 
-  /// Loads booking details by ID
+  /// Loads full details for a single booking by ID
   Future<BookingModel?> loadBookingDetails(String bookingId) async {
+    if (isLoadingDetails) return null;
+
     _detailsState = ViewState.loading();
     notifyListeners();
 
@@ -141,6 +151,15 @@ class BookingProvider extends ChangeNotifier {
       notifyListeners();
       return null;
     }
+  }
+
+  /// Directly set the currently focused booking model
+  void setSelectedBooking(BookingModel? booking) {
+    _selectedBooking = booking;
+    if (booking != null) {
+      _detailsState = ViewState.success(booking);
+    }
+    notifyListeners();
   }
 
   /// Verifies all required checkout information exists and is sound
@@ -175,15 +194,13 @@ class BookingProvider extends ChangeNotifier {
     return true;
   }
 
-  /// Sends a booking creation request through the repository
+  /// Confirms and creates a booking from review summary
   Future<BookingModel?> createBooking({
     required BookingSummaryModel summary,
     required PaymentMethodModel paymentMethod,
   }) async {
-    // 1. Prevent duplicate submission if already running
     if (isCreating) return null;
 
-    // 2. Validate checkout context
     if (!validateCheckout(summary: summary, paymentMethod: paymentMethod)) {
       return null;
     }
@@ -230,14 +247,13 @@ class BookingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Cancels an active/eligible booking (Phase 5A)
+  /// Cancels an active/eligible booking (Enforces strict 2-hour salon policy)
   Future<BookingModel?> cancelBooking({
     CancelBookingRequestModel? request,
     String? bookingId,
     String? reason,
     String? reasonNote,
   }) async {
-    // 1. Guard against concurrent cancellations
     if (isCancelling) return null;
 
     final effectiveRequest = request ??
@@ -247,25 +263,42 @@ class BookingProvider extends ChangeNotifier {
           reasonNote: reasonNote,
         );
 
+    final targetBooking = _selectedBooking ??
+        bookings.cast<BookingModel?>().firstWhere(
+              (b) => b?.id == effectiveRequest.bookingId,
+              orElse: () => null,
+            );
+
+    // Business rule: Check 2-hour cancellation lockout
+    if (targetBooking != null && !targetBooking.isCancellable) {
+      _cancellationState = ViewState.error(
+        'Appointments cannot be cancelled within 2 hours of the scheduled time.',
+      );
+      notifyListeners();
+      return null;
+    }
+
     _cancellationState = ViewState.loading();
     notifyListeners();
 
     try {
-      final updatedBooking = await repository.cancelBooking(request: effectiveRequest);
+      final updatedBooking =
+          await repository.cancelBooking(request: effectiveRequest);
 
-      // 2. Synchronize selected booking & details state if currently focused
       if (_selectedBooking != null &&
           (_selectedBooking!.id == updatedBooking.id ||
-              _selectedBooking!.bookingReference == updatedBooking.bookingReference)) {
+              _selectedBooking!.bookingReference ==
+                  updatedBooking.bookingReference)) {
         _selectedBooking = updatedBooking;
         _detailsState = ViewState.success(updatedBooking);
       }
 
-      // 3. Synchronize in-memory bookings list if already loaded
       if (_bookingsState.isSuccess && _bookingsState.data != null) {
         final currentList = List<BookingModel>.from(_bookingsState.data!);
         final index = currentList.indexWhere(
-          (b) => b.id == updatedBooking.id || b.bookingReference == updatedBooking.bookingReference,
+          (b) =>
+              b.id == updatedBooking.id ||
+              b.bookingReference == updatedBooking.bookingReference,
         );
         if (index != -1) {
           currentList[index] = updatedBooking;
@@ -284,9 +317,75 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
+  /// Reschedules an active booking to a new slot (Enforces strict 2-hour salon policy)
+  Future<BookingModel?> rescheduleBooking({
+    required String bookingId,
+    required ServiceDateModel newDate,
+    required TimeSlotModel newSlot,
+  }) async {
+    if (isRescheduling) return null;
+
+    final targetBooking = _selectedBooking ??
+        bookings.cast<BookingModel?>().firstWhere(
+              (b) => b?.id == bookingId,
+              orElse: () => null,
+            );
+
+    // Business rule: Check 2-hour rescheduling lockout
+    if (targetBooking != null && !targetBooking.isReschedulable) {
+      _rescheduleState = ViewState.error(
+        'Appointments cannot be rescheduled within 2 hours of the scheduled time.',
+      );
+      notifyListeners();
+      return null;
+    }
+
+    _rescheduleState = ViewState.loading();
+    notifyListeners();
+
+    try {
+      await Future.delayed(const Duration(milliseconds: 300));
+      final updatedBooking = (targetBooking ?? _selectedBooking)!.copyWith(
+        scheduledDate: newDate,
+        timeSlot: newSlot,
+        status: BookingStatus.rescheduled,
+        rescheduledAt: DateTime.now(),
+      );
+
+      if (_selectedBooking != null && _selectedBooking!.id == bookingId) {
+        _selectedBooking = updatedBooking;
+        _detailsState = ViewState.success(updatedBooking);
+      }
+
+      if (_bookingsState.isSuccess && _bookingsState.data != null) {
+        final currentList = List<BookingModel>.from(_bookingsState.data!);
+        final index = currentList.indexWhere((b) => b.id == bookingId);
+        if (index != -1) {
+          currentList[index] = updatedBooking;
+          _bookingsState = ViewState.success(currentList);
+        }
+      }
+
+      _rescheduleState = ViewState.success(updatedBooking);
+      notifyListeners();
+      return updatedBooking;
+    } catch (e) {
+      final appError = ErrorHandler.handleError(e);
+      _rescheduleState = ViewState.error(appError.message);
+      notifyListeners();
+      return null;
+    }
+  }
+
   /// Resets cancellation state
   void resetCancellationState() {
     _cancellationState = ViewState.initial();
+    notifyListeners();
+  }
+
+  /// Resets rescheduling state
+  void resetRescheduleState() {
+    _rescheduleState = ViewState.initial();
     notifyListeners();
   }
 

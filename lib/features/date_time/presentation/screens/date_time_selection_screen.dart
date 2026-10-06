@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
+import 'package:prop_crm/core/constants/route_names.dart';
 import 'package:prop_crm/core/widgets/app_button.dart';
 import 'package:prop_crm/core/widgets/app_card.dart';
 import 'package:prop_crm/core/widgets/app_error_view.dart';
 import 'package:prop_crm/core/widgets/app_loading_indicator.dart';
 import 'package:prop_crm/core/widgets/custom_app_bar.dart';
+import 'package:prop_crm/features/branches/presentation/providers/branch_provider.dart';
+import 'package:prop_crm/features/services/data/models/service_model.dart';
+import 'package:prop_crm/features/services/data/models/service_package_model.dart';
+import 'package:prop_crm/features/services/presentation/providers/service_provider.dart';
 import 'package:provider/provider.dart';
 import '../providers/date_time_provider.dart';
 import '../widgets/date_selector_widget.dart';
@@ -236,11 +241,75 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
                 text: 'Continue',
                 onPressed: dateTimeProvider.isSelectionComplete
                     ? () {
-                        // Return/establish appointment state for upcoming checkout
-                        Navigator.of(context).pop({
-                          'selectedDate': dateTimeProvider.selectedDate,
-                          'selectedTimeSlot': dateTimeProvider.selectedTimeSlot,
-                        });
+                        final args = ModalRoute.of(context)?.settings.arguments
+                            as Map<String, dynamic>?;
+                        final isPickerMode =
+                            args?['isPickerMode'] as bool? ?? false;
+
+                        if (isPickerMode ||
+                            (args != null &&
+                                !args.containsKey('packageId') &&
+                                Navigator.of(context).canPop())) {
+                          Navigator.of(context).pop({
+                            'selectedDate': dateTimeProvider.selectedDate,
+                            'selectedTimeSlot': dateTimeProvider.selectedTimeSlot,
+                          });
+                          return;
+                        }
+
+                        final branch =
+                            context.read<BranchProvider>().selectedBranch;
+                        final serviceProv = context.read<ServiceProvider>();
+                        final services = serviceProv.services;
+                        final service = services
+                                .cast<ServiceModel?>()
+                                .firstWhere(
+                                  (s) =>
+                                      s?.id ==
+                                      (widget.serviceId ??
+                                          dateTimeProvider.serviceId),
+                                  orElse: () => null,
+                                ) ??
+                            const ServiceModel(
+                              id: 'srv_exec_haircut',
+                              categoryId: 'cat_hair_styling',
+                              name: 'Executive Haircut & Styling',
+                              description: 'Salon precision haircut & styling',
+                              startingPrice: 499.0,
+                              duration: '45 mins',
+                            );
+
+                        final package = service.packages
+                                .cast<ServicePackageModel?>()
+                                .firstWhere(
+                                  (p) =>
+                                      p?.id ==
+                                      (widget.packageId ??
+                                          dateTimeProvider.packageId),
+                                  orElse: () => null,
+                                ) ??
+                            (service.packages.isNotEmpty
+                                ? service.packages.first
+                                : ServicePackageModel(
+                                    id: 'pkg_classic',
+                                    serviceId: service.id,
+                                    name: widget.packageName ?? service.name,
+                                    description: service.description,
+                                    price: service.startingPrice,
+                                    duration: service.duration,
+                                    features: const ['Service Included'],
+                                  ));
+
+                        Navigator.of(context).pushNamed(
+                          AppRoutes.bookingSummary,
+                          arguments: {
+                            'service': service,
+                            'package': package,
+                            'branch': branch,
+                            'scheduledDate': dateTimeProvider.selectedDate,
+                            'timeSlot': dateTimeProvider.selectedTimeSlot,
+                          },
+                        );
                       }
                     : null,
               ),

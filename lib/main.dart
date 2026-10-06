@@ -29,6 +29,9 @@ import 'features/payment/domain/repositories/payment_repository.dart';
 import 'features/date_time/data/datasources/date_time_remote_data_source.dart';
 import 'features/date_time/data/repositories/date_time_repository_impl.dart';
 import 'features/date_time/domain/repositories/date_time_repository.dart';
+import 'features/branches/data/datasources/branch_remote_data_source.dart';
+import 'features/branches/data/repositories/branch_repository_impl.dart';
+import 'features/branches/domain/repositories/branch_repository.dart';
 import 'features/services/data/datasources/service_remote_data_source.dart';
 import 'features/services/data/repositories/service_repository_impl.dart';
 import 'features/services/domain/repositories/service_repository.dart';
@@ -40,7 +43,7 @@ void main() async {
   AppConfig.initialize(
     config: const AppConfig(
       environment: AppEnvironment.development,
-      appName: 'ServeCraft',
+      appName: 'Luxe Salon & Spa',
       appVersion: '1.0.0',
       apiBaseUrl: ApiConstants.defaultBaseUrl,
       enableLogging: true,
@@ -68,6 +71,12 @@ void main() async {
   final AuthRepository authRepository = AuthRepositoryImpl(
     remoteDataSource: authRemoteDataSource,
     storageService: storageService,
+  );
+
+  final BranchRemoteDataSource branchRemoteDataSource =
+      MockBranchRemoteDataSource();
+  final BranchRepository branchRepository = BranchRepositoryImpl(
+    remoteDataSource: branchRemoteDataSource,
   );
 
   final CategoryRemoteDataSource categoryRemoteDataSource =
@@ -127,6 +136,7 @@ void main() async {
       storageService: storageService,
       apiService: apiService,
       authRepository: authRepository,
+      branchRepository: branchRepository,
       categoryRepository: categoryRepository,
       serviceRepository: serviceRepository,
       homeRepository: homeRepository,

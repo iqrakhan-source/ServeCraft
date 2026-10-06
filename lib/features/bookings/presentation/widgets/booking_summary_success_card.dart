@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:prop_crm/core/constants/app_colors.dart';
-import 'package:prop_crm/core/constants/app_typography.dart';
-import 'package:prop_crm/core/widgets/app_card.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_typography.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../data/models/booking_model.dart';
 
 class BookingSummarySuccessCard extends StatelessWidget {
@@ -20,12 +20,16 @@ class BookingSummarySuccessCard extends StatelessWidget {
         return Icons.credit_card_rounded;
       case 'cod':
       default:
-        return Icons.payments_outlined;
+        return Icons.storefront_rounded;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final branchName = booking.branch?.name ?? 'Downtown Luxury Lounge';
+    final branchAddress = booking.branch?.address ??
+        '${booking.address.houseNumber}, ${booking.address.addressLine}, ${booking.address.city}';
+
     return AppCard(
       borderRadius: 16,
       padding: const EdgeInsets.all(16.0),
@@ -43,7 +47,7 @@ class BookingSummarySuccessCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
-                  Icons.cleaning_services_rounded,
+                  Icons.content_cut_rounded,
                   color: AppColors.primary,
                   size: 22,
                 ),
@@ -94,7 +98,7 @@ class BookingSummarySuccessCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Scheduled Date & Time',
+                      'Appointment Schedule',
                       style: AppTypography.labelSmall.copyWith(
                         color: AppColors.textTertiary,
                       ),
@@ -114,12 +118,12 @@ class BookingSummarySuccessCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // 3. Service Address
+          // 3. Salon Branch
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Icon(
-                Icons.location_on_outlined,
+                Icons.storefront_rounded,
                 size: 18,
                 color: AppColors.textTertiary,
               ),
@@ -128,47 +132,25 @@ class BookingSummarySuccessCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Service Address',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.textTertiary,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceMuted,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            booking.address.label,
-                            style: AppTypography.labelSmall.copyWith(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Salon Branch Location',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${booking.address.houseNumber}, ${booking.address.addressLine}',
+                      branchName,
                       style: AppTypography.bodySmall.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
                     Text(
-                      '${booking.address.city}, ${booking.address.state} - ${booking.address.pincode}',
+                      branchAddress,
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -201,7 +183,7 @@ class BookingSummarySuccessCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Payment Method',
+                            'Payment Mode',
                             style: AppTypography.labelSmall.copyWith(
                               color: AppColors.textTertiary,
                             ),

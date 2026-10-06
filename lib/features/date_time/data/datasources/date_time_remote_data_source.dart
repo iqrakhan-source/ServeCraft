@@ -84,14 +84,13 @@ class MockDateTimeRemoteDataSource implements DateTimeRemoteDataSource {
   final Map<String, List<ServiceDateModel>> _cache = {};
 
   final List<Map<String, String>> _standardSlotTemplates = const [
-    {'id': 'slot_1', 'start': '09:00 AM', 'end': '10:00 AM'},
-    {'id': 'slot_2', 'start': '10:00 AM', 'end': '11:00 AM'},
-    {'id': 'slot_3', 'start': '11:00 AM', 'end': '12:00 PM'},
-    {'id': 'slot_4', 'start': '12:00 PM', 'end': '01:00 PM'},
-    {'id': 'slot_5', 'start': '02:00 PM', 'end': '03:00 PM'},
-    {'id': 'slot_6', 'start': '03:00 PM', 'end': '04:00 PM'},
-    {'id': 'slot_7', 'start': '04:00 PM', 'end': '05:00 PM'},
-    {'id': 'slot_8', 'start': '05:00 PM', 'end': '06:00 PM'},
+    {'id': 'slot_morning_1', 'start': '10:00 AM', 'end': '11:00 AM'},
+    {'id': 'slot_morning_2', 'start': '11:00 AM', 'end': '12:00 PM'},
+    {'id': 'slot_afternoon_1', 'start': '01:00 PM', 'end': '02:00 PM'},
+    {'id': 'slot_afternoon_2', 'start': '02:00 PM', 'end': '03:00 PM'},
+    {'id': 'slot_afternoon_3', 'start': '03:00 PM', 'end': '04:00 PM'},
+    {'id': 'slot_evening_1', 'start': '05:00 PM', 'end': '06:00 PM'},
+    {'id': 'slot_evening_2', 'start': '06:00 PM', 'end': '07:00 PM'},
   ];
 
   List<ServiceDateModel> _generateMockDates() {

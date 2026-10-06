@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:prop_crm/core/constants/app_colors.dart';
-import 'package:prop_crm/core/constants/app_typography.dart';
-import 'package:prop_crm/core/constants/route_names.dart';
-import 'package:prop_crm/core/utilities/formatters.dart';
-import 'package:prop_crm/core/widgets/app_button.dart';
-import 'package:prop_crm/core/widgets/app_error_view.dart';
-import 'package:prop_crm/core/widgets/app_loading_indicator.dart';
-import 'package:prop_crm/core/widgets/custom_app_bar.dart';
-import 'package:prop_crm/features/addresses/data/models/address_model.dart';
-import 'package:prop_crm/features/addresses/presentation/providers/address_provider.dart';
-import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
-import 'package:prop_crm/features/date_time/data/models/time_slot_model.dart';
-import 'package:prop_crm/features/date_time/presentation/providers/date_time_provider.dart';
-import 'package:prop_crm/features/services/data/models/service_model.dart';
-import 'package:prop_crm/features/services/data/models/service_package_model.dart';
-import 'package:prop_crm/features/services/presentation/providers/service_details_provider.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_typography.dart';
+import '../../../../core/constants/route_names.dart';
+import '../../../../core/utilities/formatters.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/app_loading_indicator.dart';
+import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../addresses/data/models/address_model.dart';
+import '../../../branches/data/models/branch_model.dart';
+import '../../../branches/presentation/screens/branch_selection_screen.dart';
+import '../../../date_time/data/models/service_date_model.dart';
+import '../../../date_time/data/models/time_slot_model.dart';
+import '../../../offers/presentation/providers/offer_provider.dart';
+import '../../../services/data/models/service_model.dart';
+import '../../../services/data/models/service_package_model.dart';
 import '../../data/models/booking_summary_model.dart';
 import '../providers/booking_summary_provider.dart';
-import '../widgets/summary_address_card.dart';
+import '../widgets/summary_branch_card.dart';
+import '../widgets/summary_coupon_card.dart';
 import '../widgets/summary_price_details_card.dart';
 import '../widgets/summary_schedule_card.dart';
 import '../widgets/summary_service_card.dart';
@@ -27,6 +29,7 @@ class BookingSummaryScreen extends StatefulWidget {
   final ServiceModel? service;
   final ServicePackageModel? package;
   final AddressModel? address;
+  final BranchModel? branch;
   final ServiceDateModel? scheduledDate;
   final TimeSlotModel? timeSlot;
   final BookingSummaryModel? initialSummary;
@@ -36,6 +39,7 @@ class BookingSummaryScreen extends StatefulWidget {
     this.service,
     this.package,
     this.address,
+    this.branch,
     this.scheduledDate,
     this.timeSlot,
     this.initialSummary,
@@ -55,63 +59,42 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
   }
 
   void _initializeSummary() {
-    final summaryProvider = context.read<BookingSummaryProvider>();
+    final provider = context.read<BookingSummaryProvider>();
 
     if (widget.initialSummary != null) {
-      summaryProvider.setSummary(widget.initialSummary!);
+      provider.setSummary(widget.initialSummary!);
       return;
     }
 
-    if (summaryProvider.summary != null && summaryProvider.summary!.isValid) {
-      return;
-    }
+    final service = widget.service;
+    final package = widget.package;
+    final scheduledDate = widget.scheduledDate;
+    final timeSlot = widget.timeSlot;
 
-    // Resolve selections from widget parameters or existing providers
-    ServiceModel? service = widget.service;
-    ServicePackageModel? package = widget.package;
-    AddressModel? address = widget.address;
-    ServiceDateModel? scheduledDate = widget.scheduledDate;
-    TimeSlotModel? timeSlot = widget.timeSlot;
-
-    try {
-      service ??= context.read<ServiceDetailsProvider>().service;
-      package ??= context.read<ServiceDetailsProvider>().selectedPackage;
-    } catch (_) {}
-
-    try {
-      address ??= context.read<AddressProvider>().selectedAddress ??
-          context.read<AddressProvider>().defaultAddress;
-    } catch (_) {}
-
-    try {
-      scheduledDate ??= context.read<DateTimeProvider>().selectedDate;
-      timeSlot ??= context.read<DateTimeProvider>().selectedTimeSlot;
-    } catch (_) {}
-
-    // Only load if all 5 selections exist
     if (service != null &&
         package != null &&
-        address != null &&
         scheduledDate != null &&
         timeSlot != null) {
-      summaryProvider.loadSummary(
+      provider.loadSummary(
         service: service,
         package: package,
-        address: address,
+        address: widget.address,
+        branch: widget.branch,
         date: scheduledDate,
         timeSlot: timeSlot,
       );
     }
   }
 
-  Future<void> _handleEditAddress() async {
-    final updatedAddress = await Navigator.of(context).pushNamed(
-      AppRoutes.addressSelection,
-      arguments: {'isSelectionMode': true},
+  Future<void> _handleEditBranch() async {
+    final updatedBranch = await Navigator.of(context).push<BranchModel>(
+      MaterialPageRoute(
+        builder: (_) => const BranchSelectionScreen(isSelectionMode: true),
+      ),
     );
 
-    if (updatedAddress is AddressModel && mounted) {
-      context.read<BookingSummaryProvider>().updateAddress(updatedAddress);
+    if (updatedBranch != null && mounted) {
+      context.read<BookingSummaryProvider>().updateBranch(updatedBranch);
     }
   }
 
@@ -157,26 +140,32 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
         builder: (context) {
           // 1. Loading State
           if (summaryProvider.isLoading) {
-            return _buildLoadingState();
+            return const Center(child: AppLoadingIndicator());
           }
 
           // 2. Error State
           if (summaryProvider.hasError) {
             return AppErrorView(
               message: summaryProvider.errorMessage ??
-                  "Couldn't load booking summary",
+                  "Couldn't load appointment summary",
               onRetry: _initializeSummary,
             );
           }
 
           final summary = summaryProvider.summary;
 
-          // 3. Incomplete / Missing selections validation
+          // 3. Incomplete State
           if (summary == null || !summary.isValid) {
-            return _buildIncompleteState();
+            return AppEmptyState(
+              title: 'Booking Details Incomplete',
+              subtitle:
+                  'Some required booking information is missing. Please complete all previous steps before reviewing the summary.',
+              actionText: 'Go Back',
+              onActionPressed: () => Navigator.of(context).maybePop(),
+            );
           }
 
-          // 4. Valid Booking Summary Review
+          // 4. Valid Appointment Summary Review
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
             child: Column(
@@ -197,10 +186,41 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Address Card
-                SummaryAddressCard(
-                  address: summary.address,
-                  onEdit: _handleEditAddress,
+                // Salon Branch Location Card
+                SummaryBranchCard(
+                  branch: summary.branch ??
+                      const BranchModel(
+                        id: 'branch-1',
+                        name: 'Downtown Luxury Lounge',
+                        address: '104 Royal Palms, Downtown Luxury Avenue, Mumbai',
+                        phone: '+91 98765 43210',
+                        openingTime: '09:00',
+                        closingTime: '21:00',
+                        isActive: true,
+                      ),
+                  onEdit: _handleEditBranch,
+                ),
+                const SizedBox(height: 16),
+
+                // Coupon Card
+                SummaryCouponCard(
+                  appliedCoupon: summary.appliedCoupon,
+                  onApplyCoupon: (code) {
+                    try {
+                      final offerProv = Provider.of<OfferProvider>(context, listen: false);
+                      final coupon = offerProv.validateCoupon(
+                        code,
+                        summary.package.price,
+                      );
+                      if (coupon != null) {
+                        summaryProvider.applyCoupon(coupon);
+                      }
+                    } catch (_) {}
+                  },
+                  onRemoveCoupon: () {
+                    summaryProvider.removeCoupon();
+                  },
+                  errorMessage: summaryProvider.couponError,
                 ),
                 const SizedBox(height: 16),
 
@@ -218,8 +238,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
       // Sticky Bottom CTA Bar
       bottomNavigationBar: summaryProvider.isValid
           ? Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: const BoxDecoration(
                 color: AppColors.surface,
                 border: Border(
@@ -245,7 +264,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Total Price',
+                            'Total Amount',
                             style: AppTypography.labelSmall.copyWith(
                               color: AppColors.textTertiary,
                             ),
@@ -263,9 +282,8 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 14),
 
-                    // Primary CTA
+                    // Proceed CTA
                     Expanded(
                       flex: 6,
                       child: AppButton(
@@ -279,79 +297,6 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
               ),
             )
           : null,
-    );
-  }
-
-  Widget _buildIncompleteState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(28.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceMuted,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.info_outline_rounded,
-                size: 48,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Booking Details Incomplete',
-              style: AppTypography.titleMedium.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Some required booking information is missing. Please complete all previous steps before reviewing the summary.',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            AppButton(
-              text: 'Go Back',
-              isFullWidth: false,
-              variant: AppButtonVariant.secondary,
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return const SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Service skeleton
-          AppSkeleton(height: 96, width: double.infinity, borderRadius: 14),
-          SizedBox(height: 16),
-
-          // Schedule skeleton
-          AppSkeleton(height: 104, width: double.infinity, borderRadius: 14),
-          SizedBox(height: 16),
-
-          // Address skeleton
-          AppSkeleton(height: 96, width: double.infinity, borderRadius: 14),
-          SizedBox(height: 16),
-
-          // Price skeleton
-          AppSkeleton(height: 180, width: double.infinity, borderRadius: 14),
-        ],
-      ),
     );
   }
 }

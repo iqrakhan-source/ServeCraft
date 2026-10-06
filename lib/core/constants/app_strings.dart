@@ -1,7 +1,7 @@
 abstract class AppStrings {
   // App
-  static const String appName = 'ServeCraft';
-  static const String appTagline = 'Expert services at your doorstep';
+  static const String appName = 'Luxe Salon & Spa';
+  static const String appTagline = 'Elevated Hair, Beauty & Wellness';
 
   // Common Actions
   static const String continueText = 'Continue';
@@ -12,28 +12,29 @@ abstract class AppStrings {
   static const String done = 'Done';
   static const String apply = 'Apply';
   static const String viewAll = 'View All';
-  static const String bookNow = 'Book Now';
+  static const String bookNow = 'Book Appointment';
   static const String selectPackage = 'Select Package';
-  static const String confirmBooking = 'Confirm Booking';
-  static const String payNow = 'Proceed to Pay';
+  static const String confirmBooking = 'Confirm Appointment';
+  static const String payNow = 'Proceed to Payment';
 
   // Bottom Navigation
   static const String navHome = 'Home';
-  static const String navBookings = 'Bookings';
+  static const String navServices = 'Services';
+  static const String navBookings = 'Appointments';
   static const String navOffers = 'Offers';
   static const String navProfile = 'Profile';
 
   // Auth
-  static const String loginTitle = 'Enter Mobile Number';
-  static const String loginSubtitle = 'We will send a 6-digit verification code';
+  static const String loginTitle = 'Welcome to Luxe';
+  static const String loginSubtitle = 'Enter your mobile number to access appointments & exclusive offers';
   static const String phoneHint = '10-digit mobile number';
-  static const String sendOtp = 'Send OTP';
-  static const String otpTitle = 'Verify OTP';
-  static const String otpSubtitle = 'Enter the 6-digit code sent to';
-  static const String resendOtp = 'Resend OTP';
-  static const String verifyOtp = 'Verify & Proceed';
-  static const String completeProfileTitle = 'Complete Your Profile';
-  static const String completeProfileSubtitle = 'Tell us your name so we can personalize your experience';
+  static const String sendOtp = 'Send Verification Code';
+  static const String otpTitle = 'Verify Mobile';
+  static const String otpSubtitle = 'Enter the 6-digit verification code sent to';
+  static const String resendOtp = 'Resend Code';
+  static const String verifyOtp = 'Verify & Continue';
+  static const String completeProfileTitle = 'Your Salon Profile';
+  static const String completeProfileSubtitle = 'Personalize your beauty & grooming experience';
   static const String fullNameHint = 'Full Name';
   static const String emailHint = 'Email Address (optional)';
 
@@ -45,11 +46,11 @@ abstract class AppStrings {
   static const String emptyData = 'No items found.';
 
   // Status Strings
-  static const String statusPending = 'Pending';
+  static const String statusPending = 'Pending Confirmation';
   static const String statusConfirmed = 'Confirmed';
-  static const String statusProviderAssigned = 'Expert Assigned';
-  static const String statusProviderOnTheWay = 'Expert on the Way';
-  static const String statusServiceStarted = 'In Progress';
+  static const String statusProviderAssigned = 'Stylist Assigned';
+  static const String statusProviderOnTheWay = 'Stylist Ready';
+  static const String statusServiceStarted = 'In Treatment';
   static const String statusCompleted = 'Completed';
   static const String statusCancelled = 'Cancelled';
 }

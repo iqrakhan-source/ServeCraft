@@ -9,6 +9,9 @@ import '../features/auth/presentation/screens/mobile_login_screen.dart';
 import '../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../features/auth/presentation/screens/profile_screen.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
+import '../features/branches/data/models/branch_model.dart';
+import '../features/branches/presentation/screens/branch_selection_screen.dart';
+import '../features/offers/presentation/screens/offers_screen.dart';
 import '../features/addresses/data/models/address_model.dart';
 import '../features/addresses/presentation/screens/add_address_screen.dart';
 import '../features/addresses/presentation/screens/addresses_screen.dart';
@@ -29,6 +32,10 @@ import '../features/bookings/presentation/screens/booking_confirmation_screen.da
 import '../features/bookings/presentation/screens/booking_details_screen.dart';
 import '../features/bookings/presentation/screens/my_bookings_screen.dart';
 import '../features/payment/presentation/screens/payment_screen.dart';
+import '../features/auth/presentation/screens/edit_profile_screen.dart';
+import '../features/branches/presentation/screens/branch_details_screen.dart';
+import '../features/notifications/presentation/screens/notifications_screen.dart';
+import '../features/services/presentation/screens/service_search_screen.dart';
 
 abstract class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -107,6 +114,17 @@ abstract class AppRouter {
           phaseName: 'Phase 4: Booking Flow',
         );
 
+      case AppRoutes.branchSelection: {
+        final args = settings.arguments as Map<String, dynamic>?;
+        final isSelectionMode = args?['isSelectionMode'] as bool? ?? true;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => BranchSelectionScreen(
+            isSelectionMode: isSelectionMode,
+          ),
+        );
+      }
+
       case AppRoutes.addressSelection: {
         final args = settings.arguments as Map<String, dynamic>?;
         final isSelectionMode = args?['isSelectionMode'] as bool? ?? true;
@@ -150,6 +168,7 @@ abstract class AppRouter {
             service: args?['service'] as ServiceModel?,
             package: args?['package'] as ServicePackageModel?,
             address: args?['address'] as AddressModel?,
+            branch: args?['branch'] as BranchModel?,
             scheduledDate: args?['scheduledDate'] as ServiceDateModel?,
             timeSlot: args?['timeSlot'] as TimeSlotModel?,
             initialSummary: args?['bookingSummary'] as BookingSummaryModel?,
@@ -204,10 +223,39 @@ abstract class AppRouter {
         );
 
       case AppRoutes.editProfile:
-        return _buildPlaceholderRoute(
+        return MaterialPageRoute(
           settings: settings,
-          title: 'Profile & Settings',
-          phaseName: 'Phase 7: Profile & Reviews',
+          builder: (_) => const EditProfileScreen(),
+        );
+
+      case AppRoutes.serviceSearch:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const ServiceSearchScreen(),
+        );
+
+      case AppRoutes.branchDetails: {
+        final args = settings.arguments as Map<String, dynamic>?;
+        final branch = args?['branch'] as BranchModel? ??
+            const BranchModel(
+              id: 'branch-1',
+              name: 'Downtown Luxury Lounge',
+              address: '104 Royal Palms, Downtown Luxury Avenue, Mumbai',
+              phone: '+91 98765 43210',
+              openingTime: '09:00',
+              closingTime: '21:00',
+              isActive: true,
+            );
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => BranchDetailsScreen(branch: branch),
+        );
+      }
+
+      case AppRoutes.notifications:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const NotificationsScreen(),
         );
 
       case AppRoutes.reviews:
@@ -219,10 +267,9 @@ abstract class AppRouter {
         );
 
       case AppRoutes.offers:
-        return _buildPlaceholderRoute(
+        return MaterialPageRoute(
           settings: settings,
-          title: 'Offers & Discounts',
-          phaseName: 'Phase 7: Offers',
+          builder: (_) => const OffersScreen(),
         );
 
       default:

@@ -23,6 +23,9 @@ import '../features/bookings/presentation/providers/booking_provider.dart';
 import '../features/payment/domain/repositories/payment_repository.dart';
 import '../features/payment/presentation/providers/payment_provider.dart';
 import '../features/services/presentation/providers/service_provider.dart';
+import '../features/branches/domain/repositories/branch_repository.dart';
+import '../features/branches/presentation/providers/branch_provider.dart';
+import '../features/offers/presentation/providers/offer_provider.dart';
 import 'app_router.dart';
 import 'app_theme.dart';
 
@@ -30,6 +33,7 @@ class ServeCraftApp extends StatelessWidget {
   final StorageService storageService;
   final ApiService apiService;
   final AuthRepository authRepository;
+  final BranchRepository branchRepository;
   final CategoryRepository categoryRepository;
   final ServiceRepository serviceRepository;
   final HomeRepository homeRepository;
@@ -44,6 +48,7 @@ class ServeCraftApp extends StatelessWidget {
     required this.storageService,
     required this.apiService,
     required this.authRepository,
+    required this.branchRepository,
     required this.categoryRepository,
     required this.serviceRepository,
     required this.homeRepository,
@@ -72,6 +77,20 @@ class ServeCraftApp extends StatelessWidget {
         Provider<BookingSummaryRepository>.value(value: bookingSummaryRepository),
         Provider<PaymentRepository>.value(value: paymentRepository),
         Provider<BookingRepository>.value(value: bookingRepository),
+        Provider<BranchRepository>.value(value: branchRepository),
+
+        // Branch Provider
+        ChangeNotifierProvider<BranchProvider>(
+          create: (_) => BranchProvider(
+            repository: branchRepository,
+            storageService: storageService,
+          ),
+        ),
+
+        // Offer & Coupon Provider
+        ChangeNotifierProvider<OfferProvider>(
+          create: (_) => OfferProvider(),
+        ),
 
         // Auth Provider
         ChangeNotifierProvider<AuthProvider>(

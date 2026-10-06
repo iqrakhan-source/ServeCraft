@@ -1,5 +1,6 @@
 import 'package:prop_crm/core/utilities/formatters.dart';
 import 'package:prop_crm/features/addresses/data/models/address_model.dart';
+import 'package:prop_crm/features/branches/data/models/branch_model.dart';
 import 'package:prop_crm/features/booking_summary/data/models/pricing_breakdown_model.dart';
 import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
 import 'package:prop_crm/features/date_time/data/models/time_slot_model.dart';
@@ -11,7 +12,8 @@ enum BookingStatus {
   confirmed,
   pending,
   cancelled,
-  completed;
+  completed,
+  rescheduled;
 
   static BookingStatus fromString(String value) {
     switch (value.toLowerCase()) {
@@ -23,6 +25,8 @@ enum BookingStatus {
         return BookingStatus.cancelled;
       case 'completed':
         return BookingStatus.completed;
+      case 'rescheduled':
+        return BookingStatus.rescheduled;
       default:
         return BookingStatus.confirmed;
     }
@@ -38,6 +42,8 @@ enum BookingStatus {
         return 'cancelled';
       case BookingStatus.completed:
         return 'completed';
+      case BookingStatus.rescheduled:
+        return 'rescheduled';
     }
   }
 
@@ -51,6 +57,8 @@ enum BookingStatus {
         return 'Cancelled';
       case BookingStatus.completed:
         return 'Completed';
+      case BookingStatus.rescheduled:
+        return 'Rescheduled';
     }
   }
 }
@@ -62,6 +70,7 @@ class BookingModel {
   final ServiceModel service;
   final ServicePackageModel package;
   final AddressModel address;
+  final BranchModel? branch;
   final ServiceDateModel scheduledDate;
   final TimeSlotModel timeSlot;
   final PaymentMethodModel paymentMethod;
@@ -70,6 +79,7 @@ class BookingModel {
   final String? cancellationReason;
   final String? cancellationNote;
   final DateTime? cancelledAt;
+  final DateTime? rescheduledAt;
 
   const BookingModel({
     required this.id,
@@ -78,6 +88,7 @@ class BookingModel {
     required this.service,
     required this.package,
     required this.address,
+    this.branch,
     required this.scheduledDate,
     required this.timeSlot,
     required this.paymentMethod,
@@ -86,9 +97,10 @@ class BookingModel {
     this.cancellationReason,
     this.cancellationNote,
     this.cancelledAt,
+    this.rescheduledAt,
   });
 
-  /// Formatted booking reference (e.g. SC-2026-000001)
+  /// Formatted booking reference (e.g. GLM-2026-000001)
   String get formattedBookingReference => bookingReference;
 
   /// Helper for schedule summary display: "Saturday, 26 September • 10:00 AM - 11:00 AM"
@@ -98,12 +110,56 @@ class BookingModel {
   /// Formatted final total amount (e.g. ₹1,061)
   String get formattedTotal => AppFormatters.formatCurrency(pricing.totalAmount);
 
-  /// Check whether booking is confirmed
-  bool get isConfirmed => status == BookingStatus.confirmed;
+  /// Check whether booking is confirmed or rescheduled
+  bool get isConfirmed =>
+      status == BookingStatus.confirmed || status == BookingStatus.rescheduled;
 
-  /// Check whether booking is eligible for cancellation
-  bool get isCancellable =>
-      status == BookingStatus.confirmed || status == BookingStatus.pending;
+  /// Precise scheduled DateTime combining date and slot time
+  DateTime get scheduledDateTime {
+    try {
+      final raw = timeSlot.startTime.trim().toUpperCase();
+      final isPm = raw.contains('PM');
+      final isAm = raw.contains('AM');
+      final clean = raw.replaceAll('AM', '').replaceAll('PM', '').trim();
+      final parts = clean.split(':');
+      var hour = int.parse(parts[0]);
+      final minute = parts.length > 1 ? int.parse(parts[1]) : 0;
+      if (isPm && hour < 12) hour += 12;
+      if (isAm && hour == 12) hour = 0;
+      return DateTime(
+        scheduledDate.date.year,
+        scheduledDate.date.month,
+        scheduledDate.date.day,
+        hour,
+        minute,
+      );
+    } catch (_) {
+      return scheduledDate.date;
+    }
+  }
+
+  /// Salon Business Rule: Check if appointment is in the future and within 2 hours of starting time
+  bool get isWithin2HoursOfAppointment {
+    final now = DateTime.now();
+    final difference = scheduledDateTime.difference(now);
+    return !difference.isNegative && difference.inMinutes < 120;
+  }
+
+  /// Salon Business Rule: Cancellation allowed ONLY up to 2 hours before appointment
+  bool get isCancellable {
+    if (status == BookingStatus.cancelled || status == BookingStatus.completed) {
+      return false;
+    }
+    return !isWithin2HoursOfAppointment;
+  }
+
+  /// Salon Business Rule: Rescheduling allowed ONLY up to 2 hours before appointment
+  bool get isReschedulable {
+    if (status == BookingStatus.cancelled || status == BookingStatus.completed) {
+      return false;
+    }
+    return !isWithin2HoursOfAppointment;
+  }
 
   BookingModel copyWith({
     String? id,
@@ -112,6 +168,7 @@ class BookingModel {
     ServiceModel? service,
     ServicePackageModel? package,
     AddressModel? address,
+    BranchModel? branch,
     ServiceDateModel? scheduledDate,
     TimeSlotModel? timeSlot,
     PaymentMethodModel? paymentMethod,
@@ -120,6 +177,7 @@ class BookingModel {
     String? cancellationReason,
     String? cancellationNote,
     DateTime? cancelledAt,
+    DateTime? rescheduledAt,
   }) {
     return BookingModel(
       id: id ?? this.id,
@@ -128,6 +186,7 @@ class BookingModel {
       service: service ?? this.service,
       package: package ?? this.package,
       address: address ?? this.address,
+      branch: branch ?? this.branch,
       scheduledDate: scheduledDate ?? this.scheduledDate,
       timeSlot: timeSlot ?? this.timeSlot,
       paymentMethod: paymentMethod ?? this.paymentMethod,
@@ -136,6 +195,7 @@ class BookingModel {
       cancellationReason: cancellationReason ?? this.cancellationReason,
       cancellationNote: cancellationNote ?? this.cancellationNote,
       cancelledAt: cancelledAt ?? this.cancelledAt,
+      rescheduledAt: rescheduledAt ?? this.rescheduledAt,
     );
   }
 
@@ -147,7 +207,21 @@ class BookingModel {
       service: ServiceModel.fromJson(json['service'] as Map<String, dynamic>),
       package: ServicePackageModel.fromJson(
           json['package'] as Map<String, dynamic>),
-      address: AddressModel.fromJson(json['address'] as Map<String, dynamic>),
+      address: json['address'] != null
+          ? AddressModel.fromJson(json['address'] as Map<String, dynamic>)
+          : const AddressModel(
+              id: 'branch_loc',
+              userId: 'salon',
+              label: 'Salon Branch',
+              houseNumber: '',
+              addressLine: 'Salon Branch Location',
+              city: '',
+              state: '',
+              pincode: '',
+            ),
+      branch: json['branch'] != null
+          ? BranchModel.fromJson(json['branch'] as Map<String, dynamic>)
+          : null,
       scheduledDate: ServiceDateModel.fromJson(
           json['scheduledDate'] as Map<String, dynamic>),
       timeSlot:
@@ -164,6 +238,9 @@ class BookingModel {
       cancelledAt: json['cancelledAt'] != null
           ? DateTime.parse(json['cancelledAt'] as String)
           : null,
+      rescheduledAt: json['rescheduledAt'] != null
+          ? DateTime.parse(json['rescheduledAt'] as String)
+          : null,
     );
   }
 
@@ -175,6 +252,7 @@ class BookingModel {
       'service': service.toJson(),
       'package': package.toJson(),
       'address': address.toJson(),
+      if (branch != null) 'branch': branch!.toJson(),
       'scheduledDate': scheduledDate.toJson(),
       'timeSlot': timeSlot.toJson(),
       'paymentMethod': paymentMethod.toJson(),
@@ -183,6 +261,7 @@ class BookingModel {
       if (cancellationReason != null) 'cancellationReason': cancellationReason,
       if (cancellationNote != null) 'cancellationNote': cancellationNote,
       if (cancelledAt != null) 'cancelledAt': cancelledAt!.toIso8601String(),
+      if (rescheduledAt != null) 'rescheduledAt': rescheduledAt!.toIso8601String(),
     };
   }
 
@@ -196,6 +275,7 @@ class BookingModel {
           status == other.status &&
           service == other.service &&
           package == other.package &&
+          branch == other.branch &&
           address == other.address &&
           scheduledDate == other.scheduledDate &&
           timeSlot == other.timeSlot &&
@@ -204,7 +284,8 @@ class BookingModel {
           createdAt == other.createdAt &&
           cancellationReason == other.cancellationReason &&
           cancellationNote == other.cancellationNote &&
-          cancelledAt == other.cancelledAt;
+          cancelledAt == other.cancelledAt &&
+          rescheduledAt == other.rescheduledAt;
 
   @override
   int get hashCode =>
@@ -213,6 +294,7 @@ class BookingModel {
       status.hashCode ^
       service.hashCode ^
       package.hashCode ^
+      (branch?.hashCode ?? 0) ^
       address.hashCode ^
       scheduledDate.hashCode ^
       timeSlot.hashCode ^
@@ -221,5 +303,6 @@ class BookingModel {
       createdAt.hashCode ^
       (cancellationReason?.hashCode ?? 0) ^
       (cancellationNote?.hashCode ?? 0) ^
-      (cancelledAt?.hashCode ?? 0);
+      (cancelledAt?.hashCode ?? 0) ^
+      (rescheduledAt?.hashCode ?? 0);
 }

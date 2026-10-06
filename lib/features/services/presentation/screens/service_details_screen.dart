@@ -10,6 +10,8 @@ import 'package:prop_crm/core/widgets/app_network_image.dart';
 import 'package:provider/provider.dart';
 
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
+import 'package:prop_crm/features/branches/presentation/providers/branch_provider.dart';
+import 'package:prop_crm/features/branches/presentation/screens/branch_selection_screen.dart';
 import '../providers/service_details_provider.dart';
 
 class ServiceDetailsScreen extends StatefulWidget {
@@ -139,9 +141,9 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withOpacity(0.15),
+                                Colors.black.withValues(alpha: 0.15),
                                 Colors.transparent,
-                                Colors.black.withOpacity(0.45),
+                                Colors.black.withValues(alpha: 0.45),
                               ],
                               stops: const [
                                 0.0,
@@ -163,20 +165,20 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                             vertical: 7,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.55),
+                            color: Colors.black.withValues(alpha: 0.65),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
-                                Icons.verified_rounded,
+                                Icons.auto_awesome_rounded,
                                 size: 15,
-                                color: Colors.white,
+                                color: AppColors.secondary,
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                'ServeCraft Verified',
+                                'Luxe Salon Certified',
                                 style: AppTypography.labelSmall.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
@@ -295,6 +297,71 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                             ),
                           ),
                         ],
+                      ),
+
+                      // Branch Selection Context
+                      Consumer<BranchProvider>(
+                        builder: (context, branchProv, _) {
+                          final currentBranch = branchProv.selectedBranch?.name ??
+                              'Downtown Luxury Lounge';
+                          return Container(
+                            margin: const EdgeInsets.only(top: 14),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppColors.primary.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const BranchSelectionScreen(
+                                        isSelectionMode: true),
+                                  ),
+                                );
+                              },
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.storefront_rounded,
+                                      size: 18, color: AppColors.primary),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Available at Salon Branch',
+                                          style: AppTypography.labelSmall.copyWith(
+                                            color: AppColors.textTertiary,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '$currentBranch (Change)',
+                                          style:
+                                              AppTypography.bodySmall.copyWith(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.arrow_forward_ios_rounded,
+                                      size: 12, color: AppColors.primary),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
 
                       const SizedBox(height: 14),
@@ -459,7 +526,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Material(
-        color: Colors.white.withOpacity(0.92),
+        color: Colors.white.withValues(alpha: 0.92),
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
@@ -964,16 +1031,19 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
 
             Expanded(
               child: AppButton(
-                text: selectedPackage == null
-                    ? 'Choose Package'
-                    : 'Continue',
+                text: 'Book Appointment',
                 onPressed: () {
+                  final pkg = selectedPackage ??
+                      (service.packages.isNotEmpty
+                          ? service.packages.first
+                          : null);
                   Navigator.of(context).pushNamed(
-                    AppRoutes.packageSelection,
+                    AppRoutes.dateTimeSelection,
                     arguments: {
                       'serviceId': service.id,
                       'serviceName': service.name,
-                      'packageId': selectedPackage?.id,
+                      'packageId': pkg?.id ?? 'pkg_default',
+                      'packageName': pkg?.name ?? service.name,
                     },
                   );
                 },

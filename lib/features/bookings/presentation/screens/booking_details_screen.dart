@@ -7,6 +7,9 @@ import 'package:prop_crm/core/widgets/app_button.dart';
 import 'package:prop_crm/core/widgets/app_card.dart';
 import 'package:prop_crm/core/widgets/app_loading_indicator.dart';
 import 'package:prop_crm/core/widgets/custom_app_bar.dart';
+import 'package:prop_crm/core/constants/route_names.dart';
+import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
+import 'package:prop_crm/features/date_time/data/models/time_slot_model.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/booking_model.dart';
 import '../providers/booking_provider.dart';
@@ -110,7 +113,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           child: _buildBody(context, provider, booking),
         ),
       ),
-      bottomNavigationBar: (booking != null && booking.isCancellable)
+      bottomNavigationBar: (booking != null &&
+              (booking.status == BookingStatus.confirmed ||
+                  booking.status == BookingStatus.pending ||
+                  booking.status == BookingStatus.rescheduled))
           ? SafeArea(
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -127,15 +133,91 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     ),
                   ],
                 ),
-                child: AppButton(
-                  text: 'Cancel Booking',
-                  variant: AppButtonVariant.dangerOutline,
-                  onPressed: () => _handleCancelBooking(booking),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline_rounded,
+                          size: 14,
+                          color: AppColors.textTertiary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Policy: Free cancellation & rescheduling up to 2 hours prior.',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppButton(
+                            text: 'Reschedule',
+                            variant: AppButtonVariant.outline,
+                            onPressed: () =>
+                                _handleRescheduleBooking(booking),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppButton(
+                            text: 'Cancel Appointment',
+                            variant: AppButtonVariant.dangerOutline,
+                            onPressed: () => _handleCancelBooking(booking),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             )
           : null,
     );
+  }
+
+  Future<void> _handleRescheduleBooking(BookingModel booking) async {
+    final result = await Navigator.of(context).pushNamed(
+      AppRoutes.dateTimeSelection,
+      arguments: {
+        'serviceId': booking.service.id,
+        'serviceName': booking.service.name,
+        'packageId': booking.package.id,
+        'packageName': booking.package.name,
+      },
+    );
+
+    if (result is Map<String, dynamic> && mounted) {
+      final newDate = result['selectedDate'] as ServiceDateModel?;
+      final newSlot = result['selectedTimeSlot'] as TimeSlotModel?;
+
+      if (newDate != null && newSlot != null) {
+        final updated = await context.read<BookingProvider>().rescheduleBooking(
+              bookingId: booking.id,
+              newDate: newDate,
+              newSlot: newSlot,
+            );
+
+        if (updated != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Appointment rescheduled to ${newDate.dayName}, ${newDate.dayNumber} ${newDate.monthName} at ${newSlot.formattedLabel}',
+              ),
+              backgroundColor: AppColors.success,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildBody(
@@ -164,23 +246,27 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           _buildReferenceCard(context, booking),
           const SizedBox(height: 16),
 
-          // 3. Service & Package
-          _buildServiceSection(booking),
+          // 3. Customer Information
+          _buildCustomerSection(booking),
           const SizedBox(height: 16),
 
-          // 4. Schedule
-          _buildScheduleSection(booking),
-          const SizedBox(height: 16),
-
-          // 5. Service Address
+          // 4. Salon Branch Location
           _buildAddressSection(booking),
           const SizedBox(height: 16),
 
-          // 6. Payment Information
+          // 5. Service & Package
+          _buildServiceSection(booking),
+          const SizedBox(height: 16),
+
+          // 6. Schedule
+          _buildScheduleSection(booking),
+          const SizedBox(height: 16),
+
+          // 7. Payment Information
           _buildPaymentSection(booking),
           const SizedBox(height: 16),
 
-          // 7. Price Breakdown
+          // 8. Price Breakdown
           _buildPriceBreakdownSection(booking),
           const SizedBox(height: 24),
         ],
@@ -197,21 +283,21 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     switch (booking.status) {
       case BookingStatus.confirmed:
         statusDescription =
-            'Your service has been confirmed. A professional partner will arrive at the scheduled time.';
+            'Your appointment is confirmed. Please arrive at the salon 10 minutes prior to your scheduled time.';
         bannerIcon = Icons.check_circle_outline_rounded;
         accentColor = AppColors.success;
         bgColor = AppColors.successLight;
         break;
       case BookingStatus.pending:
         statusDescription =
-            'Your booking is currently pending confirmation from our service partners.';
+            'Your appointment is currently pending confirmation from our salon concierge.';
         bannerIcon = Icons.schedule_rounded;
         accentColor = AppColors.warning;
         bgColor = AppColors.warningLight;
         break;
       case BookingStatus.completed:
         statusDescription =
-            'This service was successfully completed. Thank you for choosing ServeCraft!';
+            'This treatment was successfully completed. Thank you for choosing Luxe Salon & Spa!';
         bannerIcon = Icons.task_alt_rounded;
         accentColor = AppColors.info;
         bgColor = AppColors.infoLight;
@@ -219,11 +305,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       case BookingStatus.cancelled:
         statusDescription = booking.cancellationReason != null &&
                 booking.cancellationReason!.isNotEmpty
-            ? 'This booking was cancelled. Reason: ${booking.cancellationReason}.'
-            : 'This booking was cancelled. No charges were incurred.';
+            ? 'This appointment was cancelled. Reason: ${booking.cancellationReason}.'
+            : 'This appointment was cancelled. No cancellation fee was incurred.';
         bannerIcon = Icons.cancel_outlined;
         accentColor = AppColors.error;
         bgColor = AppColors.errorLight;
+        break;
+      case BookingStatus.rescheduled:
+        statusDescription =
+            'Your appointment has been successfully rescheduled to a new time slot.';
+        bannerIcon = Icons.update_rounded;
+        accentColor = const Color(0xFF6D28D9);
+        bgColor = const Color(0xFFEDE9FE);
         break;
     }
 
@@ -357,7 +450,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
-                  Icons.cleaning_services_rounded,
+                  Icons.content_cut_rounded,
                   color: AppColors.primary,
                   size: 24,
                 ),
@@ -477,9 +570,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 
-  Widget _buildAddressSection(BookingModel booking) {
-    final address = booking.address;
-
+  Widget _buildCustomerSection(BookingModel booking) {
     return AppCard(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -489,7 +580,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Service Address',
+                'Customer Details',
                 style: AppTypography.titleSmall.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -497,14 +588,15 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceMuted,
+                  color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  address.label,
+                  'CLIENT',
                   style: AppTypography.labelSmall.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                    fontSize: 10,
                   ),
                 ),
               ),
@@ -512,43 +604,150 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           ),
           const SizedBox(height: 12),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.location_on_outlined,
-                size: 20,
-                color: AppColors.primary,
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: AppColors.primaryLight,
+                child: Text(
+                  'SR',
+                  style: AppTypography.titleSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${address.houseNumber}, ${address.addressLine}',
+                      'Sophia Reynolds',
                       style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    if (address.landmark != null &&
-                        address.landmark!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        'Landmark: ${address.landmark!}',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 2),
                     Text(
-                      '${address.city}, ${address.state} - ${address.pincode}',
+                      '+91 98765 43210 • sophia.reynolds@example.com',
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
                   ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddressSection(BookingModel booking) {
+    final branchName = booking.branch?.name ?? 'Downtown Luxury Lounge';
+    final branchAddress = booking.branch?.address ??
+        '104 Royal Palms, Downtown Luxury Avenue, Mumbai';
+    final branchHours = booking.branch?.formattedHours ?? '09:00 AM - 09:00 PM';
+    final branchPhone = booking.branch?.phone ?? '+91 98765 43210';
+
+    return AppCard(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.storefront_rounded,
+                    size: 20,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Salon Branch Location',
+                    style: AppTypography.titleSmall.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'CONFIRMED SALON',
+                  style: AppTypography.labelSmall.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            branchName,
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.location_on_outlined,
+                size: 16,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  branchAddress,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(
+                Icons.access_time_rounded,
+                size: 14,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                branchHours,
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const Spacer(),
+              const Icon(
+                Icons.phone_outlined,
+                size: 14,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                branchPhone,
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -582,7 +781,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     Icon(
                       isOnline
                           ? Icons.credit_card_rounded
-                          : Icons.payments_outlined,
+                          : Icons.storefront_rounded,
                       size: 20,
                       color: AppColors.primary,
                     ),
@@ -592,7 +791,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            booking.paymentMethod.title,
+                            isOnline
+                                ? booking.paymentMethod.title
+                                : 'Pay at Salon (Cash / Card)',
                             style: AppTypography.bodyMedium.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
@@ -602,7 +803,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            isOnline ? 'Prepaid Online' : 'Pay on Delivery / Service',
+                            isOnline
+                                ? 'Prepaid Online'
+                                : 'Pay at Reception Desk',
                             style: AppTypography.bodySmall.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -625,7 +828,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  isOnline ? 'PAID' : 'PAY ON SERVICE',
+                  isOnline ? 'PAID ONLINE' : 'PAY AT SALON',
                   style: AppTypography.labelSmall.copyWith(
                     fontWeight: FontWeight.w700,
                     color: isOnline

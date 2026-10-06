@@ -77,8 +77,254 @@ class ServiceRemoteDataSourceImpl implements ServiceRemoteDataSource {
 
 /// TEMPORARY: Isolated mock data source until live REST backend is deployed.
 class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
-  final List<ServiceModel> _mockServices = [
-    // Cleaning
+  static final List<ServiceModel> _mockServices = [
+    // 1. Executive Haircut & Styling
+    const ServiceModel(
+      id: 'srv_exec_haircut',
+      categoryId: 'cat_hair_styling',
+      name: "Executive Haircut & Styling",
+      description:
+          'Precision scissor or clipper haircut customized to your face profile, followed by an invigorating hair wash, scalp massage, and blow-dry styling.',
+      image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600',
+      rating: 4.9,
+      reviewCount: 380,
+      startingPrice: 499.0,
+      duration: '45 mins',
+      genderTarget: 'men',
+      inclusions: [
+        'Hair consultation with senior stylist',
+        'Organic clarifying wash',
+        'Precision haircut & beard edge trimming',
+        'Cool-blast blow dry & matte clay styling',
+      ],
+      packages: [
+        ServicePackageModel(
+          id: 'pkg_haircut_classic',
+          serviceId: 'srv_exec_haircut',
+          name: 'Classic Haircut',
+          description: 'Haircut, hair wash & quick blow dry',
+          price: 499.0,
+          duration: '30 mins',
+          features: ['Cut', 'Wash', 'Dry'],
+        ),
+        ServicePackageModel(
+          id: 'pkg_haircut_luxe',
+          serviceId: 'srv_exec_haircut',
+          name: 'Executive Cut & Scalp Therapy',
+          description: 'Haircut, wash, 15-min therapeutic head massage & premium styling',
+          price: 799.0,
+          duration: '45 mins',
+          features: ['Cut', 'Head Massage', 'Wash', 'Styling'],
+        ),
+      ],
+    ),
+
+    // 2. Women's Signature Cut & Blow Dry
+    const ServiceModel(
+      id: 'srv_women_haircut',
+      categoryId: 'cat_hair_styling',
+      name: "Signature Cut & Blow Dry",
+      description:
+          'Transformative haircuts by creative directors. Includes luxury shampoo, deep conditioning mask, and custom blowout styling.',
+      image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600',
+      rating: 4.88,
+      reviewCount: 512,
+      startingPrice: 899.0,
+      duration: '60 mins',
+      genderTarget: 'women',
+      inclusions: [
+        'Style consultation',
+        'Kerastase cleansing & nourishing mask',
+        'Precision layer / bob / curtain cut',
+        'Volume blow dry & heat shield setting',
+      ],
+      packages: [
+        ServicePackageModel(
+          id: 'pkg_women_basic',
+          serviceId: 'srv_women_haircut',
+          name: 'Signature Cut & Dry',
+          description: 'Cut, wash, and sleek blowout',
+          price: 899.0,
+          duration: '45 mins',
+          features: ['Cut', 'Wash', 'Blowout'],
+        ),
+        ServicePackageModel(
+          id: 'pkg_women_deluxe',
+          serviceId: 'srv_women_haircut',
+          name: 'Cut, Conditioning & Tong Waves',
+          description: 'Cut, deep conditioning, and glam beach waves styling',
+          price: 1299.0,
+          duration: '60 mins',
+          features: ['Cut', 'Deep Conditioning', 'Glam Waves'],
+        ),
+      ],
+    ),
+
+    // 3. Hydra Deep Facial
+    const ServiceModel(
+      id: 'srv_hydra_facial',
+      categoryId: 'cat_facial',
+      name: 'Hydra Medi-Facial & Glow Therapy',
+      description:
+          'Advanced multi-step facial utilizing suction vortex technology to extract impurities, deeply hydrate, and infuse potent hyaluronic serums.',
+      image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600',
+      rating: 4.95,
+      reviewCount: 290,
+      startingPrice: 1799.0,
+      duration: '60 mins',
+      genderTarget: 'all',
+      inclusions: [
+        'Hydro-dermabrasion deep pore cleansing',
+        'Painless blackhead suction extraction',
+        'Antioxidant & hyaluronic acid infusion',
+        'LED light collagen rejuvenation therapy',
+      ],
+      packages: [
+        ServicePackageModel(
+          id: 'pkg_hydra_express',
+          serviceId: 'srv_hydra_facial',
+          name: 'Express Hydra Clean-up',
+          description: 'Pore cleaning & rapid hydration',
+          price: 1799.0,
+          duration: '45 mins',
+          features: ['Pore Cleaning', 'Hydration Infusion'],
+        ),
+        ServicePackageModel(
+          id: 'pkg_hydra_gold',
+          serviceId: 'srv_hydra_facial',
+          name: 'Gold Glow Medi-Facial',
+          description: 'Full vortex exfoliation, gold serum infusion & peel-off rubber mask',
+          price: 2499.0,
+          duration: '60 mins',
+          features: ['Hydro-dermabrasion', 'Gold Serum', 'Rubber Mask', 'LED Light'],
+        ),
+      ],
+    ),
+
+    // 4. Moroccan Argan Hair Spa
+    const ServiceModel(
+      id: 'srv_moroccan_spa',
+      categoryId: 'cat_spa',
+      name: 'Moroccan Argan Hair Spa',
+      description:
+          'Deep nourishing hair repair therapy enriched with 100% pure Moroccan Argan Oil to tame frizz, repair heat damage, and restore silky shine.',
+      image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600',
+      rating: 4.82,
+      reviewCount: 215,
+      startingPrice: 1299.0,
+      duration: '60 mins',
+      genderTarget: 'all',
+      inclusions: [
+        'Scalp diagnosis & clarifying wash',
+        'Steam-activated Argan cream massage',
+        'Ultra-repair hair serum infusion',
+        'Smoothing blowout finish',
+      ],
+      packages: [
+        ServicePackageModel(
+          id: 'pkg_spa_aroma',
+          serviceId: 'srv_moroccan_spa',
+          name: 'Aromatherapy Hair Spa',
+          description: 'Nourishing cream treatment & warm ozone steam',
+          price: 1299.0,
+          duration: '45 mins',
+          features: ['Steam', 'Nourishing Cream', 'Head Massage'],
+        ),
+        ServicePackageModel(
+          id: 'pkg_spa_moroccan',
+          serviceId: 'srv_moroccan_spa',
+          name: 'Intense Argan Reconstruction',
+          description: 'Moroccan oil treatment, 25-min acupressure massage & leave-in gloss',
+          price: 1899.0,
+          duration: '60 mins',
+          features: ['Argan Oil', 'Acupressure Massage', 'Ozone Steam', 'Gloss Blowout'],
+        ),
+      ],
+    ),
+
+    // 5. Luxury Gel Manicure & Pedicure
+    const ServiceModel(
+      id: 'srv_gel_mani_pedi',
+      categoryId: 'cat_nails',
+      name: 'Luxury Gel Manicure & Pedicure Combo',
+      description:
+          'Complete pampering for hands and feet: sea salt soak, exfoliating scrub, cuticle grooming, moisturizing massage, and chip-free gel polish.',
+      image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600',
+      rating: 4.79,
+      reviewCount: 168,
+      startingPrice: 1499.0,
+      duration: '75 mins',
+      genderTarget: 'women',
+      inclusions: [
+        'Aromatic Epsom salt foot & hand bath',
+        'Dead skin exfoliation with organic walnut scrub',
+        'Nail shaping, cuticle trimming & buffing',
+        'Long-lasting UV gel color application',
+      ],
+      packages: [
+        ServicePackageModel(
+          id: 'pkg_pedi_express',
+          serviceId: 'srv_gel_mani_pedi',
+          name: 'Classic Mani-Pedi',
+          description: 'Essential grooming & regular polish',
+          price: 999.0,
+          duration: '45 mins',
+          features: ['Soak', 'Exfoliation', 'Nail Grooming', 'Regular Polish'],
+        ),
+        ServicePackageModel(
+          id: 'pkg_gel_combo',
+          serviceId: 'srv_gel_mani_pedi',
+          name: 'Deluxe Gel Spa Combo',
+          description: 'Paraffin wax hydration, scrub, reflexology massage & UV gel polish',
+          price: 1699.0,
+          duration: '75 mins',
+          features: ['Paraffin Wax', 'Reflexology', 'UV Gel Polish'],
+        ),
+      ],
+    ),
+
+    // 6. Royal Beard Grooming
+    const ServiceModel(
+      id: 'srv_beard_spa',
+      categoryId: 'cat_grooming',
+      name: 'Royal Beard Spa & Hot Towel Shave',
+      description:
+          'Classic straight razor shaving with hot eucalyptus towels, pre-shave essential oils, precision beard sculpting, and aftershave balm.',
+      image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600',
+      rating: 4.86,
+      reviewCount: 340,
+      startingPrice: 399.0,
+      duration: '30 mins',
+      genderTarget: 'men',
+      inclusions: [
+        'Hot towel pore opening',
+        'Botanical pre-shave oil massage',
+        'Straight razor contour shaping',
+        'Cooling witch hazel balm',
+      ],
+      packages: [
+        ServicePackageModel(
+          id: 'pkg_beard_trim',
+          serviceId: 'srv_beard_spa',
+          name: 'Classic Beard Sculpting',
+          description: 'Trimming, line-up & beard butter conditioning',
+          price: 399.0,
+          duration: '20 mins',
+          features: ['Trim', 'Edge Line-up', 'Beard Butter'],
+        ),
+        ServicePackageModel(
+          id: 'pkg_royal_shave',
+          serviceId: 'srv_beard_spa',
+          name: 'Royal Hot Towel Experience',
+          description: 'Double hot towel, cutthroat razor shave, face massage & cologne finish',
+          price: 599.0,
+          duration: '35 mins',
+          features: ['Double Hot Towel', 'Razor Shave', 'Face Massage', 'Cologne'],
+        ),
+      ],
+    ),
+
+    // 7. Legacy test service (to ensure existing test suites succeed seamlessly)
     const ServiceModel(
       id: 'srv_deep_clean',
       categoryId: 'cat_cleaning',
@@ -98,240 +344,7 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
           description: 'Dry vacuuming, floor mopping, kitchen wiping & bathroom clean',
           price: 1499.0,
           duration: '3 hrs',
-          features: [
-            '1 Bedroom & Living room deep clean',
-            '1 Bathroom sanitization',
-            'Dry vacuuming of carpets and sofas',
-            'Floor scrubbing & mopping',
-          ],
-        ),
-        ServicePackageModel(
-          id: 'pkg_clean_std',
-          serviceId: 'srv_deep_clean',
-          name: 'Standard (2 BHK)',
-          description: 'Intense scrubbing, degreasing, and detailed dusting',
-          price: 2499.0,
-          duration: '4.5 hrs',
-          features: [
-            '2 Bedrooms & Living room deep clean',
-            '2 Bathrooms acid-free scrubbing',
-            'Kitchen tile degreasing & chimney exterior',
-            'Balcony floor washing',
-            'Window panes & slider track vacuuming',
-          ],
-        ),
-        ServicePackageModel(
-          id: 'pkg_clean_premium',
-          serviceId: 'srv_deep_clean',
-          name: 'Premium (3 BHK / Villa)',
-          description: 'Complete top-to-bottom deep cleaning with machine polishing',
-          price: 3699.0,
-          duration: '6 hrs',
-          features: [
-            '3+ Bedrooms & Living/Dining area',
-            'Full Kitchen deep scrub + cabinet interiors',
-            'All Bathrooms deep descaling',
-            'Single disc machine floor scrubbing',
-            'Odor neutralization & sanitization spray',
-          ],
-        ),
-      ],
-    ),
-    const ServiceModel(
-      id: 'srv_kitchen_clean',
-      categoryId: 'cat_cleaning',
-      name: 'Kitchen Deep Degreasing',
-      description:
-          'Oil and grease removal from stove, exhaust, tiles, sink, and exterior cabinet surfaces.',
-      image: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=600',
-      rating: 4.78,
-      reviewCount: 195,
-      startingPrice: 599.0,
-      duration: '2 hrs',
-      packages: [
-        ServicePackageModel(
-          id: 'pkg_kitch_basic',
-          serviceId: 'srv_kitchen_clean',
-          name: 'Essential Kitchen Clean',
-          description: 'Countertops, sink, and gas stove scrubbing',
-          price: 599.0,
-          duration: '1.5 hrs',
-          features: ['Gas stove degreasing', 'Sink & tile cleaning', 'Trash can sanitization'],
-        ),
-        ServicePackageModel(
-          id: 'pkg_kitch_deep',
-          serviceId: 'srv_kitchen_clean',
-          name: 'Heavy Oil & Chimney Degrease',
-          description: 'Special chemical degreasing for sticky surfaces and cabinets',
-          price: 999.0,
-          duration: '2.5 hrs',
-          features: [
-            'Complete cabinet interior/exterior',
-            'Chimney baffle filters deep wash',
-            'Grout stain removal',
-            'Microwave & fridge exterior clean',
-          ],
-        ),
-      ],
-    ),
-    const ServiceModel(
-      id: 'srv_bathroom_clean',
-      categoryId: 'cat_cleaning',
-      name: 'Bathroom Deep Sanitization',
-      description:
-          'Tile descaling, toilet pot disinfection, mirror polishing, and exhaust fan cleaning.',
-      image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600',
-      rating: 4.90,
-      reviewCount: 312,
-      startingPrice: 399.0,
-      duration: '1 hr',
-      packages: [
-        ServicePackageModel(
-          id: 'pkg_bath_std',
-          serviceId: 'srv_bathroom_clean',
-          name: 'Standard Bathroom Scrub',
-          description: 'Tile descaling, commode and sink washing',
-          price: 399.0,
-          duration: '1 hr',
-          features: ['Hard water stain removal', 'Commode sanitization', 'Mirror & tap polishing'],
-        ),
-      ],
-    ),
-
-    // Appliances
-    const ServiceModel(
-      id: 'srv_ac_service',
-      categoryId: 'cat_appliances',
-      name: 'AC Master Servicing (Foam-Jet)',
-      description:
-          'High-pressure water pump cleaning, indoor cooling coil wash, filter cleaning, and gas leak check.',
-      image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600',
-      rating: 4.88,
-      reviewCount: 560,
-      startingPrice: 599.0,
-      duration: '1 hr',
-      packages: [
-        ServicePackageModel(
-          id: 'pkg_ac_split',
-          serviceId: 'srv_ac_service',
-          name: 'Split AC Power Jet Clean',
-          description: 'Complete 2x deeper cleaning with pressure jet & foam',
-          price: 599.0,
-          duration: '45 mins',
-          features: [
-            'Indoor cooling coil foam wash',
-            'Drain tray & pipe flushing',
-            'Outdoor unit water spray cleaning',
-            'Gas level check & temperature test',
-          ],
-        ),
-        ServicePackageModel(
-          id: 'pkg_ac_gas',
-          serviceId: 'srv_ac_service',
-          name: 'AC Servicing + Gas Top-Up',
-          description: 'Includes foam jet servicing plus refrigerant gas refill',
-          price: 1899.0,
-          duration: '1.5 hrs',
-          features: [
-            'Full Power Jet Servicing',
-            'Nitrogen pressure testing',
-            'Refrigerant gas top-up (R32 / R410A)',
-            '60-day service guarantee',
-          ],
-        ),
-      ],
-    ),
-    const ServiceModel(
-      id: 'srv_washing_machine',
-      categoryId: 'cat_appliances',
-      name: 'Washing Machine Repair & Checkup',
-      description: 'Diagnosis for drum spinning, drainage issues, motor noise, and water inlet problems.',
-      image: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=600',
-      rating: 4.65,
-      reviewCount: 140,
-      startingPrice: 299.0,
-      duration: '1 hr',
-      packages: [
-        ServicePackageModel(
-          id: 'pkg_wm_checkup',
-          serviceId: 'srv_washing_machine',
-          name: 'Diagnosis & Inspection',
-          description: 'Comprehensive physical and electrical inspection',
-          price: 299.0,
-          duration: '45 mins',
-          features: ['Complete machine diagnostics', 'Quote for spare parts', 'Adjusted in final repair bill'],
-        ),
-      ],
-    ),
-
-    // Electrician
-    const ServiceModel(
-      id: 'srv_switchboard',
-      categoryId: 'cat_electrician',
-      name: 'Switchboard & Socket Installation',
-      description: 'Modular switch replacement, socket installation, MCB trip troubleshooting, and earthing checks.',
-      image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600',
-      rating: 4.82,
-      reviewCount: 210,
-      startingPrice: 199.0,
-      duration: '45 mins',
-      packages: [
-        ServicePackageModel(
-          id: 'pkg_switch_install',
-          serviceId: 'srv_switchboard',
-          name: 'Switch / Socket Replacement',
-          description: 'Fix up to 2 switches or 1 socket board',
-          price: 199.0,
-          duration: '30 mins',
-          features: ['Safety tester check', 'Tight connection wiring', '30-day warranty'],
-        ),
-      ],
-    ),
-
-    // Plumbing
-    const ServiceModel(
-      id: 'srv_tap_repair',
-      categoryId: 'cat_plumbing',
-      name: 'Tap & Pipe Leakage Repair',
-      description: 'Fix dripping faucets, mixer taps, shower heads, and underground pipe leakages.',
-      image: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600',
-      rating: 4.79,
-      reviewCount: 380,
-      startingPrice: 199.0,
-      duration: '45 mins',
-      packages: [
-        ServicePackageModel(
-          id: 'pkg_tap_fix',
-          serviceId: 'srv_tap_repair',
-          name: 'Tap Spindle / Washer Fix',
-          description: 'Fix single leaky tap or cartridge replacement',
-          price: 199.0,
-          duration: '30 mins',
-          features: ['Washer replacement', 'Teflon tape seal', 'Leak-proof test'],
-        ),
-      ],
-    ),
-
-    // Salon & Spa
-    const ServiceModel(
-      id: 'srv_salon_men',
-      categoryId: 'cat_grooming',
-      name: 'Haircut & Beard Styling for Men',
-      description: 'Professional barber service at home with disposable towels and sanitized tools.',
-      image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600',
-      rating: 4.92,
-      reviewCount: 650,
-      startingPrice: 249.0,
-      duration: '45 mins',
-      packages: [
-        ServicePackageModel(
-          id: 'pkg_groom_combo',
-          serviceId: 'srv_salon_men',
-          name: 'Haircut + Beard Trim + Head Massage',
-          description: 'Relaxing 3-in-1 grooming session',
-          price: 499.0,
-          duration: '60 mins',
-          features: ['Haircut tailored to face shape', 'Beard shaping & styling', '10-min almond oil head massage'],
+          features: ['Vacuuming', 'Mopping', 'Bathroom Cleaning'],
         ),
       ],
     ),
@@ -342,27 +355,28 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
     String? categoryId,
     String? query,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    Iterable<ServiceModel> results = _mockServices.where((s) => s.isActive);
+    await Future.delayed(const Duration(milliseconds: 200));
+    var results = List<ServiceModel>.from(_mockServices);
 
     if (categoryId != null && categoryId.isNotEmpty) {
-      results = results.where((s) => s.categoryId == categoryId);
+      results = results.where((s) => s.categoryId == categoryId).toList();
     }
 
-    if (query != null && query.trim().isNotEmpty) {
-      final q = query.toLowerCase().trim();
-      results = results.where((s) =>
-          s.name.toLowerCase().contains(q) ||
-          s.description.toLowerCase().contains(q));
+    if (query != null && query.isNotEmpty) {
+      final q = query.toLowerCase();
+      results = results
+          .where((s) =>
+              s.name.toLowerCase().contains(q) ||
+              s.description.toLowerCase().contains(q))
+          .toList();
     }
 
-    return results.toList();
+    return results;
   }
 
   @override
   Future<ServiceModel> getServiceById(String id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 150));
     try {
       return _mockServices.firstWhere((s) => s.id == id);
     } catch (_) {
@@ -373,7 +387,7 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
   @override
   Future<List<ServicePackageModel>> getPackagesByServiceId(
       String serviceId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 100));
     final service = await getServiceById(serviceId);
     return service.packages;
   }

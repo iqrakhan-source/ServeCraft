@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:prop_crm/core/constants/app_colors.dart';
-import 'package:prop_crm/core/constants/app_typography.dart';
-import 'package:prop_crm/core/widgets/app_card.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_typography.dart';
+import '../../../../core/widgets/app_card.dart';
 
 class BookingNextSteps extends StatelessWidget {
   const BookingNextSteps({super.key});
@@ -15,15 +15,15 @@ class BookingNextSteps extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: 34,
+          height: 34,
           decoration: BoxDecoration(
-            color: AppColors.surfaceMuted,
-            borderRadius: BorderRadius.circular(8),
+            color: AppColors.primaryLight,
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             icon,
-            size: 16,
+            size: 18,
             color: AppColors.primary,
           ),
         ),
@@ -35,7 +35,7 @@ class BookingNextSteps extends StatelessWidget {
               Text(
                 title,
                 style: AppTypography.labelLarge.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
                   fontSize: 13,
                 ),
@@ -67,13 +67,13 @@ class BookingNextSteps extends StatelessWidget {
           Row(
             children: [
               const Icon(
-                Icons.info_outline_rounded,
+                Icons.spa_rounded,
                 size: 18,
                 color: AppColors.primary,
               ),
               const SizedBox(width: 8),
               Text(
-                "What's Next?",
+                "Salon Visit Guidelines",
                 style: AppTypography.titleSmall.copyWith(
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -84,24 +84,24 @@ class BookingNextSteps extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _buildStepItem(
-            icon: Icons.verified_user_outlined,
-            title: 'Partner Assignment',
+            icon: Icons.access_time_rounded,
+            title: 'Arrive 10 Mins Early',
             description:
-                'A verified service professional will be assigned to your booking prior to the scheduled slot.',
+                'Please arrive 10 minutes prior to your slot. Valet parking & complimentary beverages are available upon arrival.',
           ),
           const SizedBox(height: 12),
           _buildStepItem(
-            icon: Icons.schedule_rounded,
-            title: 'On-time Arrival',
+            icon: Icons.person_pin_rounded,
+            title: 'Stylist Consultation',
             description:
-                'Your professional will arrive at the scheduled time with all necessary equipment and cleaning supplies.',
+                'Your dedicated master stylist will conduct a personalized consultation before beginning your treatment.',
           ),
           const SizedBox(height: 12),
           _buildStepItem(
-            icon: Icons.receipt_long_outlined,
-            title: 'Manage Booking',
+            icon: Icons.payment_rounded,
+            title: 'Check-out & Reception',
             description:
-                'You can review booking progress, details, and updates from the My Bookings section.',
+                'If you chose "Pay at Salon", you can conveniently pay at the reception desk after your service via Cash, Card, or UPI.',
           ),
         ],
       ),
