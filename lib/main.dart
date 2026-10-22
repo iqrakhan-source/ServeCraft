@@ -3,7 +3,6 @@ import 'app/app.dart';
 import 'core/config/app_config.dart';
 import 'core/constants/api_constants.dart';
 import 'core/networking/api_client.dart';
-import 'core/networking/api_service.dart';
 import 'core/storage/shared_prefs_storage_service.dart';
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
@@ -35,6 +34,8 @@ import 'features/branches/domain/repositories/branch_repository.dart';
 import 'features/services/data/datasources/service_remote_data_source.dart';
 import 'features/services/data/repositories/service_repository_impl.dart';
 import 'features/services/domain/repositories/service_repository.dart';
+import 'package:prop_crm/features/services/data/datasources/service_products_remote_data_source.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,12 +63,10 @@ void main() async {
       // Session invalidation hook for 401
     },
   );
-  final apiService = DioApiService(dio: apiClient.dio);
 
   // 4. Initialize Data Sources & Repositories
-  // TEMPORARY: Isolated Mock Data Source until backend API contract is deployed.
-  // To switch to live API, simply replace mock instances with *RemoteDataSourceImpl(apiService: apiService)
-  final AuthRemoteDataSource authRemoteDataSource = MockAuthRemoteDataSource();
+  final AuthRemoteDataSource authRemoteDataSource =
+      AuthRemoteDataSourceImpl(apiService: apiClient);
   final AuthRepository authRepository = AuthRepositoryImpl(
     remoteDataSource: authRemoteDataSource,
     storageService: storageService,
@@ -86,9 +85,16 @@ void main() async {
   );
 
   final ServiceRemoteDataSource serviceRemoteDataSource =
-      MockServiceRemoteDataSource();
+  MockServiceRemoteDataSource();
+
+  final ServiceProductsRemoteDataSource productsRemoteDataSource =
+  ServiceProductsRemoteDataSourceImpl(
+    apiService: apiClient,
+  );
+
   final ServiceRepository serviceRepository = ServiceRepositoryImpl(
     remoteDataSource: serviceRemoteDataSource,
+    productsRemoteDataSource: productsRemoteDataSource,
   );
 
   final HomeRemoteDataSource homeRemoteDataSource = MockHomeRemoteDataSource(
@@ -134,7 +140,6 @@ void main() async {
   runApp(
     ServeCraftApp(
       storageService: storageService,
-      apiService: apiService,
       authRepository: authRepository,
       branchRepository: branchRepository,
       categoryRepository: categoryRepository,

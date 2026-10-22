@@ -1,6 +1,5 @@
 import 'package:prop_crm/core/constants/api_constants.dart';
-import 'package:prop_crm/core/networking/api_exceptions.dart';
-import 'package:prop_crm/core/networking/api_service.dart';
+import 'package:prop_crm/core/networking/api_client.dart';
 import 'package:prop_crm/features/addresses/data/models/address_model.dart';
 import 'package:prop_crm/features/branches/data/models/branch_model.dart';
 import 'package:prop_crm/features/booking_summary/data/models/booking_summary_model.dart';
@@ -31,7 +30,7 @@ abstract class BookingRemoteDataSource {
 }
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
-  final ApiService apiService;
+  final ApiClient apiService;
 
   BookingRemoteDataSourceImpl({required this.apiService});
 

@@ -1,10 +1,13 @@
 import 'dart:convert';
-import 'package:prop_crm/core/networking/api_exceptions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/storage/storage_keys.dart';
 import 'package:prop_crm/core/storage/storage_service.dart';
+import '../../../../core/networking/api_client.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../models/complete_profile_request.dart';
+import '../models/register_customer_request.dart';
+import '../models/register_customer_response.dart';
 import '../models/send_otp_request.dart';
 import '../models/send_otp_response.dart';
 import '../models/user_model.dart';
@@ -19,6 +22,66 @@ class AuthRepositoryImpl implements AuthRepository {
     required this.remoteDataSource,
     required this.storageService,
   });
+
+  @override
+  Future<RegisterCustomerResponse> registerCustomer(
+      RegisterCustomerRequest request,
+      ) async {
+    debugPrint('REGISTER [AuthRepository]: Repository method reached for ${request.email}');
+
+    try {
+      debugPrint('REGISTER [AuthRepository]: Calling remote data source');
+
+      final response =
+      await remoteDataSource.registerCustomer(request);
+
+      debugPrint('REGISTER [AuthRepository]: Remote data source returned successfully');
+      debugPrint('REGISTER [AuthRepository]: Access token received: '
+          '${response.accessToken.isNotEmpty}');
+      debugPrint('REGISTER [AuthRepository]: User data received: ${response.user.isNotEmpty}');
+
+      await storageService.setString(
+        StorageKeys.authToken,
+        response.accessToken,
+      );
+
+      if (response.refreshToken != null &&
+          response.refreshToken!.isNotEmpty) {
+        await storageService.setString(
+          StorageKeys.refreshToken,
+          response.refreshToken!,
+        );
+      }
+
+      final userId = response.user['id']?.toString();
+      final phone = response.user['phone']?.toString();
+
+      if (userId != null && userId.isNotEmpty) {
+        await storageService.setString(StorageKeys.userId, userId);
+      }
+
+      if (phone != null && phone.isNotEmpty) {
+        await storageService.setString(StorageKeys.userPhone, phone);
+      }
+
+      await storageService.setBool(
+        StorageKeys.isProfileComplete,
+        false,
+      );
+
+      debugPrint('REGISTER [AuthRepository]: Token storage completed successfully');
+      return response;
+    } catch (e, stackTrace) {
+      debugPrint('REGISTER [AuthRepository] ERROR: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<SendOtpResponse> sendSignupOtp(String email) async {
+    return await remoteDataSource.sendSignupOtp(email);
+  }
 
   @override
   Future<SendOtpResponse> sendOtp(String phone) async {
@@ -50,11 +113,15 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<UserModel> completeProfile({
     required String name,
     String? email,
+    String? gender,
+    String? dateOfBirth,
     String? profileImage,
   }) async {
     final request = CompleteProfileRequest(
       name: name,
       email: email,
+      gender: gender,
+      dateOfBirth: dateOfBirth,
       profileImage: profileImage,
     );
     final updatedUser = await remoteDataSource.completeProfile(request);
@@ -64,6 +131,24 @@ class AuthRepositoryImpl implements AuthRepository {
         StorageKeys.isProfileComplete, updatedUser.isProfileComplete);
     await _saveUserToCache(updatedUser);
 
+    return updatedUser;
+  }
+
+  @override
+  Future<UserModel> updateProfile(Map<String, dynamic> data) async {
+    final updatedUser = await remoteDataSource.updateProfile(data);
+    await storageService.setBool(
+        StorageKeys.isProfileComplete, updatedUser.isProfileComplete);
+    await _saveUserToCache(updatedUser);
+    return updatedUser;
+  }
+
+  @override
+  Future<UserModel> updateClinicalPreferences(
+      Map<String, dynamic> preferences) async {
+    final updatedUser =
+        await remoteDataSource.updateClinicalPreferences(preferences);
+    await _saveUserToCache(updatedUser);
     return updatedUser;
   }
 
@@ -123,4 +208,45 @@ class AuthRepositoryImpl implements AuthRepository {
     final jsonStr = jsonEncode(user.toJson());
     await storageService.setString(StorageKeys.userCachedJson, jsonStr);
   }
+
+
+  // @override
+  // Future<RegisterCustomerResponse> registerCustomer(
+  //     RegisterCustomerRequest request,
+  //     ) async {
+  //   final response = await remoteDataSource.registerCustomer(request);
+  //
+  //   // Save authentication tokens.
+  //   await storageService.setString(
+  //     StorageKeys.authToken,
+  //     response.accessToken,
+  //   );
+  //
+  //   if (response.refreshToken != null &&
+  //       response.refreshToken!.isNotEmpty) {
+  //     await storageService.setString(
+  //       StorageKeys.refreshToken,
+  //       response.refreshToken!,
+  //     );
+  //   }
+  //
+  //   // Save user details returned by the backend.
+  //   final user = response.user;
+  //
+  //   final userId = user['id']?.toString();
+  //   final phone = user['phone']?.toString();
+  //
+  //   if (userId != null && userId.isNotEmpty) {
+  //     await storageService.setString(StorageKeys.userId, userId);
+  //   }
+  //
+  //   if (phone != null && phone.isNotEmpty) {
+  //     await storageService.setString(StorageKeys.userPhone, phone);
+  //   }
+  //
+  //   // Registration leads to profile completion.
+  //   await storageService.setBool(StorageKeys.isProfileComplete, false);
+  //
+  //   return response;
+  // }
 }

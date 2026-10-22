@@ -1,5 +1,5 @@
 import 'package:prop_crm/core/constants/api_constants.dart';
-import 'package:prop_crm/core/networking/api_service.dart';
+import 'package:prop_crm/core/networking/api_client.dart';
 import 'package:prop_crm/features/categories/data/datasources/category_remote_data_source.dart';
 import 'package:prop_crm/features/services/data/datasources/service_remote_data_source.dart';
 import 'package:prop_crm/features/home/data/models/banner_model.dart';
@@ -11,7 +11,7 @@ abstract class HomeRemoteDataSource {
 
 /// Production implementation connecting to REST backend via ApiService
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
-  final ApiService apiService;
+  final ApiClient apiService;
 
   HomeRemoteDataSourceImpl({required this.apiService});
 

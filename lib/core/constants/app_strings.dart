@@ -27,16 +27,40 @@ abstract class AppStrings {
   // Auth
   static const String loginTitle = 'Welcome to Luxe';
   static const String loginSubtitle = 'Enter your mobile number to access appointments & exclusive offers';
+  static const String emailLoginSubtitle = 'Sign in to access appointments, rewards & bespoke services';
+  static const String emailLabel = 'Email Address';
+  static const String emailHint = 'alex@example.com';
+  static const String passwordLabel = 'Password';
+  static const String passwordHint = 'Enter your password';
+  static const String confirmPasswordLabel = 'Confirm Password';
+  static const String confirmPasswordHint = 'Re-enter your password';
+  static const String forgotPassword = 'Forgot Password?';
+  static const String signIn = 'Sign In';
+  static const String login = 'Login';
+  static const String signUp = 'Create Account';
+  static const String dontHaveAccount = "Don't have an account?";
+  static const String alreadyHaveAccount = 'Already have an account?';
+  static const String signUpTitle = 'Create Account';
+  static const String signUpSubtitle = 'Sign up to book top stylists, view curated packages & earn rewards';
+  static const String forgotPasswordTitle = 'Forgot Password';
+  static const String forgotPasswordSubtitle = 'Enter your registered email address and we will send a verification code to reset your password.';
+  static const String sendResetCode = 'Send Verification Code';
+  static const String verifyCodeTitle = 'Verify Code';
+  static const String verifyCodeSubtitle = 'Enter the 6-digit verification code sent to';
+  static const String resetPasswordTitle = 'Reset Password';
+  static const String resetPasswordSubtitle = 'Create a new, secure password for your Luxe account';
+  static const String newPasswordLabel = 'New Password';
+  static const String resetPasswordBtn = 'Reset Password';
   static const String phoneHint = '10-digit mobile number';
+  static const String phoneLabel = 'Phone Number';
   static const String sendOtp = 'Send Verification Code';
   static const String otpTitle = 'Verify Mobile';
   static const String otpSubtitle = 'Enter the 6-digit verification code sent to';
   static const String resendOtp = 'Resend Code';
   static const String verifyOtp = 'Verify & Continue';
-  static const String completeProfileTitle = 'Your Salon Profile';
-  static const String completeProfileSubtitle = 'Personalize your beauty & grooming experience';
+  static const String completeProfileTitle = 'Complete Your Profile';
+  static const String completeProfileSubtitle = 'Personalize your salon experience and help us tailor treatments to you';
   static const String fullNameHint = 'Full Name';
-  static const String emailHint = 'Email Address (optional)';
 
   // Error messages
   static const String commonError = 'Something went wrong. Please try again.';

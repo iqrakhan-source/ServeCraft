@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:prop_crm/core/networking/api_exceptions.dart';
+import 'package:prop_crm/core/networking/api_client.dart';
 import 'package:prop_crm/features/addresses/data/datasources/address_remote_data_source.dart';
 import 'package:prop_crm/features/addresses/data/models/address_model.dart';
 import 'package:prop_crm/features/addresses/data/repositories/address_repository_impl.dart';

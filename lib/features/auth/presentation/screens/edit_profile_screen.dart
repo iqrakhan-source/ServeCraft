@@ -80,15 +80,46 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  void _handleSave() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile updated successfully'),
-        backgroundColor: AppColors.primary,
-        duration: Duration(seconds: 2),
-      ),
+  Future<void> _handleSave() async {
+    final name = _nameController.text.trim();
+    if (name.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Name must be at least 2 characters'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final authProvider = context.read<AuthProvider>();
+    final email = _emailController.text.trim();
+    final success = await authProvider.completeProfile(
+      name: name,
+      email: email.isNotEmpty ? email : null,
+      gender: _selectedGender,
+      dateOfBirth: _dateOfBirth,
     );
-    Navigator.of(context).pop();
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully'),
+          backgroundColor: AppColors.primary,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      Navigator.of(context).pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Failed to update profile'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override

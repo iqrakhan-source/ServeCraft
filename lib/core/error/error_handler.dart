@@ -1,5 +1,5 @@
 import '../constants/app_strings.dart';
-import '../networking/api_exceptions.dart';
+import '../networking/api_client.dart';
 import 'app_error.dart';
 
 abstract class ErrorHandler {

@@ -92,6 +92,8 @@ class UserModel {
         other.phone == phone &&
         other.email == email &&
         other.profileImage == profileImage &&
+        other.gender == gender &&
+        other.dateOfBirth == dateOfBirth &&
         other.isProfileComplete == isProfileComplete;
   }
 
@@ -102,6 +104,8 @@ class UserModel {
         phone,
         email,
         profileImage,
+        gender,
+        dateOfBirth,
         isProfileComplete,
       );
 }

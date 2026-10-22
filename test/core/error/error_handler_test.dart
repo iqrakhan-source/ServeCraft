@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prop_crm/core/constants/app_strings.dart';
 import 'package:prop_crm/core/error/error_handler.dart';
-import 'package:prop_crm/core/networking/api_exceptions.dart';
+import 'package:prop_crm/core/networking/api_client.dart';
 
 void main() {
   group('ErrorHandler', () {

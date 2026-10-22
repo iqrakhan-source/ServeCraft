@@ -54,6 +54,28 @@ abstract class AppValidators {
     return null;
   }
 
+  /// Validates password field (minimum 6 characters)
+  static String? validatePassword(String? value, {int minLength = 6}) {
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    }
+    if (value.length < minLength) {
+      return 'Password must be at least $minLength characters';
+    }
+    return null;
+  }
+
+  /// Validates confirmation password against the original password
+  static String? validateConfirmPassword(String? value, String? originalPassword) {
+    if (value == null || value.isEmpty) {
+      return 'Please confirm your password';
+    }
+    if (value != originalPassword) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+
   /// Validates 6-digit Indian PIN code
   static String? validatePincode(String? value) {
     if (value == null || value.trim().isEmpty) {

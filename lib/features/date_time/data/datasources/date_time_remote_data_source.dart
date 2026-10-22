@@ -1,5 +1,5 @@
 import 'package:prop_crm/core/constants/api_constants.dart';
-import 'package:prop_crm/core/networking/api_service.dart';
+import 'package:prop_crm/core/networking/api_client.dart';
 import '../models/service_date_model.dart';
 import '../models/time_slot_model.dart';
 
@@ -18,7 +18,7 @@ abstract class DateTimeRemoteDataSource {
 
 /// Production implementation connecting to REST backend via ApiService
 class DateTimeRemoteDataSourceImpl implements DateTimeRemoteDataSource {
-  final ApiService apiService;
+  final ApiClient apiService;
 
   DateTimeRemoteDataSourceImpl({required this.apiService});
 

@@ -5,9 +5,14 @@ import '../core/constants/route_names.dart';
 import '../core/widgets/app_button.dart';
 import '../core/widgets/custom_app_bar.dart';
 import '../features/auth/presentation/screens/complete_profile_screen.dart';
+import '../features/auth/presentation/screens/forgot_password_otp_screen.dart';
+import '../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/mobile_login_screen.dart';
 import '../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../features/auth/presentation/screens/profile_screen.dart';
+import '../features/auth/presentation/screens/reset_password_screen.dart';
+import '../features/auth/presentation/screens/signup_screen.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/branches/data/models/branch_model.dart';
 import '../features/branches/presentation/screens/branch_selection_screen.dart';
@@ -46,19 +51,62 @@ abstract class AppRouter {
           builder: (_) => const SplashScreen(),
         );
 
-      case AppRoutes.mobileLogin:
+      case AppRoutes.login:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => const MobileLoginScreen(),
+          builder: (_) => const LoginScreen(),
         );
 
-      case AppRoutes.otpVerification:
+      case AppRoutes.signup:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SignupScreen(),
+        );
+
+      case AppRoutes.forgotPassword:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const ForgotPasswordScreen(),
+        );
+
+      case AppRoutes.forgotPasswordOtp: {
+        final email = settings.arguments as String?;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => ForgotPasswordOtpScreen(email: email),
+        );
+      }
+
+      case AppRoutes.resetPassword: {
+        final email = settings.arguments as String?;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => ResetPasswordScreen(email: email),
+        );
+      }
+
+      case AppRoutes.otpVerification: {
+        final args = settings.arguments;
+        String? phone;
+        String? email;
+        if (args is Map<String, dynamic>) {
+          phone = args['phone'] as String?;
+          email = args['email'] as String?;
+        } else if (args is String) {
+          if (args.contains('@')) {
+            email = args;
+          } else {
+            phone = args;
+          }
+        }
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => OtpVerificationScreen(
-            phone: settings.arguments as String?,
+            phone: phone,
+            email: email,
           ),
         );
+      }
 
       case AppRoutes.completeProfile:
         return MaterialPageRoute(

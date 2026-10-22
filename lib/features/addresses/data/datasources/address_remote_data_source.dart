@@ -1,6 +1,5 @@
 import 'package:prop_crm/core/constants/api_constants.dart';
-import 'package:prop_crm/core/networking/api_exceptions.dart';
-import 'package:prop_crm/core/networking/api_service.dart';
+import 'package:prop_crm/core/networking/api_client.dart';
 import '../models/address_model.dart';
 
 abstract class AddressRemoteDataSource {
@@ -14,7 +13,7 @@ abstract class AddressRemoteDataSource {
 
 /// Production implementation connecting to REST backend via ApiService
 class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
-  final ApiService apiService;
+  final ApiClient apiService;
 
   AddressRemoteDataSourceImpl({required this.apiService});
 

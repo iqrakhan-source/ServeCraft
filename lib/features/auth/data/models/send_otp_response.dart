@@ -12,11 +12,20 @@ class SendOtpResponse {
   });
 
   factory SendOtpResponse.fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> data =
+        (json['data'] is Map<String, dynamic>) ? json['data'] as Map<String, dynamic> : json;
+
     return SendOtpResponse(
-      success: json['success'] as bool? ?? true,
-      message: (json['message'] as String?) ?? 'OTP sent successfully',
-      expiresInSeconds: json['expiresInSeconds'] as int? ?? 60,
-      resendToken: json['resendToken'] as String?,
+      success: (json['success'] as bool?) ?? (data['success'] as bool?) ?? true,
+      message: (data['message'] as String?) ??
+          (json['message'] as String?) ??
+          'Verification code sent successfully',
+      expiresInSeconds: (data['expiresInSeconds'] as int?) ??
+          (data['expiresIn'] as int?) ??
+          (json['expiresInSeconds'] as int?) ??
+          (json['expiresIn'] as int?) ??
+          60,
+      resendToken: (data['resendToken'] as String?) ?? (json['resendToken'] as String?),
     );
   }
 

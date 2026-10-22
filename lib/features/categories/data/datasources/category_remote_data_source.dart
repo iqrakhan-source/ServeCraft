@@ -1,6 +1,5 @@
 import 'package:prop_crm/core/constants/api_constants.dart';
-import 'package:prop_crm/core/networking/api_exceptions.dart';
-import 'package:prop_crm/core/networking/api_service.dart';
+import 'package:prop_crm/core/networking/api_client.dart';
 import '../models/category_model.dart';
 
 abstract class CategoryRemoteDataSource {
@@ -10,7 +9,7 @@ abstract class CategoryRemoteDataSource {
 
 /// Production implementation communicating with REST API via ApiService
 class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
-  final ApiService apiService;
+  final ApiClient apiService;
 
   CategoryRemoteDataSourceImpl({required this.apiService});
 

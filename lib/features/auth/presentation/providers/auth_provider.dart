@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/error/error_handler.dart';
 import '../../data/models/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../data/models/register_customer_request.dart';
+
 
 enum AuthStatus {
   initial,
@@ -19,6 +21,7 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.initial;
   UserModel? _currentUser;
   String? _currentPhone;
+  String? _currentEmail;
   String? _errorMessage;
   int _resendCountdown = 0;
   bool _isResending = false;
@@ -30,6 +33,7 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus get status => _status;
   UserModel? get currentUser => _currentUser;
   String? get currentPhone => _currentPhone;
+  String? get currentEmail => _currentEmail;
   String? get errorMessage => _errorMessage;
   int get resendCountdown => _resendCountdown;
   bool get isResending => _isResending;
@@ -72,6 +76,69 @@ class AuthProvider extends ChangeNotifier {
     return _status;
   }
 
+  /// Register a customer using email and password.
+  Future<bool> registerCustomer(
+      RegisterCustomerRequest request,
+      ) async {
+    if (isLoading) return false;
+
+    debugPrint('REGISTER [AuthProvider]: Initiating registration for ${request.email}');
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await repository.registerCustomer(request);
+
+      _currentEmail = request.email;
+      _currentPhone = request.phone;
+      if (response.user.isNotEmpty) {
+        final userData = Map<String, dynamic>.from(response.user);
+        if ((userData['email'] == null ||
+                userData['email'].toString().isEmpty) &&
+            request.email.isNotEmpty) {
+          userData['email'] = request.email;
+        }
+        _currentUser = UserModel.fromJson(userData);
+      }
+
+      // Registration succeeded. The user still needs to
+      // complete their profile in the next screen.
+      _status = AuthStatus.profileIncomplete;
+      debugPrint('REGISTER [AuthProvider]: Registration succeeded for ${request.email}');
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = ErrorHandler.handleError(e).message;
+      _status = AuthStatus.error;
+      debugPrint('REGISTER [AuthProvider]: Registration failed. Error: $_errorMessage');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Request Signup OTP for email address (POST /signup/send-otp)
+  Future<bool> sendSignupOtp(String email) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await repository.sendSignupOtp(email);
+      _currentEmail = email;
+      _status = AuthStatus.initial;
+      startResendCountdown(response.expiresInSeconds);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = ErrorHandler.handleError(e).message;
+      _status = AuthStatus.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Request OTP for mobile number
   Future<bool> sendOtp(String phone) async {
     _status = AuthStatus.loading;
@@ -93,16 +160,18 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Resend OTP using existing phone number
+  /// Resend OTP using existing phone number or email
   Future<bool> resendOtp() async {
-    if (_currentPhone == null || !canResendOtp) return false;
+    if ((_currentPhone == null && _currentEmail == null) || !canResendOtp) return false;
 
     _isResending = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final response = await repository.sendOtp(_currentPhone!);
+      final response = _currentEmail != null
+          ? await repository.sendSignupOtp(_currentEmail!)
+          : await repository.sendOtp(_currentPhone!);
       startResendCountdown(response.expiresInSeconds);
       _isResending = false;
       notifyListeners();
@@ -150,10 +219,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Submit mandatory profile completion for new users
+  /// Submit profile completion for users
   Future<bool> completeProfile({
     required String name,
     String? email,
+    String? gender,
+    String? dateOfBirth,
     String? profileImage,
   }) async {
     _status = AuthStatus.loading;
@@ -164,8 +235,52 @@ class AuthProvider extends ChangeNotifier {
       final updatedUser = await repository.completeProfile(
         name: name,
         email: email,
+        gender: gender,
+        dateOfBirth: dateOfBirth,
         profileImage: profileImage,
       );
+      _currentUser = updatedUser;
+      _status = AuthStatus.authenticated;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = ErrorHandler.handleError(e).message;
+      _status = AuthStatus.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Update profile using PATCH /api/v1/customer/profile
+  Future<bool> updateProfile(Map<String, dynamic> data) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updatedUser = await repository.updateProfile(data);
+      _currentUser = updatedUser;
+      _status = AuthStatus.authenticated;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = ErrorHandler.handleError(e).message;
+      _status = AuthStatus.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Update clinical preferences using PATCH /api/v1/customer/profile/clinical-preferences
+  Future<bool> updateClinicalPreferences(
+      Map<String, dynamic> preferences) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updatedUser =
+          await repository.updateClinicalPreferences(preferences);
       _currentUser = updatedUser;
       _status = AuthStatus.authenticated;
       notifyListeners();
@@ -183,6 +298,7 @@ class AuthProvider extends ChangeNotifier {
     await repository.logout();
     _currentUser = null;
     _currentPhone = null;
+    _currentEmail = null;
     _errorMessage = null;
     _status = AuthStatus.unauthenticated;
     cancelResendCountdown();

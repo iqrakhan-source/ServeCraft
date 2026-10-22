@@ -1,5 +1,5 @@
 import 'package:prop_crm/core/constants/api_constants.dart';
-import 'package:prop_crm/core/networking/api_service.dart';
+import 'package:prop_crm/core/networking/api_client.dart';
 import '../models/payment_method_model.dart';
 
 abstract class PaymentRemoteDataSource {
@@ -7,7 +7,7 @@ abstract class PaymentRemoteDataSource {
 }
 
 class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
-  final ApiService apiService;
+  final ApiClient apiService;
 
   PaymentRemoteDataSourceImpl({required this.apiService});
 

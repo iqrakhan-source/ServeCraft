@@ -2,9 +2,14 @@ abstract class AppRoutes {
   static const String splash = '/';
   
   // Auth flow
-  static const String mobileLogin = '/auth/login';
-  static const String otpVerification = '/auth/otp';
+  static const String login = '/auth/login';
+  static const String mobileLogin = login; // Retained for backward compatibility
+  static const String signup = '/auth/signup';
   static const String completeProfile = '/auth/complete-profile';
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String forgotPasswordOtp = '/auth/forgot-password-otp';
+  static const String resetPassword = '/auth/reset-password';
+  static const String otpVerification = '/auth/otp';
 
   // Main navigation & Tabs
   static const String mainNav = '/main';
@@ -12,6 +17,7 @@ abstract class AppRoutes {
   static const String bookings = '/bookings';
   static const String offers = '/offers';
   static const String profile = '/profile';
+  static const String editProfile = '/CompleteProfileScreen';
 
   // Categories & Services
   static const String categories = '/categories';
@@ -35,7 +41,7 @@ abstract class AppRoutes {
   static const String bookingDetails = '/bookings/details';
 
   // Profile, Notifications & Reviews
-  static const String editProfile = '/profile/edit';
+ // static const String editProfile = '/profile/edit';
   static const String notifications = '/notifications';
   static const String reviews = '/reviews';
   static const String addReview = '/reviews/add';

@@ -1,26 +1,201 @@
+import 'dart:developer' as developer;
 import 'package:prop_crm/core/constants/api_constants.dart';
-import 'package:prop_crm/core/networking/api_exceptions.dart';
-import 'package:prop_crm/core/networking/api_service.dart';
+import 'package:prop_crm/core/networking/api_client.dart';
+import '../../../services/data/models/service_products_response.dart';
 import '../models/complete_profile_request.dart';
+import '../models/forgot_password_request.dart';
+import '../models/password_reset_response.dart';
+import '../models/reset_password_request.dart';
 import '../models/send_otp_request.dart';
 import '../models/send_otp_response.dart';
 import '../models/user_model.dart';
 import '../models/verify_otp_request.dart';
 import '../models/verify_otp_response.dart';
+import '../models/register_customer_request.dart';
+import '../models/register_customer_response.dart';
 
 abstract class AuthRemoteDataSource {
+
+
+  Future<RegisterCustomerResponse> registerCustomer(
+      RegisterCustomerRequest request,
+      );
+  Future<PasswordResetResponse> forgotPassword(
+      ForgotPasswordRequest request,
+      );
+
+  Future<PasswordResetResponse> resetPassword(
+      ResetPasswordRequest request,
+      );
+
+
   Future<SendOtpResponse> sendOtp(SendOtpRequest request);
+  Future<SendOtpResponse> sendSignupOtp(String email);
   Future<VerifyOtpResponse> verifyOtp(VerifyOtpRequest request);
   Future<UserModel> completeProfile(CompleteProfileRequest request);
+  Future<UserModel> updateProfile(Map<String, dynamic> data);
+  Future<UserModel> updateClinicalPreferences(Map<String, dynamic> preferences);
   Future<UserModel> getCurrentUser();
   Future<void> logout();
 }
 
 /// Production implementation connecting to REST backend via ApiService
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final ApiService apiService;
+  final ApiClient apiService;
 
   AuthRemoteDataSourceImpl({required this.apiService});
+
+  //get body => null;
+
+
+  @override
+  Future<RegisterCustomerResponse> registerCustomer(
+      RegisterCustomerRequest request,
+      ) async {
+    developer.log(
+      '🚀 [AuthRemoteDataSource] Dispatching customer registration to ${ApiConstants.registerCustomer} '
+      '(name: ${request.name}, email: ${request.email}, phone: ${request.phone}, gender: ${request.gender})',
+      name: 'AuthRemoteDataSource',
+    );
+
+    final response =
+    await apiService.post<RegisterCustomerResponse>(
+      ApiConstants.registerCustomer,
+      data: request.toJson(),
+      fromJson: (json) => RegisterCustomerResponse.fromJson(
+        Map<String, dynamic>.from(json as Map),
+      ),
+    );
+
+    developer.log(
+      '📥 [AuthRemoteDataSource] Registration response received '
+      '(success: ${response.success}, statusCode: ${response.statusCode})',
+      name: 'AuthRemoteDataSource',
+    );
+
+    if (response.data == null) {
+      throw ServerException(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Customer registration failed',
+      );
+    }
+
+    return response.data!;
+  }
+
+
+  Future<ServiceProductsResponse> getProductsForService(
+      String serviceId,
+      ) async {
+    final response =
+    await apiService.get<ServiceProductsResponse>(
+      '${ApiConstants.productsForService}/$serviceId',
+      fromJson: (json) => ServiceProductsResponse.fromJson(
+        Map<String, dynamic>.from(json as Map),
+      ),
+    );
+
+    if (response.data == null) {
+      throw const ServerException(
+        message: 'Failed to fetch products for service',
+      );
+    }
+
+    return response.data!;
+  }
+
+  @override
+  Future<PasswordResetResponse> forgotPassword(
+      ForgotPasswordRequest request,
+      ) async {
+    final response =
+    await apiService.post<PasswordResetResponse>(
+      ApiConstants.forgotPassword,
+      data: request.toJson(),
+      fromJson: (json) => PasswordResetResponse.fromJson(
+        Map<String, dynamic>.from(json as Map),
+      ),
+    );
+
+    if (response.data != null) {
+      return response.data!;
+    }
+
+    // Supports responses where ApiClient provides the
+    // success flag and message separately from response.data.
+    if (response.success) {
+      return PasswordResetResponse(
+        success: true,
+        message: response.message,
+      );
+    }
+
+    throw ServerException(
+      message: response.message.isNotEmpty
+          ? response.message
+          : 'Failed to request password reset',
+    );
+  }
+
+  @override
+  Future<PasswordResetResponse> resetPassword(
+      ResetPasswordRequest request,
+      ) async {
+    final response =
+    await apiService.post<PasswordResetResponse>(
+      ApiConstants.resetPassword,
+      data: request.toJson(),
+      fromJson: (json) => PasswordResetResponse.fromJson(
+        Map<String, dynamic>.from(json as Map),
+      ),
+    );
+
+    if (response.data != null) {
+      return response.data!;
+    }
+
+    if (response.success) {
+      return PasswordResetResponse(
+        success: true,
+        message: response.message,
+      );
+    }
+
+    throw ServerException(
+      message: response.message.isNotEmpty
+          ? response.message
+          : 'Failed to reset password',
+    );
+  }
+
+
+
+
+
+
+
+
+
+  @override
+  Future<SendOtpResponse> sendSignupOtp(String email) async {
+    final response = await apiService.post<SendOtpResponse>(
+      ApiConstants.signupSendOtp,
+      data: {'email': email},
+      fromJson: (json) => SendOtpResponse.fromJson(
+        json is Map<String, dynamic> ? json : <String, dynamic>{},
+      ),
+    );
+    if (response.data == null) {
+      return SendOtpResponse(
+        success: response.success,
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'OTP sent successfully',
+      );
+    }
+    return response.data!;
+  }
 
   @override
   Future<SendOtpResponse> sendOtp(SendOtpRequest request) async {
@@ -51,10 +226,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> completeProfile(CompleteProfileRequest request) async {
-    final response = await apiService.post<UserModel>(
-      ApiConstants.completeProfile,
+    final response = await apiService.patch<UserModel>(
+      ApiConstants.updateProfile,
       data: request.toJson(),
-      fromJson: (json) => UserModel.fromJson(json as Map<String, dynamic>),
+      fromJson: (json) {
+        if (json is Map<String, dynamic>) {
+          if (json.containsKey('user') && json['user'] is Map<String, dynamic>) {
+            return UserModel.fromJson(json['user'] as Map<String, dynamic>);
+          }
+          return UserModel.fromJson(json);
+        }
+        return UserModel.fromJson(const {});
+      },
     );
     if (response.data == null) {
       throw const ServerException(message: 'Failed to complete profile');
@@ -63,10 +246,62 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
+  Future<UserModel> updateProfile(Map<String, dynamic> data) async {
+    final response = await apiService.patch<UserModel>(
+      ApiConstants.updateProfile,
+      data: data,
+      fromJson: (json) {
+        if (json is Map<String, dynamic>) {
+          if (json.containsKey('user') && json['user'] is Map<String, dynamic>) {
+            return UserModel.fromJson(json['user'] as Map<String, dynamic>);
+          }
+          return UserModel.fromJson(json);
+        }
+        return UserModel.fromJson(const {});
+      },
+    );
+    if (response.data == null) {
+      throw const ServerException(message: 'Failed to update profile');
+    }
+    return response.data!;
+  }
+
+  @override
+  Future<UserModel> updateClinicalPreferences(
+      Map<String, dynamic> preferences) async {
+    final response = await apiService.patch<UserModel>(
+      ApiConstants.clinicalPreferences,
+      data: preferences,
+      fromJson: (json) {
+        if (json is Map<String, dynamic>) {
+          if (json.containsKey('user') && json['user'] is Map<String, dynamic>) {
+            return UserModel.fromJson(json['user'] as Map<String, dynamic>);
+          }
+          return UserModel.fromJson(json);
+        }
+        return UserModel.fromJson(const {});
+      },
+    );
+    if (response.data == null) {
+      throw const ServerException(
+          message: 'Failed to update clinical preferences');
+    }
+    return response.data!;
+  }
+
+  @override
   Future<UserModel> getCurrentUser() async {
     final response = await apiService.get<UserModel>(
       ApiConstants.profile,
-      fromJson: (json) => UserModel.fromJson(json as Map<String, dynamic>),
+      fromJson: (json) {
+        if (json is Map<String, dynamic>) {
+          if (json.containsKey('user') && json['user'] is Map<String, dynamic>) {
+            return UserModel.fromJson(json['user'] as Map<String, dynamic>);
+          }
+          return UserModel.fromJson(json);
+        }
+        return UserModel.fromJson(const {});
+      },
     );
     if (response.data == null) {
       throw const NotFoundException(message: 'User profile not found');
@@ -86,6 +321,131 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 /// 2. New user flow (other phones -> isProfileComplete: false)
 class MockAuthRemoteDataSource implements AuthRemoteDataSource {
   UserModel? _mockCurrentUser;
+
+
+
+  @override
+  Future<RegisterCustomerResponse> registerCustomer(
+      RegisterCustomerRequest request,
+      ) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    if (request.name.trim().length < 2) {
+      throw const BadRequestException(
+        message: 'Please enter a valid name',
+      );
+    }
+
+    if (!request.email.contains('@')) {
+      throw const BadRequestException(
+        message: 'Please enter a valid email',
+      );
+    }
+
+    if (request.phone.length != 10) {
+      throw const BadRequestException(
+        message: 'Please enter a valid phone number',
+      );
+    }
+
+    if (request.password != request.confirmPassword) {
+      throw const BadRequestException(
+        message: 'Passwords do not match',
+      );
+    }
+
+    final userId =
+        'usr_${DateTime.now().millisecondsSinceEpoch}';
+
+    return RegisterCustomerResponse(
+      accessToken: 'mock_access_token_$userId',
+      refreshToken: 'mock_refresh_token_$userId',
+      user: {
+        'id': userId,
+        'name': request.name.trim(),
+        'email': request.email.trim(),
+        'phone': request.phone,
+        'gender': request.gender,
+      },
+    );
+  }
+
+
+
+  @override
+  Future<PasswordResetResponse> forgotPassword(
+      ForgotPasswordRequest request,
+      ) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final email = request.email.trim();
+
+    if (email.isEmpty || !email.contains('@')) {
+      throw const BadRequestException(
+        message: 'Please enter a valid email address',
+      );
+    }
+
+    // Development mock response.
+    return PasswordResetResponse(
+      success: true,
+      message:
+      'If an account exists with that email address, '
+          'password reset instructions have been sent.',
+      resetToken:
+      'mock_reset_token_${DateTime.now().millisecondsSinceEpoch}',
+    );
+  }
+
+  @override
+  Future<PasswordResetResponse> resetPassword(
+      ResetPasswordRequest request,
+      ) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (request.resetToken.trim().isEmpty) {
+      throw const BadRequestException(
+        message: 'Reset token is required',
+      );
+    }
+
+    if (request.newPassword.length < 8) {
+      throw const BadRequestException(
+        message: 'Password must be at least 8 characters',
+      );
+    }
+
+    return const PasswordResetResponse(
+      success: true,
+      message: 'Password has been reset successfully. Please log in.',
+    );
+  }
+
+
+
+  @override
+  Future<SendOtpResponse> sendSignupOtp(String email) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    final trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail.contains('@') || !trimmedEmail.contains('.')) {
+      throw const BadRequestException(message: 'Invalid email address');
+    }
+
+    if (trimmedEmail == 'registered@example.com' ||
+        trimmedEmail == 'existing@example.com') {
+      throw const ConflictException(
+        message: 'This email is already registered. Please sign in.',
+      );
+    }
+
+    return SendOtpResponse(
+      success: true,
+      message: 'Verification code sent to $email',
+      expiresInSeconds: 30,
+      resendToken: 'mock_resend_token_${DateTime.now().millisecondsSinceEpoch}',
+    );
+  }
 
   @override
   Future<SendOtpResponse> sendOtp(SendOtpRequest request) async {
@@ -178,6 +538,8 @@ class MockAuthRemoteDataSource implements AuthRemoteDataSource {
     final updated = current.copyWith(
       name: request.name.trim(),
       email: request.email?.trim(),
+      gender: request.gender?.trim(),
+      dateOfBirth: request.dateOfBirth?.trim(),
       profileImage: request.profileImage,
       isProfileComplete: true,
       updatedAt: DateTime.now(),
@@ -185,6 +547,50 @@ class MockAuthRemoteDataSource implements AuthRemoteDataSource {
 
     _mockCurrentUser = updated;
     return updated;
+  }
+
+  @override
+  Future<UserModel> updateProfile(Map<String, dynamic> data) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    final current = _mockCurrentUser ??
+        UserModel(
+          id: 'usr_mock_123',
+          name: '',
+          phone: '9876543210',
+          email: '',
+          isProfileComplete: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+    final updated = current.copyWith(
+      name: data['name'] as String? ?? current.name,
+      email: data['email'] as String? ?? current.email,
+      gender: data['gender'] as String? ?? current.gender,
+      dateOfBirth: data['dateOfBirth'] as String? ?? current.dateOfBirth,
+      profileImage: data['profileImage'] as String? ?? current.profileImage,
+      isProfileComplete: true,
+      updatedAt: DateTime.now(),
+    );
+
+    _mockCurrentUser = updated;
+    return updated;
+  }
+
+  @override
+  Future<UserModel> updateClinicalPreferences(
+      Map<String, dynamic> preferences) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return _mockCurrentUser ??
+        UserModel(
+          id: 'usr_mock_123',
+          name: '',
+          phone: '9876543210',
+          email: '',
+          isProfileComplete: true,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
   }
 
   @override

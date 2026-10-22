@@ -26,8 +26,12 @@ class ProfileScreen extends StatelessWidget {
         user?.phone.isNotEmpty == true ? AppFormatters.formatPhone(user!.phone) : '+91 98765 43210';
     final displayEmail =
         user?.email.isNotEmpty == true ? user!.email : 'sophia.reynolds@example.com';
-    final displayGender = user?.gender ?? 'Female';
-    final displayDob = user?.dateOfBirth ?? '15 Aug 1996';
+    final displayGender = (user?.gender != null && user!.gender!.isNotEmpty)
+        ? user.gender!
+        : 'Not specified';
+    final displayDob = (user?.dateOfBirth != null && user!.dateOfBirth!.isNotEmpty)
+        ? user.dateOfBirth!
+        : 'Not specified';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -56,13 +60,20 @@ class ProfileScreen extends StatelessWidget {
                       CircleAvatar(
                         radius: 44,
                         backgroundColor: AppColors.primaryLight,
-                        child: Text(
-                          displayName.substring(0, 1).toUpperCase(),
-                          style: AppTypography.displayLarge.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                        backgroundImage: (user?.profileImage != null &&
+                                user!.profileImage!.startsWith('http'))
+                            ? NetworkImage(user.profileImage!)
+                            : null,
+                        child: (user?.profileImage == null ||
+                                !user!.profileImage!.startsWith('http'))
+                            ? Text(
+                                displayName.substring(0, 1).toUpperCase(),
+                                style: AppTypography.displayLarge.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              )
+                            : null,
                       ),
                       Positioned(
                         bottom: 0,

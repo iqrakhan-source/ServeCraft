@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prop_crm/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:prop_crm/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:prop_crm/features/auth/data/models/register_customer_request.dart';
 import 'package:prop_crm/features/auth/presentation/providers/auth_provider.dart';
 import '../../../mocks/fake_storage_service.dart';
 
@@ -46,6 +47,21 @@ void main() {
       expect(authProvider.canResendOtp, isFalse);
     });
 
+    test('sendSignupOtp updates currentEmail and starts countdown', () async {
+      final success = await authProvider.sendSignupOtp('newuser@example.com');
+      expect(success, isTrue);
+      expect(authProvider.currentEmail, equals('newuser@example.com'));
+      expect(authProvider.resendCountdown, equals(30));
+      expect(authProvider.canResendOtp, isFalse);
+    });
+
+    test('sendSignupOtp fails for already registered email with meaningful error', () async {
+      final success = await authProvider.sendSignupOtp('registered@example.com');
+      expect(success, isFalse);
+      expect(authProvider.hasError, isTrue);
+      expect(authProvider.errorMessage, contains('already registered'));
+    });
+
     test('verifyOtp for new user transitions to AuthStatus.profileIncomplete', () async {
       await authProvider.sendOtp('9876543210');
       final verified = await authProvider.verifyOtp('123456');
@@ -77,12 +93,19 @@ void main() {
       final completed = await authProvider.completeProfile(
         name: 'Taylor Swift',
         email: 'taylor@example.com',
+        gender: 'Female',
+        dateOfBirth: '13 Dec 1989',
+        profileImage: 'https://example.com/avatar.jpg',
       );
 
       expect(completed, isTrue);
       expect(authProvider.status, equals(AuthStatus.authenticated));
       expect(authProvider.isAuthenticated, isTrue);
       expect(authProvider.currentUser!.name, equals('Taylor Swift'));
+      expect(authProvider.currentUser!.email, equals('taylor@example.com'));
+      expect(authProvider.currentUser!.gender, equals('Female'));
+      expect(authProvider.currentUser!.dateOfBirth, equals('13 Dec 1989'));
+      expect(authProvider.currentUser!.profileImage, equals('https://example.com/avatar.jpg'));
       expect(authProvider.currentUser!.isProfileComplete, isTrue);
     });
 
@@ -95,6 +118,43 @@ void main() {
       expect(authProvider.status, equals(AuthStatus.unauthenticated));
       expect(authProvider.isAuthenticated, isFalse);
       expect(authProvider.currentUser, isNull);
+    });
+
+    test('registerCustomer sets current email, phone, user, and transitions to profileIncomplete', () async {
+      final request = const RegisterCustomerRequest(
+        name: 'Jane Doe',
+        email: 'jane@example.com',
+        phone: '9876543210',
+        password: 'Password123!',
+        confirmPassword: 'Password123!',
+        gender: 'female',
+      );
+
+      final success = await authProvider.registerCustomer(request);
+      expect(success, isTrue);
+      expect(authProvider.status, equals(AuthStatus.profileIncomplete));
+      expect(authProvider.isProfileIncomplete, isTrue);
+      expect(authProvider.currentEmail, equals('jane@example.com'));
+      expect(authProvider.currentPhone, equals('9876543210'));
+      expect(authProvider.currentUser, isNotNull);
+      expect(authProvider.currentUser!.name, equals('Jane Doe'));
+    });
+
+    test('registerCustomer fails on invalid request and sets error message', () async {
+      final request = const RegisterCustomerRequest(
+        name: 'J',
+        email: 'jane@example.com',
+        phone: '9876543210',
+        password: 'Password123!',
+        confirmPassword: 'Password123!',
+        gender: 'female',
+      );
+
+      final success = await authProvider.registerCustomer(request);
+      expect(success, isFalse);
+      expect(authProvider.hasError, isTrue);
+      expect(authProvider.status, equals(AuthStatus.error));
+      expect(authProvider.errorMessage, isNotEmpty);
     });
   });
 }

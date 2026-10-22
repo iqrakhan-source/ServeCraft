@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/config/app_config.dart';
 import '../core/constants/route_names.dart';
-import '../core/networking/api_service.dart';
 import '../core/storage/storage_service.dart';
 import '../features/auth/domain/repositories/auth_repository.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
@@ -31,7 +30,6 @@ import 'app_theme.dart';
 
 class ServeCraftApp extends StatelessWidget {
   final StorageService storageService;
-  final ApiService apiService;
   final AuthRepository authRepository;
   final BranchRepository branchRepository;
   final CategoryRepository categoryRepository;
@@ -46,7 +44,6 @@ class ServeCraftApp extends StatelessWidget {
   const ServeCraftApp({
     super.key,
     required this.storageService,
-    required this.apiService,
     required this.authRepository,
     required this.branchRepository,
     required this.categoryRepository,
@@ -67,7 +64,6 @@ class ServeCraftApp extends StatelessWidget {
       providers: [
         // Core services & repositories injected into Provider tree
         Provider<StorageService>.value(value: storageService),
-        Provider<ApiService>.value(value: apiService),
         Provider<AuthRepository>.value(value: authRepository),
         Provider<CategoryRepository>.value(value: categoryRepository),
         Provider<ServiceRepository>.value(value: serviceRepository),

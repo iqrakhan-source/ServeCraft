@@ -56,7 +56,8 @@ class AppLoggingInterceptor extends Interceptor {
       name: 'Network',
     );
     if (options.data != null) {
-      developer.log('📦 Payload: ${options.data}', name: 'Network');
+      final sanitizedData = _sanitizeData(options.data);
+      developer.log('📦 Payload: $sanitizedData', name: 'Network');
     }
     return handler.next(options);
   }
@@ -78,5 +79,25 @@ class AppLoggingInterceptor extends Interceptor {
       error: err,
     );
     return handler.next(err);
+  }
+
+  dynamic _sanitizeData(dynamic data) {
+    if (data is Map) {
+      final sanitized = Map<String, dynamic>.from(data);
+      for (final key in [
+        'password',
+        'confirmPassword',
+        'token',
+        'accessToken',
+        'refreshToken',
+        'otp'
+      ]) {
+        if (sanitized.containsKey(key)) {
+          sanitized[key] = '[PROTECTED]';
+        }
+      }
+      return sanitized;
+    }
+    return data;
   }
 }

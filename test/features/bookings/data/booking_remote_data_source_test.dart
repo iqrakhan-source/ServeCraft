@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:prop_crm/core/networking/api_exceptions.dart';
+import 'package:prop_crm/core/networking/api_client.dart';
 import 'package:prop_crm/features/addresses/data/models/address_model.dart';
 import 'package:prop_crm/features/booking_summary/data/models/booking_summary_model.dart';
 import 'package:prop_crm/features/booking_summary/data/models/pricing_breakdown_model.dart';

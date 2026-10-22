@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prop_crm/core/storage/storage_keys.dart';
 import 'package:prop_crm/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:prop_crm/features/auth/data/models/register_customer_request.dart';
 import 'package:prop_crm/features/auth/data/repositories/auth_repository_impl.dart';
 import '../../../mocks/fake_storage_service.dart';
 
@@ -19,6 +20,27 @@ void main() {
   });
 
   group('AuthRepositoryImpl', () {
+    test('registerCustomer persists tokens and marks profile incomplete in storage', () async {
+      const request = RegisterCustomerRequest(
+        name: 'Jane Doe',
+        email: 'janedoe@example.com',
+        phone: '9876543210',
+        password: 'Password123!',
+        confirmPassword: 'Password123!',
+        gender: 'female',
+      );
+
+      final response = await repository.registerCustomer(request);
+
+      expect(response.accessToken, isNotEmpty);
+      expect(response.refreshToken, isNotEmpty);
+      expect(storageService.getString(StorageKeys.authToken), equals(response.accessToken));
+      expect(storageService.getString(StorageKeys.refreshToken), equals(response.refreshToken));
+      expect(storageService.getString(StorageKeys.userId), equals(response.user['id']));
+      expect(storageService.getString(StorageKeys.userPhone), equals(response.user['phone']));
+      expect(storageService.getBool(StorageKeys.isProfileComplete), isFalse);
+    });
+
     test('sendOtp succeeds for valid 10-digit mobile number', () async {
       final response = await repository.sendOtp('9876543210');
       expect(response.success, isTrue);

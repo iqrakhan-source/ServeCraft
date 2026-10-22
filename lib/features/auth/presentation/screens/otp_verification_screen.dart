@@ -15,8 +15,9 @@ import 'package:provider/provider.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String? phone;
+  final String? email;
 
-  const OtpVerificationScreen({super.key, this.phone});
+  const OtpVerificationScreen({super.key, this.phone, this.email});
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -36,6 +37,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final targetEmail = widget.email ?? context.read<AuthProvider>().currentEmail;
+    if (targetEmail != null && targetEmail.isNotEmpty) {
+      // /signup/verify is not integrated yet per instructions; OTP screen remains UI-only
+      Navigator.of(context).pushReplacementNamed(
+        AppRoutes.completeProfile,
+      );
       return;
     }
 
@@ -82,7 +92,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final targetEmail = widget.email ?? authProvider.currentEmail ?? '';
     final targetPhone = widget.phone ?? authProvider.currentPhone ?? '';
+    final destinationText = targetEmail.isNotEmpty
+        ? targetEmail
+        : (targetPhone.isNotEmpty ? AppFormatters.formatPhone(targetPhone) : '');
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -100,7 +114,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               children: [
                 const SizedBox(height: 16),
                 Text(
-                  AppStrings.otpTitle,
+                  targetEmail.isNotEmpty ? 'Verify Email' : AppStrings.otpTitle,
                   style: AppTypography.displayMedium.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -110,7 +124,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        '${AppStrings.otpSubtitle} ${AppFormatters.formatPhone(targetPhone)}',
+                        '${AppStrings.otpSubtitle} $destinationText',
                         style: AppTypography.bodyMedium.copyWith(
                           color: AppColors.textSecondary,
                         ),

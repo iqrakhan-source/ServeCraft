@@ -35,9 +35,10 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context
-          .read<ServiceDetailsProvider>()
-          .fetchServiceDetails(widget.serviceId);
+      final provider = context.read<ServiceDetailsProvider>();
+
+      provider.fetchServiceDetails(widget.serviceId);
+      provider.fetchProductsForService(widget.serviceId);
     });
   }
 
