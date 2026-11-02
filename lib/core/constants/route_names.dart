@@ -17,7 +17,7 @@ abstract class AppRoutes {
   static const String bookings = '/bookings';
   static const String offers = '/offers';
   static const String profile = '/profile';
-  static const String editProfile = '/CompleteProfileScreen';
+  static const String editProfile = '/profile/edit';
 
   // Categories & Services
   static const String categories = '/categories';
@@ -41,7 +41,6 @@ abstract class AppRoutes {
   static const String bookingDetails = '/bookings/details';
 
   // Profile, Notifications & Reviews
- // static const String editProfile = '/profile/edit';
   static const String notifications = '/notifications';
   static const String reviews = '/reviews';
   static const String addReview = '/reviews/add';

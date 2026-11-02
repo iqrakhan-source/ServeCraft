@@ -27,7 +27,20 @@ class CompleteProfileRequest {
       map['gender'] = gender!.trim();
     }
     if (dateOfBirth != null && dateOfBirth!.trim().isNotEmpty) {
-      map['dateOfBirth'] = dateOfBirth!.trim();
+      final dobStr = dateOfBirth!.trim();
+      map['dateOfBirth'] = dobStr;
+      final parsedDate = DateTime.tryParse(dobStr);
+      if (parsedDate != null) {
+        final now = DateTime.now();
+        var age = now.year - parsedDate.year;
+        if (now.month < parsedDate.month ||
+            (now.month == parsedDate.month && now.day < parsedDate.day)) {
+          age--;
+        }
+        if (age > 0) {
+          map['age'] = age;
+        }
+      }
     }
     return map;
   }

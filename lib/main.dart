@@ -4,6 +4,7 @@ import 'core/config/app_config.dart';
 import 'core/constants/api_constants.dart';
 import 'core/networking/api_client.dart';
 import 'core/storage/shared_prefs_storage_service.dart';
+import 'core/storage/storage_keys.dart';
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
@@ -60,7 +61,12 @@ void main() async {
   final apiClient = ApiClient.create(
     storageService: storageService,
     onUnauthorized: () {
-      // Session invalidation hook for 401
+      storageService.remove(StorageKeys.authToken);
+      storageService.remove(StorageKeys.refreshToken);
+      storageService.remove(StorageKeys.userId);
+      storageService.remove(StorageKeys.userPhone);
+      storageService.remove(StorageKeys.isProfileComplete);
+      storageService.remove(StorageKeys.userCachedJson);
     },
   );
 
@@ -73,19 +79,19 @@ void main() async {
   );
 
   final BranchRemoteDataSource branchRemoteDataSource =
-      MockBranchRemoteDataSource();
+  BranchRemoteDataSourceImpl(apiService: apiClient);
   final BranchRepository branchRepository = BranchRepositoryImpl(
     remoteDataSource: branchRemoteDataSource,
   );
 
   final CategoryRemoteDataSource categoryRemoteDataSource =
-      MockCategoryRemoteDataSource();
+  CategoryRemoteDataSourceImpl(apiService: apiClient);
   final CategoryRepository categoryRepository = CategoryRepositoryImpl(
     remoteDataSource: categoryRemoteDataSource,
   );
 
   final ServiceRemoteDataSource serviceRemoteDataSource =
-  MockServiceRemoteDataSource();
+  ServiceRemoteDataSourceImpl(apiService: apiClient);
 
   final ServiceProductsRemoteDataSource productsRemoteDataSource =
   ServiceProductsRemoteDataSourceImpl(

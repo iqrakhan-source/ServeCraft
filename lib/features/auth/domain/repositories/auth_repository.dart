@@ -1,3 +1,6 @@
+import 'package:prop_crm/features/auth/data/models/login_request.dart';
+import 'package:prop_crm/features/auth/data/models/login_response.dart';
+
 import '../../data/models/register_customer_request.dart';
 import '../../data/models/register_customer_response.dart';
 import '../../data/models/send_otp_response.dart';
@@ -9,6 +12,7 @@ abstract class AuthRepository {
       RegisterCustomerRequest request,
       );
   Future<SendOtpResponse> sendOtp(String phone);
+  Future<LoginResponse> login(String email, String password);
   Future<SendOtpResponse> sendSignupOtp(String email);
   Future<VerifyOtpResponse> verifyOtp(String phone, String otp);
   Future<UserModel> completeProfile({

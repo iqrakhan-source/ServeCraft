@@ -50,15 +50,26 @@ class UserModel {
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final explicitComplete =
+        json['isProfileComplete'] ?? json['is_profile_complete'];
+    final name = json['name'] as String? ?? '';
+
+    final bool isProfileComplete;
+    if (explicitComplete is bool) {
+      isProfileComplete = explicitComplete;
+    } else {
+      isProfileComplete = name.trim().length >= 2;
+    }
+
     return UserModel(
-      id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
+      id: (json['id'] ?? json['_id'])?.toString() ?? '',
+      name: name,
       phone: json['phone'] as String? ?? '',
       email: json['email'] as String? ?? '',
-      profileImage: json['profileImage'] as String?,
+      profileImage: (json['profileImage'] ?? json['profilePhoto']) as String?,
       gender: json['gender'] as String?,
       dateOfBirth: json['dateOfBirth'] as String?,
-      isProfileComplete: json['isProfileComplete'] as bool? ?? false,
+      isProfileComplete: isProfileComplete,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
           : DateTime.now(),

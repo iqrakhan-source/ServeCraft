@@ -13,6 +13,11 @@ import '../models/send_otp_response.dart';
 import '../models/user_model.dart';
 import '../models/verify_otp_request.dart';
 import '../models/verify_otp_response.dart';
+import '../../data/models/login_response.dart';
+import '../../data/models/forgot_password_request.dart';
+import '../../data/models/password_reset_response.dart';
+import '../../data/models/reset_password_request.dart';
+import '../models/login_response.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -22,6 +27,45 @@ class AuthRepositoryImpl implements AuthRepository {
     required this.remoteDataSource,
     required this.storageService,
   });
+
+  @override
+  Future<LoginResponse> login(String email, String password) async {
+    final response = await remoteDataSource.login(email, password);
+
+    await storageService.setString(
+      StorageKeys.authToken,
+      response.accessToken,
+    );
+
+    if (response.refreshToken != null &&
+        response.refreshToken!.isNotEmpty) {
+      await storageService.setString(
+        StorageKeys.refreshToken,
+        response.refreshToken!,
+      );
+    }
+
+    await storageService.setString(
+      StorageKeys.userId,
+      response.user.id,
+    );
+
+    if (response.user.phone.isNotEmpty) {
+      await storageService.setString(
+        StorageKeys.userPhone,
+        response.user.phone,
+      );
+    }
+
+    await storageService.setBool(
+      StorageKeys.isProfileComplete,
+      response.user.isProfileComplete,
+    );
+
+    await _saveUserToCache(response.user);
+
+    return response;
+  }
 
   @override
   Future<RegisterCustomerResponse> registerCustomer(
@@ -53,7 +97,8 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      final userId = response.user['id']?.toString();
+      final userId =
+          (response.user['id'] ?? response.user['_id'])?.toString();
       final phone = response.user['phone']?.toString();
 
       if (userId != null && userId.isNotEmpty) {
@@ -155,20 +200,35 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserModel?> checkAuthSession() async {
     final token = storageService.getString(StorageKeys.authToken);
-    if (token == null || token.isEmpty) {
+    final hasToken = token != null && token.isNotEmpty;
+    debugPrint('STARTUP_AUTH [AuthRepository]: Stored auth token exists: $hasToken');
+
+    if (!hasToken) {
       return null;
     }
 
     try {
       final user = await remoteDataSource.getCurrentUser();
+      debugPrint(
+          'STARTUP_AUTH [AuthRepository]: Fetched user profile (id: ${user.id}, isProfileComplete: ${user.isProfileComplete})');
       await _saveUserToCache(user);
       await storageService.setBool(
           StorageKeys.isProfileComplete, user.isProfileComplete);
       return user;
     } on UnauthorizedException {
+      debugPrint('STARTUP_AUTH [AuthRepository]: Received 401 Unauthorized. Clearing session.');
       await logout();
       return null;
-    } catch (_) {
+    } on ForbiddenException {
+      debugPrint('STARTUP_AUTH [AuthRepository]: Received 403 Forbidden. Clearing session.');
+      await logout();
+      return null;
+    } on NotFoundException {
+      debugPrint('STARTUP_AUTH [AuthRepository]: Received 404 NotFound. Clearing session.');
+      await logout();
+      return null;
+    } catch (e) {
+      debugPrint('STARTUP_AUTH [AuthRepository]: Error fetching profile ($e). Falling back to cached user.');
       // If network fails offline, fall back to cached user session
       return await getCachedUser();
     }

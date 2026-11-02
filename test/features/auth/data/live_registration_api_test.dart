@@ -106,5 +106,16 @@ void main() {
     expect(duplicateSuccess, isFalse);
     expect(provider.hasError, isTrue);
     expect(provider.errorMessage, contains('already exists'));
+
+    final profileSuccess = await provider.completeProfile(
+      name: 'E2E Verified User Updated',
+      gender: 'female',
+      dateOfBirth: '1995-05-15',
+    );
+    print('Profile completion success: $profileSuccess');
+    print('Profile completion status: ${provider.status}');
+    print('Current user profile complete: ${provider.currentUser?.isProfileComplete}');
+    expect(profileSuccess, isTrue);
+    expect(provider.status, equals(AuthStatus.authenticated));
   });
 }

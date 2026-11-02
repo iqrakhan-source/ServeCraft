@@ -41,7 +41,7 @@ void main() {
   });
 
   group('AuthRemoteDataSourceImpl - registerCustomer', () {
-    test('sends POST to /api/v1/customer/auth/register and returns parsed RegisterCustomerResponse', () async {
+    test('sends POST to /api/customer/auth/register and returns parsed RegisterCustomerResponse', () async {
       RequestOptions? capturedOptions;
 
       mockAdapter.handler = (options) {
@@ -87,7 +87,7 @@ void main() {
       expect(capturedOptions, isNotNull);
       expect(capturedOptions!.method, equals('POST'));
       expect(capturedOptions!.path, equals(ApiConstants.registerCustomer));
-      expect(capturedOptions!.path, equals('/api/v1/customer/auth/register'));
+      expect(capturedOptions!.path, equals('/api/customer/auth/register'));
       expect(capturedOptions!.data['name'], equals('Sarah Connor'));
       expect(capturedOptions!.data['email'], equals('sarah@example.com'));
       expect(capturedOptions!.data['phone'], equals('9876543210'));

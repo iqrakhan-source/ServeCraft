@@ -14,6 +14,8 @@ import 'package:prop_crm/core/utilities/validators.dart';
 import 'package:prop_crm/core/widgets/app_button.dart';
 import 'package:prop_crm/core/widgets/app_text_field.dart';
 import 'package:prop_crm/core/widgets/custom_app_bar.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
   const CompleteProfileScreen({super.key});
@@ -39,9 +41,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final Set<String> _selectedPreferences = {'Hair Styling', 'Spa & Massage'};
 
   final List<String> _genderOptions = [
-    'Female',
-    'Male',
-    'Non-Binary',
+    'female',
+    'male',
+    'non-binary',
     'Other',
     'Prefer not to say',
   ];
@@ -60,6 +62,40 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
     'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final auth = context.read<AuthProvider>();
+      final user = auth.currentUser;
+      final phone = (user?.phone.isNotEmpty == true) ? user!.phone : (auth.currentPhone ?? '');
+      final email = (user?.email.isNotEmpty == true) ? user!.email : (auth.currentEmail ?? '');
+      final name = user?.name ?? '';
+
+      if (_nameController.text.isEmpty && name.isNotEmpty) {
+        _nameController.text = name;
+      }
+      if (_phoneController.text.isEmpty && phone.isNotEmpty) {
+        _phoneController.text = phone;
+      }
+      if (_emailController.text.isEmpty && email.isNotEmpty) {
+        _emailController.text = email;
+      }
+      if (_selectedGender == null &&
+          user?.gender != null &&
+          user!.gender!.isNotEmpty) {
+        final match = _genderOptions.firstWhere(
+          (g) => g.toLowerCase() == user.gender!.toLowerCase(),
+          orElse: () => _genderOptions.first,
+        );
+        setState(() {
+          _selectedGender = match;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -410,16 +446,30 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   Future<void> _handleCompleteProfile() async {
     FocusScope.of(context).unfocus();
 
+    final authProvider = context.read<AuthProvider>();
+    if (_isLoading || authProvider.isLoading) return;
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // UI-only prototype: simulate short interaction and navigate to Home / MainNav
     setState(() {
       _isLoading = true;
     });
+    final dobFormatted = _selectedDateOfBirth != null
+        ? DateFormat('yyyy-MM-dd').format(_selectedDateOfBirth!)
+        : null;
+    final photo = _selectedAvatarUrl ?? _webImagePath ?? _imageFile?.path;
 
-    await Future.delayed(const Duration(milliseconds: 500));
+    final success = await authProvider.completeProfile(
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim().isNotEmpty
+          ? _emailController.text.trim()
+          : null,
+      gender: _selectedGender,
+      dateOfBirth: dobFormatted,
+      profileImage: photo,
+    );
 
     if (!mounted) return;
 
@@ -427,20 +477,71 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       _isLoading = false;
     });
 
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      AppRoutes.mainNav,
-      (route) => false,
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile completed successfully!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        AppRoutes.mainNav,
+        (route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Failed to update profile'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sign Out', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
     );
+
+    if (confirm == true && mounted) {
+      await context.read<AuthProvider>().logout();
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        AppRoutes.login,
+        (route) => false,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(
+      appBar: CustomAppBar(
         title: 'Profile Setup',
         showBackButton: false,
         showBottomBorder: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: AppColors.textSecondary),
+            tooltip: 'Sign Out',
+            onPressed: _handleLogout,
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

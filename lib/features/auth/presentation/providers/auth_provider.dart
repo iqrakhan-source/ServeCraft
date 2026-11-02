@@ -72,6 +72,8 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = null;
     }
 
+    debugPrint(
+        'STARTUP_AUTH [AuthProvider]: checkSession resolved status: $_status, user.isProfileComplete: ${_currentUser?.isProfileComplete}');
     notifyListeners();
     return _status;
   }
@@ -113,6 +115,42 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = ErrorHandler.handleError(e).message;
       _status = AuthStatus.error;
       debugPrint('REGISTER [AuthProvider]: Registration failed. Error: $_errorMessage');
+      notifyListeners();
+      return false;
+    }
+  }
+
+
+  Future<bool> login(String email, String password) async {
+    if (isLoading) return false;
+
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      debugPrint('LOGIN [AuthProvider]: Login started');
+
+      final response = await repository.login(email, password);
+
+      _currentUser = response.user;
+      _currentEmail = email;
+      _currentPhone = response.user.phone;
+
+      if (response.user.isProfileComplete) {
+        _status = AuthStatus.authenticated;
+      } else {
+        _status = AuthStatus.profileIncomplete;
+      }
+
+      debugPrint('LOGIN [AuthProvider]: Login API succeeded');
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = ErrorHandler.handleError(e).message;
+      _status = AuthStatus.error;
+
+      debugPrint('LOGIN [AuthProvider]: Login failed: $_errorMessage');
       notifyListeners();
       return false;
     }
@@ -227,6 +265,7 @@ class AuthProvider extends ChangeNotifier {
     String? dateOfBirth,
     String? profileImage,
   }) async {
+    if (isLoading) return false;
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();

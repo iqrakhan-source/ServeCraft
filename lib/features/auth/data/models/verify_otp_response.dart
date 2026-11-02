@@ -26,7 +26,7 @@ class VerifyOtpResponse {
               email: '',
               isProfileComplete: false,
               createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
+                updatedAt: DateTime.now(),
             ),
       isNewUser: json['isNewUser'] as bool? ?? false,
     );

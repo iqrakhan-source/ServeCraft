@@ -78,30 +78,45 @@ class ServiceModel {
   }
 
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
-    List<ServicePackageModel> parsedPackages = [];
-    if (json['packages'] is List) {
-      parsedPackages = (json['packages'] as List)
-          .map((item) =>
-              ServicePackageModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    }
+    final category = json['category'];
 
-    List<String> parsedInclusions = [];
-    if (json['inclusions'] is List) {
-      parsedInclusions = List<String>.from(json['inclusions'] as List);
-    }
+    final String parsedCategoryId = category is Map
+        ? (category['_id'] ?? category['id'] ?? '').toString()
+        : (json['categoryId'] ?? '').toString();
+
+    final rawDuration = json['duration'];
+    final String parsedDuration = rawDuration is num
+        ? '$rawDuration mins'
+        : rawDuration?.toString() ?? '45 mins';
+
+    final rawPrice = json['price'] ?? json['startingPrice'];
+
+    final parsedPackages = json['packages'] is List
+        ? (json['packages'] as List)
+        .whereType<Map<String, dynamic>>()
+        .map(ServicePackageModel.fromJson)
+        .toList()
+        : <ServicePackageModel>[];
+
+    final parsedInclusions = json['inclusions'] is List
+        ? (json['inclusions'] as List)
+        .map((item) => item.toString())
+        .toList()
+        : <String>[];
 
     return ServiceModel(
-      id: json['id'] as String? ?? '',
-      categoryId: json['categoryId'] as String? ?? '',
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      categoryId: parsedCategoryId,
       name: json['name'] as String? ?? '',
       description: json['description'] as String? ?? '',
       image: json['image'] as String?,
       rating: (json['rating'] as num?)?.toDouble() ?? 4.8,
-      reviewCount: json['reviewCount'] as int? ?? 0,
-      startingPrice: (json['startingPrice'] as num?)?.toDouble() ?? 0.0,
-      duration: json['duration'] as String? ?? '45 mins',
-      isActive: json['isActive'] as bool? ?? true,
+      reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
+      startingPrice: (rawPrice as num?)?.toDouble() ?? 0.0,
+      duration: parsedDuration,
+      isActive: json['active'] as bool? ??
+          json['isActive'] as bool? ??
+          true,
       packages: parsedPackages,
       genderTarget: json['genderTarget'] as String? ?? 'all',
       inclusions: parsedInclusions,

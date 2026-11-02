@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:prop_crm/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:prop_crm/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:prop_crm/features/auth/presentation/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -54,6 +58,8 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _isLoading = false;
     });
+
+
 
     Navigator.of(context).pushNamedAndRemoveUntil(
       AppRoutes.mainNav,
@@ -187,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _togglePasswordVisibility,
                     ),
                     textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _handleLogin(),
+                    // onSubmitted: (_) => _handleLogin(),
                     validator: AppValidators.validatePassword,
                   ),
                   const SizedBox(height: 10),
@@ -215,11 +221,58 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
 
                   // Primary Sign In Button
+
                   AppButton(
                     text: AppStrings.signIn,
                     isLoading: _isLoading,
-                    onPressed: _handleLogin,
+                    onPressed: () async {
+                      FocusScope.of(context).unfocus();
+
+                      if (!_formKey.currentState!.validate()) {
+                        return;
+                      }
+
+                      setState(() => _isLoading = true);
+
+                      try {
+                        final authProvider = Provider.of<AuthProvider>(
+                          context,
+                          listen: false,
+                        );
+
+                        final success = await authProvider.login(
+                          _emailController.text.trim(),
+                          _passwordController.text,
+                        );
+
+                        if (!mounted) return;
+
+                        if (success) {
+                          final nextRoute = authProvider.isProfileIncomplete
+                              ? AppRoutes.editProfile
+                              : AppRoutes.mainNav;
+
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            nextRoute,
+                                (route) => false,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                authProvider.errorMessage ?? 'Login failed. Please try again.',
+                              ),
+                            ),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() => _isLoading = false);
+                        }
+                      }
+                    },
                   ),
+
                   const SizedBox(height: 28),
 
                   // Divider

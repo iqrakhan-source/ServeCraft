@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-
+import 'package:prop_crm/core/storage/storage_keys.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../config/app_config.dart';
 import '../constants/api_constants.dart';
 import '../storage/storage_service.dart';
@@ -16,8 +17,9 @@ class ApiClient {
   factory ApiClient.create({
     required StorageService storageService,
     String? baseUrl,
+
     void Function()? onUnauthorized,
-  }) {
+  })  {
     String resolvedBaseUrl = baseUrl ?? ApiConstants.defaultBaseUrl;
     Duration connectTimeout = ApiConstants.connectTimeout;
     Duration receiveTimeout = ApiConstants.receiveTimeout;
@@ -35,7 +37,6 @@ class ApiClient {
     }
 
     debugPrint('API BASE URL: $resolvedBaseUrl');
-
     final options = BaseOptions(
       baseUrl: resolvedBaseUrl,
       connectTimeout: connectTimeout,
@@ -61,9 +62,22 @@ class ApiClient {
 
     if (enableLogging) {
       dio.interceptors.add(AppLoggingInterceptor());
+
+      dio.interceptors.add(
+        PrettyDioLogger(
+          requestHeader: true,
+          requestBody: true,
+          responseBody: true,
+          responseHeader: true,
+          error: true,
+          compact: true,
+          maxWidth: 90,
+        ),
+      );
     }
 
     return ApiClient._(dio);
+
   }
 
   // ─────────────────────────────────────────────
@@ -95,6 +109,18 @@ class ApiClient {
     }
   }
 
+  Future<void> debugPrintAuthToken(StorageService storageService) async {
+    final token = storageService.getString(StorageKeys.authToken);
+
+    if (token == null || token.isEmpty) {
+      debugPrint('AUTH TOKEN: Not found. Please log in first.');
+      return;
+    }
+
+    debugPrint('AUTH TOKEN: $token');
+  }
+
+
   // ─────────────────────────────────────────────
   // POST
   // ─────────────────────────────────────────────
@@ -107,6 +133,10 @@ class ApiClient {
         Options? options,
         T Function(dynamic json)? fromJson,
       }) async {
+    debugPrint('========== POST METHOD CALLED ==========');
+    debugPrint('POST PATH: $path');
+    debugPrint('REGISTER PATH: ${ApiConstants.registerCustomer}');
+    debugPrint('IS REGISTER: ${path == ApiConstants.registerCustomer}');
     try {
       // Debug only the Create Account request.
       if (path == ApiConstants.registerCustomer) {

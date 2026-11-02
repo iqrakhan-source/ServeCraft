@@ -93,7 +93,7 @@ void main() {
       final completed = await authProvider.completeProfile(
         name: 'Taylor Swift',
         email: 'taylor@example.com',
-        gender: 'Female',
+        gender: 'female',
         dateOfBirth: '13 Dec 1989',
         profileImage: 'https://example.com/avatar.jpg',
       );
@@ -103,7 +103,7 @@ void main() {
       expect(authProvider.isAuthenticated, isTrue);
       expect(authProvider.currentUser!.name, equals('Taylor Swift'));
       expect(authProvider.currentUser!.email, equals('taylor@example.com'));
-      expect(authProvider.currentUser!.gender, equals('Female'));
+      expect(authProvider.currentUser!.gender, equals('female'));
       expect(authProvider.currentUser!.dateOfBirth, equals('13 Dec 1989'));
       expect(authProvider.currentUser!.profileImage, equals('https://example.com/avatar.jpg'));
       expect(authProvider.currentUser!.isProfileComplete, isTrue);

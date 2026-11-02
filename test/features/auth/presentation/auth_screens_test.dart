@@ -88,7 +88,7 @@ void main() {
     });
 
     testWidgets(
-        'SignupScreen validates password match, calls registerCustomer, and navigates to EditProfileScreen',
+        'SignupScreen validates password match, calls registerCustomer, and navigates to CompleteProfileScreen',
         (tester) async {
       await tester.pumpWidget(createTestWidget(const SignupScreen()));
 
@@ -108,7 +108,7 @@ void main() {
       // Select gender
       await tester.tap(find.byType(DropdownButtonFormField<String>));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Female').last);
+      await tester.tap(find.text('female').last);
       await tester.pumpAndSettle();
 
       // Enter mismatched passwords
@@ -129,8 +129,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 700));
       await tester.pumpAndSettle();
 
-      // Successfully called registerCustomer and navigated to edit profile screen
-      expect(find.text('EditProfileScreen'), findsOneWidget);
+      // Successfully called registerCustomer and navigated to complete profile screen
+      expect(find.text('CompleteProfileScreen'), findsOneWidget);
     });
 
     testWidgets(
@@ -147,7 +147,7 @@ void main() {
       // Select gender
       await tester.tap(find.byType(DropdownButtonFormField<String>));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Female').last);
+      await tester.tap(find.text('female').last);
       await tester.pumpAndSettle();
 
       await tester.enterText(textFields.at(3), 'Secret123!');
@@ -159,8 +159,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 700));
       await tester.pumpAndSettle();
 
-      // User remains on Signup screen (does not navigate to EditProfileScreen)
-      expect(find.text('EditProfileScreen'), findsNothing);
+      // User remains on Signup screen (does not navigate to CompleteProfileScreen)
+      expect(find.text('CompleteProfileScreen'), findsNothing);
       expect(find.text(AppStrings.signUpTitle), findsNWidgets(2));
       // Meaningful error message is displayed
       expect(find.text('Please enter a valid name'), findsOneWidget);

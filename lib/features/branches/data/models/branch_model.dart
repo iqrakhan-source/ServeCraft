@@ -63,26 +63,53 @@ class BranchModel {
     );
   }
 
+
   factory BranchModel.fromJson(Map<String, dynamic> json) {
+    const weekdayMap = {
+      'Monday': 1,
+      'Tuesday': 2,
+      'Wednesday': 3,
+      'Thursday': 4,
+      'Friday': 5,
+      'Saturday': 6,
+      'Sunday': 7,
+    };
+
+    final rawWorkingDays = json['workingDays'] as List<dynamic>?;
+
+    final workingDays = rawWorkingDays == null
+        ? const [1, 2, 3, 4, 5, 6, 7]
+        : rawWorkingDays.map((day) {
+      if (day is int) return day;
+      return weekdayMap[day.toString()] ?? 0;
+    }).where((day) => day >= 1 && day <= 7).toList();
+
     return BranchModel(
-      id: json['id'] as String? ?? '',
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
       name: json['name'] as String? ?? '',
-      address: json['address'] as String? ?? '',
+      address: [
+        json['address'],
+        json['city'],
+      ]
+          .whereType<String>()
+          .where((value) => value.trim().isNotEmpty)
+          .toSet()
+          .join(', '),
       phone: json['phone'] as String? ?? '',
       imageUrl: json['imageUrl'] as String?,
       rating: (json['rating'] as num?)?.toDouble() ?? 4.8,
-      reviewCount: json['reviewCount'] as int? ?? 0,
-      workingDays: json['workingDays'] != null
-          ? List<int>.from(json['workingDays'] as List)
-          : const [1, 2, 3, 4, 5, 6, 7],
+      reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
+      workingDays: workingDays,
       openingTime: json['openingTime'] as String? ?? '09:00',
       closingTime: json['closingTime'] as String? ?? '21:00',
       isActive: json['isActive'] as bool? ?? true,
-      amenities: json['amenities'] != null
-          ? List<String>.from(json['amenities'] as List)
-          : const ['AC', 'Free Wi-Fi', 'Beverages'],
+      amenities: (json['amenities'] as List<dynamic>?)
+          ?.map((item) => item.toString())
+          .toList() ??
+          const ['AC', 'Free Wi-Fi', 'Beverages'],
     );
   }
+
 
   Map<String, dynamic> toJson() {
     return {

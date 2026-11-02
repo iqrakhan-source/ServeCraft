@@ -24,11 +24,15 @@ class DateTimeRepositoryImpl implements DateTimeRepository {
     required String serviceId,
     required DateTime date,
     String? packageId,
+    String? branchId,
+    String? categoryId,
   }) {
     return remoteDataSource.getTimeSlots(
       serviceId: serviceId,
       date: date,
       packageId: packageId,
+      branchId: branchId,
+      categoryId: categoryId,
     );
   }
 }

@@ -33,12 +33,26 @@ class TimeSlotModel {
   }
 
   factory TimeSlotModel.fromJson(Map<String, dynamic> json) {
+    final slot24 = json['slot24'] ?? json['timeSlot'];
+    final display = json['display']?.toString();
+    final id = (json['id'] ?? json['_id'] ?? slot24 ?? '').toString();
+    final startTime = (json['startTime'] ?? display ?? slot24 ?? '').toString();
+    final endTime = (json['endTime'] ?? '').toString();
+    final bool isAvailable;
+    if (json.containsKey('available')) {
+      isAvailable = json['available'] == true && json['disabled'] != true;
+    } else if (json.containsKey('isAvailable')) {
+      isAvailable = json['isAvailable'] as bool? ?? true;
+    } else {
+      isAvailable = true;
+    }
+
     return TimeSlotModel(
-      id: json['id'] as String? ?? '',
-      startTime: json['startTime'] as String? ?? '',
-      endTime: json['endTime'] as String? ?? '',
-      isAvailable: json['isAvailable'] as bool? ?? true,
-      displayLabel: json['displayLabel'] as String?,
+      id: id,
+      startTime: startTime,
+      endTime: endTime,
+      isAvailable: isAvailable,
+      displayLabel: display ?? json['displayLabel'] as String?,
     );
   }
 

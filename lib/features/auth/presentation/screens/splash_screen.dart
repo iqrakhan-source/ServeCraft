@@ -49,19 +49,25 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
 
+    final String targetRoute;
     switch (status) {
       case AuthStatus.authenticated:
-        Navigator.of(context).pushReplacementNamed(AppRoutes.mainNav);
+        targetRoute = AppRoutes.mainNav;
         break;
       case AuthStatus.profileIncomplete:
-        Navigator.of(context).pushReplacementNamed(AppRoutes.completeProfile);
+        targetRoute = AppRoutes.completeProfile;
         break;
       case AuthStatus.unauthenticated:
       case AuthStatus.error:
       default:
-        Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+        targetRoute = AppRoutes.login;
         break;
     }
+
+    debugPrint(
+        'STARTUP_AUTH [SplashScreen]: Navigation decision -> AuthStatus: $status, Selected Route: $targetRoute');
+
+    Navigator.of(context).pushReplacementNamed(targetRoute);
   }
 
   @override

@@ -1,9 +1,12 @@
 import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
+import '../../features/auth/data/datasources/auth_remote_data_source.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../config/app_config.dart';
 import '../constants/api_constants.dart';
 import '../storage/storage_keys.dart';
 import '../storage/storage_service.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 class AuthInterceptor extends Interceptor {
   final StorageService storageService;
@@ -29,15 +32,26 @@ class AuthInterceptor extends Interceptor {
       options.headers[ApiConstants.clientVersionHeader] = '1.0.0';
     }
 
-    // Attach auth token if available
-    final token = storageService.getString(StorageKeys.authToken);
-    if (token != null && token.isNotEmpty) {
-      options.headers[ApiConstants.authorizationHeader] =
-          '${ApiConstants.bearerPrefix}$token';
+    // Attach auth token if available, skipping public authentication endpoints
+    final path = options.path;
+    final isPublicAuthEndpoint = path.contains('/auth/register') ||
+        path.contains('/auth/login') ||
+        path.contains('/auth/forgot-password') ||
+        path.contains('/auth/reset-password') ||
+        path.contains('/auth/send-otp') ||
+        path.contains('/signup/send-otp');
+
+    if (!isPublicAuthEndpoint) {
+      final token = storageService.getString(StorageKeys.authToken);
+      if (token != null && token.isNotEmpty) {
+        options.headers[ApiConstants.authorizationHeader] =
+            '${ApiConstants.bearerPrefix}$token';
+      }
     }
 
     return handler.next(options);
   }
+
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
@@ -48,56 +62,79 @@ class AuthInterceptor extends Interceptor {
   }
 }
 
+
 class AppLoggingInterceptor extends Interceptor {
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+  void onRequest(
+      RequestOptions options,
+      RequestInterceptorHandler handler,
+      ) {
     developer.log(
       '🌐 [HTTP REQUEST] ${options.method} -> ${options.uri}',
       name: 'Network',
     );
+
     if (options.data != null) {
       final sanitizedData = _sanitizeData(options.data);
-      developer.log('📦 Payload: $sanitizedData', name: 'Network');
+      developer.log(
+        '📦 Payload: $sanitizedData',
+        name: 'Network',
+      );
     }
-    return handler.next(options);
+
+    handler.next(options);
   }
 
   @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
+  void onResponse(
+      Response response,
+      ResponseInterceptorHandler handler,
+      ) {
     developer.log(
-      '✅ [HTTP RESPONSE] [${response.statusCode}] <- ${response.requestOptions.uri}',
+      '✅ [HTTP RESPONSE] [${response.statusCode}] <- '
+          '${response.requestOptions.uri}',
       name: 'Network',
     );
-    return handler.next(response);
+
+    handler.next(response);
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
+  void onError(
+      DioException err,
+      ErrorInterceptorHandler handler,
+      ) {
     developer.log(
-      '❌ [HTTP ERROR] [${err.response?.statusCode}] <- ${err.requestOptions.uri} : ${err.message}',
+      '❌ [HTTP ERROR] [${err.response?.statusCode}] <- '
+          '${err.requestOptions.uri} : ${err.message}',
       name: 'Network',
       error: err,
     );
-    return handler.next(err);
+
+    handler.next(err);
   }
 
   dynamic _sanitizeData(dynamic data) {
     if (data is Map) {
       final sanitized = Map<String, dynamic>.from(data);
+
       for (final key in [
         'password',
         'confirmPassword',
         'token',
         'accessToken',
         'refreshToken',
-        'otp'
+        'otp',
       ]) {
         if (sanitized.containsKey(key)) {
           sanitized[key] = '[PROTECTED]';
         }
       }
+
       return sanitized;
     }
+
     return data;
   }
 }
+

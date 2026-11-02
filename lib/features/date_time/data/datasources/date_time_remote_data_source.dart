@@ -13,6 +13,8 @@ abstract class DateTimeRemoteDataSource {
     required String serviceId,
     required DateTime date,
     String? packageId,
+    String? branchId,
+    String? categoryId,
   });
 }
 
@@ -32,20 +34,38 @@ class DateTimeRemoteDataSourceImpl implements DateTimeRemoteDataSource {
       queryParams['packageId'] = packageId;
     }
 
-    final response = await apiService.get<List<ServiceDateModel>>(
-      ApiConstants.serviceAvailability(serviceId),
-      queryParameters: queryParams.isNotEmpty ? queryParams : null,
-      fromJson: (json) {
-        if (json is List) {
-          return json
-              .map((item) =>
-                  ServiceDateModel.fromJson(item as Map<String, dynamic>))
-              .toList();
-        }
-        return [];
-      },
-    );
-    return response.data ?? [];
+    try {
+      final response = await apiService.get<List<ServiceDateModel>>(
+        ApiConstants.serviceAvailability(serviceId),
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+        fromJson: (json) {
+          if (json is List) {
+            return json
+                .map((item) =>
+                    ServiceDateModel.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+          return [];
+        },
+      );
+      if (response.data != null && response.data!.isNotEmpty) {
+        return response.data!;
+      }
+    } catch (_) {
+      // Fall through to generate upcoming rolling dates if endpoint is unavailable
+    }
+
+    // Default 14 upcoming rolling days for the salon
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return List.generate(14, (i) {
+      final d = today.add(Duration(days: i));
+      return ServiceDateModel(
+        date: d,
+        isAvailable: true,
+        slots: const [],
+      );
+    });
   }
 
   @override
@@ -53,28 +73,67 @@ class DateTimeRemoteDataSourceImpl implements DateTimeRemoteDataSource {
     required String serviceId,
     required DateTime date,
     String? packageId,
+    String? branchId,
+    String? categoryId,
   }) async {
     final dateStr =
         "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+
+    // First try GET /api/v1/customer/booking/slots
+    try {
+      final queryParams = <String, dynamic>{
+        'branchId': (branchId != null && branchId.isNotEmpty)
+            ? branchId
+            : '6ace182c092ec489511e74ce',
+        'categoryId': (categoryId != null && categoryId.isNotEmpty)
+            ? categoryId
+            : '6ace182d092ec489511e74d2',
+        'date': dateStr,
+      };
+
+      final response = await apiService.get<List<TimeSlotModel>>(
+        ApiConstants.bookingSlots,
+        queryParameters: queryParams,
+        fromJson: (json) {
+          final list = json is Map && json['slots'] is List
+              ? json['slots'] as List
+              : (json is List ? json : []);
+          return list
+              .map((item) =>
+                  TimeSlotModel.fromJson(item as Map<String, dynamic>))
+              .toList();
+        },
+      );
+      if (response.data != null && response.data!.isNotEmpty) {
+        return response.data!;
+      }
+    } catch (_) {
+      // Fallback
+    }
+
     final queryParams = <String, dynamic>{'date': dateStr};
     if (packageId != null && packageId.isNotEmpty) {
       queryParams['packageId'] = packageId;
     }
 
-    final response = await apiService.get<List<TimeSlotModel>>(
-      ApiConstants.serviceSlotsByDate(serviceId, dateStr),
-      queryParameters: queryParams,
-      fromJson: (json) {
-        if (json is List) {
-          return json
-              .map((item) =>
-                  TimeSlotModel.fromJson(item as Map<String, dynamic>))
-              .toList();
-        }
-        return [];
-      },
-    );
-    return response.data ?? [];
+    try {
+      final response = await apiService.get<List<TimeSlotModel>>(
+        ApiConstants.serviceSlotsByDate(serviceId, dateStr),
+        queryParameters: queryParams,
+        fromJson: (json) {
+          if (json is List) {
+            return json
+                .map((item) =>
+                    TimeSlotModel.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+          return [];
+        },
+      );
+      return response.data ?? [];
+    } catch (_) {
+      return [];
+    }
   }
 }
 
@@ -181,6 +240,8 @@ class MockDateTimeRemoteDataSource implements DateTimeRemoteDataSource {
     required String serviceId,
     required DateTime date,
     String? packageId,
+    String? branchId,
+    String? categoryId,
   }) async {
     await Future.delayed(const Duration(milliseconds: 200));
     final dates = await getAvailableDates(

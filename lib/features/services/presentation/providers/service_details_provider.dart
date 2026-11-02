@@ -10,18 +10,44 @@ import '../../domain/repositories/service_repository.dart';
 class ServiceDetailsProvider extends ChangeNotifier {
   final ServiceRepository repository;
 
+  ServiceDetailsProvider({
+    required this.repository,
+  });
+
+
   ViewState<ServiceModel> _serviceState = ViewState.initial();
   ViewState<ServiceProductsResponse> _productsState =
   ViewState.initial();
 
   ServicePackageModel? _selectedPackage;
+  ConsumableProduct? _selectedProduct;
 
-  ServiceDetailsProvider({required this.repository});
+  void setService(ServiceModel service) {
+    _serviceState = ViewState.success(service);
+    _selectedPackage = null;
+    if (service.packages.isNotEmpty) {
+      _selectedPackage = service.packages.first;
+    }
+    notifyListeners();
+  }
 
   // Existing service state
   ViewState<ServiceModel> get serviceState => _serviceState;
   ServiceModel? get service => _serviceState.data;
   ServicePackageModel? get selectedPackage => _selectedPackage;
+  ConsumableProduct? get selectedProduct => _selectedProduct;
+
+  double get totalPrice {
+    final base = _selectedPackage?.price ?? _serviceState.data?.startingPrice ?? 0.0;
+    final add = _selectedProduct?.addedPrice ?? 0.0;
+    return base + add;
+  }
+
+  int get totalDurationMinutes {
+    final base = _serviceState.data?.durationInMinutes ?? 45;
+    final add = _selectedProduct?.addedDuration ?? 0;
+    return base + add;
+  }
 
   bool get isLoading => _serviceState.isLoading;
   bool get hasError => _serviceState.isError;
@@ -85,6 +111,11 @@ class ServiceDetailsProvider extends ChangeNotifier {
 
   void selectPackage(ServicePackageModel package) {
     _selectedPackage = package;
+    notifyListeners();
+  }
+
+  void selectProduct(ConsumableProduct? product) {
+    _selectedProduct = product;
     notifyListeners();
   }
 }

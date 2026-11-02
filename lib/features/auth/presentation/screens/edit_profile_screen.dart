@@ -18,10 +18,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
-  String _selectedGender = 'Female';
+  String _selectedGender = 'female';
   String _dateOfBirth = '15 Aug 1996';
 
-  final List<String> _genders = ['Female', 'Male', 'Non-Binary', 'Other'];
+  final List<String> _genders = ['female', 'male', 'non-binary', 'Other'];
 
   @override
   void initState() {

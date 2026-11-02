@@ -37,17 +37,21 @@ class CategoryModel {
     );
   }
 
+
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     return CategoryModel(
-      id: json['id'] as String? ?? '',
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
       name: json['name'] as String? ?? '',
       description: json['description'] as String? ?? '',
       image: json['image'] as String?,
       icon: json['icon'] as String?,
-      isActive: json['isActive'] as bool? ?? true,
-      displayOrder: json['displayOrder'] as int? ?? 0,
+      isActive: json['active'] as bool? ??
+          json['isActive'] as bool? ??
+          true,
+      displayOrder: (json['displayOrder'] as num?)?.toInt() ?? 0,
     );
   }
+
 
   Map<String, dynamic> toJson() {
     return {

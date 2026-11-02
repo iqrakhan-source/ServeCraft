@@ -1,3 +1,4 @@
+
 abstract class StorageService {
   Future<void> init();
   
@@ -19,4 +20,5 @@ abstract class StorageService {
   bool containsKey(String key);
   Future<bool> remove(String key);
   Future<bool> clear();
+
 }

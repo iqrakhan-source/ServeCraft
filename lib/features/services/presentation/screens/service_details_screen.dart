@@ -10,8 +10,10 @@ import 'package:prop_crm/core/widgets/app_network_image.dart';
 import 'package:provider/provider.dart';
 
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
+import 'package:prop_crm/features/services/data/models/service_products_response.dart';
 import 'package:prop_crm/features/branches/presentation/providers/branch_provider.dart';
 import 'package:prop_crm/features/branches/presentation/screens/branch_selection_screen.dart';
+import '../../data/models/service_model.dart';
 import '../providers/service_details_provider.dart';
 
 class ServiceDetailsScreen extends StatefulWidget {
@@ -37,8 +39,20 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<ServiceDetailsProvider>();
 
-      provider.fetchServiceDetails(widget.serviceId);
-      provider.fetchProductsForService(widget.serviceId);
+      // Retrieve navigation arguments; may contain the full ServiceModel.
+      final args = (ModalRoute.of(context)?.settings.arguments ?? {}) as Map<String, dynamic>;
+      final ServiceModel? passedService = args['service'] as ServiceModel?;
+
+      if (passedService != null) {
+        // Use the passed service data directly, avoiding the unsupported /services/:id call.
+        provider.setService(passedService);
+        // Still need to load products for this service.
+        provider.fetchProductsForService(passedService.id);
+      } else {
+        // Fallback to fetching from the repository if the model was not provided.
+        provider.fetchServiceDetails(widget.serviceId);
+        provider.fetchProductsForService(widget.serviceId);
+      }
     });
   }
 
@@ -488,6 +502,51 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                                 isSelected: isSelected,
                                 onTap: () {
                                   provider.selectPackage(package);
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+
+                      // =================================================
+                      // PRODUCTS & ADD-ONS
+                      // =================================================
+                      if (provider.products.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Select Product Brand',
+                              style: AppTypography.titleLarge.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            Text(
+                              '${provider.products.length} options',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        ...provider.products.map(
+                          (prod) {
+                            final isSelected =
+                                provider.selectedProduct?.id == prod.id;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _buildProductCard(
+                                product: prod,
+                                isSelected: isSelected,
+                                onTap: () {
+                                  provider.selectProduct(
+                                    isSelected ? null : prod,
+                                  );
                                 },
                               ),
                             );
@@ -953,6 +1012,81 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
     );
   }
 
+  Widget _buildProductCard({
+    required ConsumableProduct product,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryLight : AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    style: AppTypography.titleSmall.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (product.brand.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      'Brand: ${product.brand}',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                  if (product.addedDuration > 0) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '+${product.addedDuration} mins duration',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textTertiary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (product.addedPrice > 0)
+              Text(
+                '+ ${AppFormatters.formatCurrency(product.addedPrice)}',
+                style: AppTypography.priceMedium.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            const SizedBox(width: 8),
+            Icon(
+              isSelected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              color: isSelected ? AppColors.primary : AppColors.textTertiary,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ================================================================
   // BOTTOM ACTION BAR
   // ================================================================
@@ -964,8 +1098,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
 
     final selectedPackage = provider.selectedPackage;
 
-    final price =
-        selectedPackage?.price ?? service.startingPrice;
+    final price = provider.totalPrice;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -1045,6 +1178,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       'serviceName': service.name,
                       'packageId': pkg?.id ?? 'pkg_default',
                       'packageName': pkg?.name ?? service.name,
+                      'productId': provider.selectedProduct?.id,
                     },
                   );
                 },
@@ -1055,4 +1189,4 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
       ),
     );
   }
-}
+  }

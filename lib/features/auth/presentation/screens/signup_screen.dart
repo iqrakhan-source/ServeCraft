@@ -82,13 +82,14 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!mounted) return;
 
       if (success) {
-        debugPrint('REGISTER [UI]: Registration succeeded. Navigating to Edit Profile.');
+        debugPrint(
+            'REGISTER [UI]: Registration succeeded. Navigating to Complete Profile.');
         context.showSuccessSnackBar(
           'Account created successfully.',
         );
 
-        Navigator.of(context).pushNamed(
-          AppRoutes.editProfile,
+        Navigator.of(context).pushReplacementNamed(
+          AppRoutes.completeProfile,
         );
       } else {
         debugPrint(
@@ -301,11 +302,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   items: const [
                     DropdownMenuItem(
                       value: 'female',
-                      child: Text('Female'),
+                      child: Text('female'),
                     ),
                     DropdownMenuItem(
                       value: 'male',
-                      child: Text('Male'),
+                      child: Text('male'),
                     ),
                     DropdownMenuItem(
                       value: 'other',
