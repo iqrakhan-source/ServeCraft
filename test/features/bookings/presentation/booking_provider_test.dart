@@ -12,6 +12,7 @@ import 'package:prop_crm/features/date_time/data/models/time_slot_model.dart';
 import 'package:prop_crm/features/payment/data/models/payment_method_model.dart';
 import 'package:prop_crm/features/services/data/models/service_model.dart';
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
+import 'package:prop_crm/features/services/data/models/service_products_response.dart';
 
 void main() {
   group('BookingProvider Tests', () {
@@ -97,6 +98,7 @@ void main() {
     });
 
     test('Validation fails when summary is null or invalid', () async {
+  
       final result = await provider.createBooking(
         summary: summary.copyWith(
           pricing: const PricingBreakdown(
@@ -119,7 +121,7 @@ void main() {
       final unavailableMethod = paymentMethod.copyWith(isAvailable: false);
       final result = await provider.createBooking(
         summary: summary,
-        paymentMethod: unavailableMethod,
+        paymentMethod: unavailableMethod, selectedProduct: null,
       );
 
       expect(result, isNull);
@@ -130,7 +132,7 @@ void main() {
     test('createBooking successfully creates booking and updates state', () async {
       final future = provider.createBooking(
         summary: summary,
-        paymentMethod: paymentMethod,
+        paymentMethod: paymentMethod, selectedProduct: null,
       );
 
       expect(provider.isCreating, isTrue);

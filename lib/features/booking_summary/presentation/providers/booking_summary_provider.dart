@@ -5,12 +5,14 @@ import 'package:prop_crm/features/addresses/data/models/address_model.dart';
 import 'package:prop_crm/features/branches/data/models/branch_model.dart';
 import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
 import 'package:prop_crm/features/date_time/data/models/time_slot_model.dart';
-import 'package:prop_crm/features/offers/data/models/coupon_model.dart';
+import 'package:prop_crm/features/offers/model/models/coupon_model.dart';
 import 'package:prop_crm/features/services/data/models/service_model.dart';
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
+import '../../../services/data/models/service_products_response.dart';
 import '../../data/models/booking_summary_model.dart';
 import '../../data/models/pricing_breakdown_model.dart';
 import '../../domain/repositories/booking_summary_repository.dart';
+
 
 class BookingSummaryProvider extends ChangeNotifier {
   final BookingSummaryRepository repository;
@@ -20,6 +22,9 @@ class BookingSummaryProvider extends ChangeNotifier {
   double _taxRate = PricingBreakdown.defaultTaxRate;
   CouponModel? _appliedCoupon;
   String? _couponError;
+
+
+
 
   BookingSummaryProvider({required this.repository});
 
@@ -40,6 +45,16 @@ class BookingSummaryProvider extends ChangeNotifier {
   PricingBreakdown? get pricing => summary?.pricing;
   CouponModel? get appliedCoupon => _appliedCoupon ?? summary?.appliedCoupon;
   String? get couponError => _couponError;
+
+
+  ConsumableProduct? _selectedProduct;
+
+  ConsumableProduct? get selectedProduct => _selectedProduct;
+
+  void setSelectedProduct(ConsumableProduct? product) {
+    _selectedProduct = product;
+    notifyListeners();
+  }
 
   /// Loads or calculates a full booking summary with all selections
   Future<void> loadSummary({
@@ -217,6 +232,7 @@ class BookingSummaryProvider extends ChangeNotifier {
     _discount = 0.0;
     _appliedCoupon = null;
     _couponError = null;
+    _selectedProduct = null;
     notifyListeners();
   }
 }

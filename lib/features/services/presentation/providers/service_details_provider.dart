@@ -91,14 +91,35 @@ class ServiceDetailsProvider extends ChangeNotifier {
   }
 
   // New: fetch products associated with this service.
+
   Future<void> fetchProductsForService(String serviceId) async {
+    debugPrint('[SERVICE PRODUCTS] Fetch started');
+    debugPrint('[SERVICE PRODUCTS] Service ID: $serviceId');
+
     _productsState = ViewState.loading();
     notifyListeners();
 
     try {
       final response = await repository.getProductsForService(serviceId);
+
+      debugPrint('[SERVICE PRODUCTS] API success: ${response.success}');
+      debugPrint(
+        '[SERVICE PRODUCTS] Products returned: ${response.products.length}',
+      );
+
+      for (final product in response.products) {
+        debugPrint(
+          '[SERVICE PRODUCTS] Product: ${product.name}, '
+              'addedPrice: ${product.addedPrice}, '
+              'addedDuration: ${product.addedDuration}',
+        );
+      }
+
       _productsState = ViewState.success(response);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[SERVICE PRODUCTS] ERROR: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
       final appError = ErrorHandler.handleError(e);
       _productsState = ViewState.error(
         appError.message,

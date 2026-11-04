@@ -29,7 +29,7 @@ void main() {
   });
 
   late FakeStorageService storageService;
-  late MockAuthRemoteDataSource authDataSource;
+  //late MockAuthRemoteDataSource authDataSource;
   late AuthRepositoryImpl authRepository;
   late AuthProvider authProvider;
 
@@ -48,10 +48,10 @@ void main() {
 
   setUp(() async {
     storageService = FakeStorageService();
-    authDataSource = MockAuthRemoteDataSource();
+   // authDataSource = MockAuthRemoteDataSource();
     authRepository = AuthRepositoryImpl(
-      remoteDataSource: authDataSource,
-      storageService: storageService,
+      //remoteDataSource: authDataSource,
+      storageService: storageService, remoteDataSource: null,
     );
     authProvider = AuthProvider(repository: authRepository);
 

@@ -1,105 +1,117 @@
+
 import 'package:prop_crm/features/booking_summary/data/models/booking_summary_model.dart';
 import 'package:prop_crm/features/payment/data/models/payment_method_model.dart';
 
 class CreateBookingRequestModel {
+  final String branchId;
+  final String date;
+  final String timeSlot;
+  final String paymentMethod;
   final String serviceId;
-  final String packageId;
-  final String addressId;
-  final String scheduledDate;
-  final String timeSlotId;
-  final String paymentMethodId;
-  final double totalAmount;
+  final String productId;
+  final int productQuantity;
 
   const CreateBookingRequestModel({
+    required this.branchId,
+    required this.date,
+    required this.timeSlot,
+    required this.paymentMethod,
     required this.serviceId,
-    required this.packageId,
-    required this.addressId,
-    required this.scheduledDate,
-    required this.timeSlotId,
-    required this.paymentMethodId,
-    required this.totalAmount,
+    required this.productId,
+    this.productQuantity = 1,
   });
 
   factory CreateBookingRequestModel.fromSummaryAndPayment({
     required BookingSummaryModel summary,
     required PaymentMethodModel paymentMethod,
+    required String branchId,
+    required String productId,
+    int productQuantity = 1,
   }) {
-    final dateStr = summary.scheduledDate.date.toIso8601String().split('T').first;
+    final dateStr =
+        summary.scheduledDate.date.toIso8601String().split('T').first;
+
     return CreateBookingRequestModel(
+      branchId: branchId,
+      date: dateStr,
+      timeSlot: summary.timeSlot.startTime,
+      paymentMethod: paymentMethod.title,
       serviceId: summary.service.id,
-      packageId: summary.package.id,
-      addressId: summary.address.id,
-      scheduledDate: dateStr,
-      timeSlotId: summary.timeSlot.id,
-      paymentMethodId: paymentMethod.id,
-      totalAmount: summary.pricing.totalAmount,
+      productId: productId,
+      productQuantity: productQuantity,
     );
   }
 
   CreateBookingRequestModel copyWith({
+    String? branchId,
+    String? date,
+    String? timeSlot,
+    String? paymentMethod,
     String? serviceId,
-    String? packageId,
-    String? addressId,
-    String? scheduledDate,
-    String? timeSlotId,
-    String? paymentMethodId,
-    double? totalAmount,
+    String? productId,
+    int? productQuantity,
   }) {
     return CreateBookingRequestModel(
+      branchId: branchId ?? this.branchId,
+      date: date ?? this.date,
+      timeSlot: timeSlot ?? this.timeSlot,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
       serviceId: serviceId ?? this.serviceId,
-      packageId: packageId ?? this.packageId,
-      addressId: addressId ?? this.addressId,
-      scheduledDate: scheduledDate ?? this.scheduledDate,
-      timeSlotId: timeSlotId ?? this.timeSlotId,
-      paymentMethodId: paymentMethodId ?? this.paymentMethodId,
-      totalAmount: totalAmount ?? this.totalAmount,
+      productId: productId ?? this.productId,
+      productQuantity: productQuantity ?? this.productQuantity,
     );
   }
 
   factory CreateBookingRequestModel.fromJson(Map<String, dynamic> json) {
+    final bookingItem =
+        json['bookingItem'] as Map<String, dynamic>? ?? {};
+
     return CreateBookingRequestModel(
-      serviceId: json['serviceId'] as String? ?? '',
-      packageId: json['packageId'] as String? ?? '',
-      addressId: json['addressId'] as String? ?? '',
-      scheduledDate: json['scheduledDate'] as String? ?? '',
-      timeSlotId: json['timeSlotId'] as String? ?? '',
-      paymentMethodId: json['paymentMethodId'] as String? ?? '',
-      totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
+      branchId: json['branchId'] as String? ?? '',
+      date: json['date'] as String? ?? '',
+      timeSlot: json['timeSlot'] as String? ?? '',
+      paymentMethod: json['paymentMethod'] as String? ?? '',
+      serviceId: bookingItem['serviceId'] as String? ?? '',
+      productId: bookingItem['productId'] as String? ?? '',
+      productQuantity:
+      (bookingItem['productQuantity'] as num?)?.toInt() ?? 1,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'serviceId': serviceId,
-      'packageId': packageId,
-      'addressId': addressId,
-      'scheduledDate': scheduledDate,
-      'timeSlotId': timeSlotId,
-      'paymentMethodId': paymentMethodId,
-      'totalAmount': totalAmount,
+      'branchId': branchId,
+      'date': date,
+      'timeSlot': timeSlot,
+      'paymentMethod': paymentMethod,
+      'bookingItem': {
+        'serviceId': serviceId,
+        'productId': productId,
+        'productQuantity': productQuantity,
+      },
     };
   }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is CreateBookingRequestModel &&
-          runtimeType == other.runtimeType &&
-          serviceId == other.serviceId &&
-          packageId == other.packageId &&
-          addressId == other.addressId &&
-          scheduledDate == other.scheduledDate &&
-          timeSlotId == other.timeSlotId &&
-          paymentMethodId == other.paymentMethodId &&
-          totalAmount == other.totalAmount;
+          other is CreateBookingRequestModel &&
+              branchId == other.branchId &&
+              date == other.date &&
+              timeSlot == other.timeSlot &&
+              paymentMethod == other.paymentMethod &&
+              serviceId == other.serviceId &&
+              productId == other.productId &&
+              productQuantity == other.productQuantity;
 
   @override
-  int get hashCode =>
-      serviceId.hashCode ^
-      packageId.hashCode ^
-      addressId.hashCode ^
-      scheduledDate.hashCode ^
-      timeSlotId.hashCode ^
-      paymentMethodId.hashCode ^
-      totalAmount.hashCode;
+  int get hashCode => Object.hash(
+    branchId,
+    date,
+    timeSlot,
+    paymentMethod,
+    serviceId,
+    productId,
+    productQuantity,
+  );
 }

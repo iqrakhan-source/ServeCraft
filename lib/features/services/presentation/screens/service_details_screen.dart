@@ -13,6 +13,8 @@ import 'package:prop_crm/features/services/data/models/service_package_model.dar
 import 'package:prop_crm/features/services/data/models/service_products_response.dart';
 import 'package:prop_crm/features/branches/presentation/providers/branch_provider.dart';
 import 'package:prop_crm/features/branches/presentation/screens/branch_selection_screen.dart';
+import '../../../bookings/data/models/booking_cart_item.dart';
+import '../../../bookings/presentation/providers/booking_cart_provider.dart';
 import '../../data/models/service_model.dart';
 import '../providers/service_details_provider.dart';
 
@@ -512,47 +514,63 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       // =================================================
                       // PRODUCTS & ADD-ONS
                       // =================================================
-                      if (provider.products.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Select Product Brand',
-                              style: AppTypography.titleLarge.copyWith(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            Text(
-                              '${provider.products.length} options',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.textTertiary,
-                              ),
-                            ),
-                          ],
+
+                      // =================================================
+                      // PRODUCTS & ADD-ONS
+                      // =================================================
+
+                      if (provider.isProductsLoading) ...[
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: CircularProgressIndicator(),
+                          ),
                         ),
+                      ] else if (provider.hasProductsError) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Text(
+                            provider.productsErrorMessage ?? 'Could not load products.',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.error,
+                            ),
+                          ),
+                        ),
+                      ] else if (provider.products.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+
+                        Text(
+                          'Select Product Brand',
+                          style: AppTypography.titleLarge.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+
                         const SizedBox(height: 14),
-                        ...provider.products.map(
-                          (prod) {
-                            final isSelected =
-                                provider.selectedProduct?.id == prod.id;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _buildProductCard(
-                                product: prod,
-                                isSelected: isSelected,
-                                onTap: () {
-                                  provider.selectProduct(
-                                    isSelected ? null : prod,
-                                  );
-                                },
-                              ),
-                            );
-                          },
+
+                        ...provider.products.map((prod) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _buildProductCard(
+                              product: prod,
+                              isSelected: provider.selectedProduct?.id == prod.id,
+                              onTap: () {
+                                provider.selectProduct(prod);
+                              },
+                            ),
+                          );
+                        }),
+                      ] else ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          'No additional products are available for this service.',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
+
 
                       const SizedBox(height: 14),
 
@@ -1179,6 +1197,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       'packageId': pkg?.id ?? 'pkg_default',
                       'packageName': pkg?.name ?? service.name,
                       'productId': provider.selectedProduct?.id,
+                      'selectedProduct': provider.selectedProduct,
                     },
                   );
                 },

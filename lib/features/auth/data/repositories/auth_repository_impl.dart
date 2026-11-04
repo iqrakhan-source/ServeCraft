@@ -32,11 +32,28 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<LoginResponse> login(String email, String password) async {
     final response = await remoteDataSource.login(email, password);
 
-    await storageService.setString(
-      StorageKeys.authToken,
-      response.accessToken,
-    );
+    // Stop if login was unsuccessful.
+    if (!response.success) {
+      throw Exception(
+        response.message.isNotEmpty
+            ? response.message
+            : 'Login failed. Please check your credentials.',
+      );
+    }
 
+    // Save the access token.
+    final token = response.accessToken.isNotEmpty
+        ? response.accessToken
+        : response.token;
+
+    if (token.isNotEmpty) {
+      await storageService.setString(
+        StorageKeys.authToken,
+        token,
+      );
+    }
+
+    // Save refresh token if provided.
     if (response.refreshToken != null &&
         response.refreshToken!.isNotEmpty) {
       await storageService.setString(
@@ -45,6 +62,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
     }
 
+    // Save user details.
     await storageService.setString(
       StorageKeys.userId,
       response.user.id,
@@ -121,6 +139,20 @@ class AuthRepositoryImpl implements AuthRepository {
       debugPrintStack(stackTrace: stackTrace);
       rethrow;
     }
+  }
+
+  @override
+  Future<PasswordResetResponse> forgotPassword(
+      ForgotPasswordRequest request,
+      ) async {
+    return await remoteDataSource.forgotPassword(request);
+  }
+
+  @override
+  Future<PasswordResetResponse> resetPassword(
+      ResetPasswordRequest request,
+      ) async {
+    return await remoteDataSource.resetPassword(request);
   }
 
   @override

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/error/error_handler.dart';
+import '../../data/models/forgot_password_request.dart';
+import '../../data/models/reset_password_request.dart';
 import '../../data/models/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../data/models/register_customer_request.dart';
@@ -144,6 +146,10 @@ class AuthProvider extends ChangeNotifier {
       }
 
       debugPrint('LOGIN [AuthProvider]: Login API succeeded');
+      debugPrint('[LOGIN REPOSITORY] success: ${response.success}');
+      debugPrint('[LOGIN REPOSITORY] message: ${response.message}');
+      debugPrint('[LOGIN REPOSITORY] user email: ${response.user.email}');
+      debugPrint('[LOGIN REPOSITORY] access token exists: ${response.accessToken.isNotEmpty}');
       notifyListeners();
       return true;
     } catch (e) {
@@ -156,97 +162,25 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Request Signup OTP for email address (POST /signup/send-otp)
-  Future<bool> sendSignupOtp(String email) async {
+  Future<bool> forgotPassword(String email) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final response = await repository.sendSignupOtp(email);
-      _currentEmail = email;
-      _status = AuthStatus.initial;
-      startResendCountdown(response.expiresInSeconds);
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = ErrorHandler.handleError(e).message;
-      _status = AuthStatus.error;
-      notifyListeners();
-      return false;
-    }
-  }
+      final response = await repository.forgotPassword(
+        ForgotPasswordRequest(email: email.trim()),
+      );
 
-  /// Request OTP for mobile number
-  Future<bool> sendOtp(String phone) async {
-    _status = AuthStatus.loading;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      final response = await repository.sendOtp(phone);
-      _currentPhone = phone;
-      _status = AuthStatus.initial;
-      startResendCountdown(response.expiresInSeconds);
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = ErrorHandler.handleError(e).message;
-      _status = AuthStatus.error;
-      notifyListeners();
-      return false;
-    }
-  }
-
-  /// Resend OTP using existing phone number or email
-  Future<bool> resendOtp() async {
-    if ((_currentPhone == null && _currentEmail == null) || !canResendOtp) return false;
-
-    _isResending = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      final response = _currentEmail != null
-          ? await repository.sendSignupOtp(_currentEmail!)
-          : await repository.sendOtp(_currentPhone!);
-      startResendCountdown(response.expiresInSeconds);
-      _isResending = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = ErrorHandler.handleError(e).message;
-      _isResending = false;
-      notifyListeners();
-      return false;
-    }
-  }
-
-  /// Verify 6-digit OTP code
-  Future<bool> verifyOtp(String otp) async {
-    if (_currentPhone == null) {
-      _errorMessage = 'Phone number missing. Please restart login.';
-      _status = AuthStatus.error;
-      notifyListeners();
-      return false;
-    }
-
-    _status = AuthStatus.loading;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      final response = await repository.verifyOtp(_currentPhone!, otp);
-      _currentUser = response.user;
-      cancelResendCountdown();
-
-      // Determine next screen based on backend response:
-      if (!response.user.isProfileComplete) {
-        _status = AuthStatus.profileIncomplete;
-      } else {
-        _status = AuthStatus.authenticated;
+      if (!response.success) {
+        throw Exception(
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to request password reset.',
+        );
       }
 
+      _status = AuthStatus.unauthenticated;
       notifyListeners();
       return true;
     } catch (e) {
@@ -256,6 +190,143 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> resetPassword({
+    required String resetToken,
+    required String newPassword,
+  }) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+
+    try {
+      final response = await repository.resetPassword(
+        ResetPasswordRequest(
+          resetToken: resetToken,
+          newPassword: newPassword,
+        ),
+      );
+
+      if (!response.success) {
+        throw Exception(
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to reset password.',
+        );
+      }
+
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = ErrorHandler.handleError(e).message;
+      _status = AuthStatus.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Request Signup OTP for email address (POST /signup/send-otp)
+  // Future<bool> sendSignupOtp(String email) async {
+  //   _status = AuthStatus.loading;
+  //   _errorMessage = null;
+  //   notifyListeners();
+  //
+  //   try {
+  //     final response = await repository.sendSignupOtp(email);
+  //     _currentEmail = email;
+  //     _status = AuthStatus.initial;
+  //     startResendCountdown(response.expiresInSeconds);
+  //     notifyListeners();
+  //     return true;
+  //   } catch (e) {
+  //     _errorMessage = ErrorHandler.handleError(e).message;
+  //     _status = AuthStatus.error;
+  //     notifyListeners();
+  //     return false;
+  //   }
+  // }
+  //
+  // /// Request OTP for mobile number
+  // Future<bool> sendOtp(String phone) async {
+  //   _status = AuthStatus.loading;
+  //   _errorMessage = null;
+  //   notifyListeners();
+  //
+  //   try {
+  //     final response = await repository.sendOtp(phone);
+  //     _currentPhone = phone;
+  //     _status = AuthStatus.initial;
+  //     startResendCountdown(response.expiresInSeconds);
+  //     notifyListeners();
+  //     return true;
+  //   } catch (e) {
+  //     _errorMessage = ErrorHandler.handleError(e).message;
+  //     _status = AuthStatus.error;
+  //     notifyListeners();
+  //     return false;
+  //   }
+  // }
+  //
+  // /// Resend OTP using existing phone number or email
+  // Future<bool> resendOtp() async {
+  //   if ((_currentPhone == null && _currentEmail == null) || !canResendOtp) return false;
+  //
+  //   _isResending = true;
+  //   _errorMessage = null;
+  //   notifyListeners();
+  //
+  //   try {
+  //     final response = _currentEmail != null
+  //         ? await repository.sendSignupOtp(_currentEmail!)
+  //         : await repository.sendOtp(_currentPhone!);
+  //     startResendCountdown(response.expiresInSeconds);
+  //     _isResending = false;
+  //     notifyListeners();
+  //     return true;
+  //   } catch (e) {
+  //     _errorMessage = ErrorHandler.handleError(e).message;
+  //     _isResending = false;
+  //     notifyListeners();
+  //     return false;
+  //   }
+  // }
+  //
+  // /// Verify 6-digit OTP code
+  // Future<bool> verifyOtp(String otp) async {
+  //   if (_currentPhone == null) {
+  //     _errorMessage = 'Phone number missing. Please restart login.';
+  //     _status = AuthStatus.error;
+  //     notifyListeners();
+  //     return false;
+  //   }
+  //
+  //   _status = AuthStatus.loading;
+  //   _errorMessage = null;
+  //   notifyListeners();
+  //
+  //   try {
+  //     final response = await repository.verifyOtp(_currentPhone!, otp);
+  //     _currentUser = response.user;
+  //     cancelResendCountdown();
+  //
+  //     // Determine next screen based on backend response:
+  //     if (!response.user.isProfileComplete) {
+  //       _status = AuthStatus.profileIncomplete;
+  //     } else {
+  //       _status = AuthStatus.authenticated;
+  //     }
+  //
+  //     notifyListeners();
+  //     return true;
+  //   } catch (e) {
+  //     _errorMessage = ErrorHandler.handleError(e).message;
+  //     _status = AuthStatus.error;
+  //     notifyListeners();
+  //     return false;
+  //   }
+  // }
 
   /// Submit profile completion for users
   Future<bool> completeProfile({

@@ -8,7 +8,7 @@ import 'package:prop_crm/features/auth/data/datasources/auth_remote_data_source.
 import 'package:prop_crm/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:prop_crm/features/auth/presentation/providers/auth_provider.dart';
 import 'package:prop_crm/features/auth/presentation/screens/complete_profile_screen.dart';
-import 'package:prop_crm/features/auth/presentation/screens/forgot_password_otp_screen.dart';
+import 'package:prop_crm/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:prop_crm/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:prop_crm/features/auth/presentation/screens/login_screen.dart';
 import 'package:prop_crm/features/auth/presentation/screens/reset_password_screen.dart';
@@ -250,7 +250,7 @@ void main() {
               AppRoutes.resetPassword: (_) =>
                   const Scaffold(body: Text('ResetPasswordScreen')),
             },
-            home: const ForgotPasswordOtpScreen(email: 'sarah@example.com'),
+            home: const ForgotPasswordScreen(email: 'sarah@example.com'),
           ),
         ),
       );

@@ -5,6 +5,7 @@ import 'package:prop_crm/features/booking_summary/data/models/booking_summary_mo
 import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
 import 'package:prop_crm/features/date_time/data/models/time_slot_model.dart';
 import 'package:prop_crm/features/payment/data/models/payment_method_model.dart';
+import '../../../services/data/models/service_products_response.dart';
 import '../../data/models/booking_model.dart';
 import '../../data/models/cancel_booking_request_model.dart';
 import '../../data/models/create_booking_request_model.dart';
@@ -198,10 +199,32 @@ class BookingProvider extends ChangeNotifier {
   Future<BookingModel?> createBooking({
     required BookingSummaryModel summary,
     required PaymentMethodModel paymentMethod,
+    required ConsumableProduct selectedProduct,
   }) async {
     if (isCreating) return null;
 
-    if (!validateCheckout(summary: summary, paymentMethod: paymentMethod)) {
+    if (!validateCheckout(
+      summary: summary,
+      paymentMethod: paymentMethod,
+    )) {
+      return null;
+    }
+
+    final branchId = summary.branch?.id;
+
+    if (branchId == null || branchId.isEmpty) {
+      _bookingState = ViewState.error(
+        'Please select a branch before booking.',
+      );
+      notifyListeners();
+      return null;
+    }
+
+    if (selectedProduct.id.isEmpty) {
+      _bookingState = ViewState.error(
+        'Please select a valid product.',
+      );
+      notifyListeners();
       return null;
     }
 
@@ -212,6 +235,8 @@ class BookingProvider extends ChangeNotifier {
       final request = CreateBookingRequestModel.fromSummaryAndPayment(
         summary: summary,
         paymentMethod: paymentMethod,
+        branchId: branchId,
+        productId: selectedProduct.id,
       );
 
       final booking = await repository.createBooking(
@@ -223,9 +248,10 @@ class BookingProvider extends ChangeNotifier {
       _createdBooking = booking;
       _bookingState = ViewState.success(booking);
 
-      // Prepend to current bookings collection if already loaded
       if (_bookingsState.isSuccess && _bookingsState.data != null) {
-        final currentList = List<BookingModel>.from(_bookingsState.data!);
+        final currentList = List<BookingModel>.from(
+          _bookingsState.data!,
+        );
         currentList.insert(0, booking);
         _bookingsState = ViewState.success(currentList);
       }

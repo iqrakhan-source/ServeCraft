@@ -7,6 +7,7 @@ class LoginResponse {
   final String accessToken;
   final String? refreshToken;
   final UserModel user;
+  final String token;
 
   const LoginResponse({
     this.success = true,
@@ -14,16 +15,25 @@ class LoginResponse {
     required this.accessToken,
     this.refreshToken,
     required this.user,
+    required this.token,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    final accessToken = json['accessToken'] ?? json['token'];
-    final refreshToken = json['refreshToken'];
+    // API response may contain the actual login data inside "data".
+    final data = json['data'] is Map
+        ? Map<String, dynamic>.from(json['data'] as Map)
+        : json;
 
-    final userData = json['user'] ??
-        json['customer'] ??
-        (json['data'] is Map ? json['data']['user'] : null) ??
-        json['data'];
+    final accessToken = data['accessToken'] ?? data['token'];
+    final refreshToken = data['refreshToken'];
+
+    final userData = data['user'] ?? data['customer'];
+
+    if (json['success'] == false) {
+      throw FormatException(
+        json['message']?.toString() ?? 'Login failed.',
+      );
+    }
 
     if (accessToken is! String || accessToken.isEmpty) {
       throw const FormatException(
@@ -38,12 +48,15 @@ class LoginResponse {
     }
 
     return LoginResponse(
-      success: json['success'] is bool ? json['success'] as bool : true,
-      message: json['message']?.toString() ?? '',
+      success: true,
+      message: json['message']?.toString() ?? 'Login successful.',
       accessToken: accessToken,
       refreshToken: refreshToken is String ? refreshToken : null,
-      user: UserModel.fromJson(Map<String, dynamic>.from(userData)),
+      user: UserModel.fromJson(
+        Map<String, dynamic>.from(userData),
+      ),
+      // Keep compatibility with existing code that reads "token".
+      token: accessToken,
     );
   }
 }
-

@@ -50,6 +50,7 @@ void main() {
             serviceName: 'Full Home Deep Clean',
             packageId: 'pkg_standard',
             packageName: 'Standard 2BHK',
+            isPickerMode: false,
           ),
         ),
       );
@@ -105,6 +106,7 @@ void main() {
                           serviceName: 'Full Home Deep Clean',
                           packageId: 'pkg_standard',
                           packageName: 'Standard 2BHK',
+                          isPickerMode: true,
                         ),
                       ),
                     );
@@ -166,6 +168,7 @@ void main() {
           const DateTimeSelectionScreen(
             serviceId: 'srv_deep_clean',
             serviceName: 'Full Home Deep Clean',
+            isPickerMode: false,
           ),
         ),
       );

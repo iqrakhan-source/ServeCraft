@@ -13,21 +13,47 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
 
   CategoryRemoteDataSourceImpl({required this.apiService});
 
+
   @override
   Future<List<CategoryModel>> getCategories() async {
     final response = await apiService.get<List<CategoryModel>>(
       ApiConstants.categories,
       fromJson: (json) {
+        dynamic categoriesJson;
+
         if (json is List) {
-          return json
-              .map((item) => CategoryModel.fromJson(item as Map<String, dynamic>))
-              .toList();
+          categoriesJson = json;
+        } else if (json is Map) {
+          categoriesJson =
+              json['categories'] ??
+                  json['data']?['categories'] ??
+                  json['data'] ??
+                  json['results'];
         }
-        return [];
+
+        if (categoriesJson is! List) {
+          throw const FormatException(
+            'Unexpected categories API response format.',
+          );
+        }
+
+        return categoriesJson.map((item) {
+          if (item is Map) {
+            return CategoryModel.fromJson(
+              Map<String, dynamic>.from(item),
+            );
+          }
+
+          throw const FormatException(
+            'Invalid category item in API response.',
+          );
+        }).toList();
       },
     );
+
     return response.data ?? [];
   }
+
 
   @override
   Future<CategoryModel> getCategoryById(String id) async {

@@ -17,9 +17,11 @@ class FailingDateTimeRepository implements DateTimeRepository {
 
   @override
   Future<List<TimeSlotModel>> getTimeSlots({
-    required String serviceId,
+    String? branchId,
+    String? categoryId,
     required DateTime date,
     String? packageId,
+    required String serviceId,
   }) async {
     throw Exception('Failed to fetch slots');
   }

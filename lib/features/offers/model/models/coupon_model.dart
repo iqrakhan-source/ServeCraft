@@ -38,18 +38,38 @@ class CouponModel {
   }
 
   factory CouponModel.fromJson(Map<String, dynamic> json) {
+    final discountType = json['discountType']?.toString().toLowerCase();
+    final discountValue = (json['discountValue'] as num?)?.toDouble();
+
+    final expiryValue = json['validUntil'] ?? json['expiryDate'];
+
+    final expiryDate = expiryValue != null
+        ? DateTime.tryParse(expiryValue.toString()) ?? DateTime.now()
+        : DateTime.now();
+
     return CouponModel(
-      code: json['code'] as String? ?? '',
-      title: json['title'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      discountPercent: (json['discountPercent'] as num?)?.toDouble(),
-      flatDiscount: (json['flatDiscount'] as num?)?.toDouble(),
-      minBookingAmount: (json['minBookingAmount'] as num?)?.toDouble() ?? 0.0,
+      code: json['code']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+
+      discountPercent: discountType == 'percentage'
+          ? discountValue
+          : (json['discountPercent'] as num?)?.toDouble(),
+
+      flatDiscount: discountType == 'fixed'
+          ? discountValue
+          : (json['flatDiscount'] as num?)?.toDouble(),
+
+      minBookingAmount:
+      ((json['minOrderAmount'] ?? json['minBookingAmount']) as num?)
+          ?.toDouble() ??
+          0.0,
+
       maxDiscount: (json['maxDiscount'] as num?)?.toDouble(),
-      expiryDate: json['expiryDate'] != null
-          ? DateTime.parse(json['expiryDate'] as String)
-          : DateTime.now().add(const Duration(days: 30)),
-      isActive: json['isActive'] as bool? ?? true,
+
+      expiryDate: expiryDate,
+
+      isActive: json['isActive'] as bool? ?? expiryDate.isAfter(DateTime.now()),
     );
   }
 

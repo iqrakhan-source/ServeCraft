@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/route_names.dart';
+import '../../../../core/utilities/extensions.dart';
 import '../../../../core/utilities/validators.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_dialog.dart';
 import '../../../../core/widgets/app_text_field.dart';
+import '../providers/auth_provider.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String? email;
+  final String resetToken;
 
-  const ResetPasswordScreen({super.key, this.email});
+
+  const ResetPasswordScreen({super.key, this.email,required this.resetToken});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -45,10 +50,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     });
   }
 
+
   Future<void> _handleResetPassword() async {
     FocusScope.of(context).unfocus();
 
-    if (!_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate() || _isLoading) {
       return;
     }
 
@@ -56,29 +62,48 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       _isLoading = true;
     });
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    try {
+      final success = await context.read<AuthProvider>().resetPassword(
+        resetToken: widget.resetToken,
+        newPassword: _newPasswordController.text,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      _isLoading = false;
-    });
-
-    // Show success dialog and navigate back to Login
-    await AppDialog.alert(
-      context: context,
-      title: 'Password Updated',
-      message:
+      if (success) {
+        await AppDialog.alert(
+          context: context,
+          title: 'Password Updated',
+          message:
           'Your password has been reset successfully. You can now log in with your new credentials.',
-      buttonText: 'Back to Sign In',
-    );
+          buttonText: 'Back to Sign In',
+        );
 
-    if (!mounted) return;
+        if (!mounted) return;
 
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      AppRoutes.login,
-      (route) => false,
-    );
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRoutes.login,
+              (route) => false,
+        );
+      } else {
+        context.showErrorSnackBar(
+          context.read<AuthProvider>().errorMessage ??
+              'Unable to reset your password. Please try again.',
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      context.showErrorSnackBar(
+        'Unable to reset your password. Please try again.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override

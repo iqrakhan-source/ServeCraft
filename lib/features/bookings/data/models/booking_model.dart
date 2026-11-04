@@ -9,6 +9,7 @@ import 'package:prop_crm/features/services/data/models/service_model.dart';
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
 
 enum BookingStatus {
+
   confirmed,
   pending,
   cancelled,
@@ -80,6 +81,7 @@ class BookingModel {
   final String? cancellationNote;
   final DateTime? cancelledAt;
   final DateTime? rescheduledAt;
+
 
   const BookingModel({
     required this.id,

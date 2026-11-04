@@ -234,31 +234,44 @@ class TimeSlotGrid extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (isSelected)
-                      const Icon(Icons.check_circle_rounded,
-                          size: 13, color: Colors.white)
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        size: 13,
+                        color: Colors.white,
+                      )
                     else if (!isAvailable)
-                      const Icon(Icons.block_rounded,
-                          size: 12, color: AppColors.textTertiary),
-                    if (isSelected || !isAvailable) const SizedBox(width: 4),
-                    Text(
-                      slot.startTime,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isSelected
-                            ? Colors.white
-                            : (isAvailable
-                                ? AppColors.textPrimary
-                                : AppColors.textTertiary),
-                        fontWeight:
-                            isSelected ? FontWeight.w800 : FontWeight.w600,
-                        fontSize: 12,
+                      const Icon(
+                        Icons.block_rounded,
+                        size: 12,
+                        color: AppColors.textTertiary,
+                      ),
+                    if (isSelected || !isAvailable)
+                      const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        slot.formattedLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isSelected
+                              ? Colors.white
+                              : (isAvailable
+                              ? AppColors.textPrimary
+                              : AppColors.textTertiary),
+                          fontWeight:
+                          isSelected ? FontWeight.w800 : FontWeight.w600,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 2),
                 Text(
                   isAvailable ? 'Available' : 'Booked',

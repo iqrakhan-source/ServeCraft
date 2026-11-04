@@ -109,4 +109,13 @@ abstract class ApiConstants {
   // Offers
   static const String offers = '/offers';
   static const String applyCoupon = '/offers/apply';
+
+  // Coupons
+  static const String customerCoupons = '/api/customer/coupons';
+  static const String applyCustomerCoupon = '/api/customer/coupons/apply';
+
+
+
 }
+
+

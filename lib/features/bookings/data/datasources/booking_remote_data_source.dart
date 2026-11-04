@@ -36,19 +36,37 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   @override
   Future<List<BookingModel>> getBookings() async {
-    final response = await apiService.get<List<dynamic>>(
-      ApiConstants.bookings,
-      fromJson: (json) => json as List<dynamic>,
+    final response = await apiService.get<List<BookingModel>>(
+      ApiConstants.appointments,
+      fromJson: (json) {
+        if (json is! List) {
+          throw const FormatException(
+            'Expected a list of bookings.',
+          );
+        }
+
+        return json.map((item) {
+          if (item is! Map) {
+            throw const FormatException(
+              'Invalid booking item.',
+            );
+          }
+
+          return BookingModel.fromJson(
+            Map<String, dynamic>.from(item),
+          );
+        }).toList();
+      },
     );
 
-    if (response.data != null) {
-      return response.data!
-          .map((item) => BookingModel.fromJson(item as Map<String, dynamic>))
-          .toList();
+    if (!response.success) {
+      throw const UnexpectedException(
+        message: 'Failed to fetch bookings.',
+      );
     }
-    throw const UnexpectedException(message: 'Failed to fetch bookings');
-  }
 
+    return response.data ?? <BookingModel>[];
+  }
   @override
   Future<BookingModel> getBookingById(String bookingId) async {
     final response = await apiService.get<BookingModel>(
@@ -68,16 +86,41 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     BookingSummaryModel? summary,
     PaymentMethodModel? paymentMethod,
   }) async {
-    final response = await apiService.post<BookingModel>(
+    final response = await apiService.post<Map<String, dynamic>>(
       ApiConstants.createBooking,
       data: request.toJson(),
-      fromJson: (json) => BookingModel.fromJson(json as Map<String, dynamic>),
+      fromJson: (json) {
+        if (json is! Map) {
+          throw const FormatException(
+            'Invalid booking creation response.',
+          );
+        }
+
+        return Map<String, dynamic>.from(json);
+      },
     );
 
-    if (response.data != null) {
-      return response.data!;
+    final responseBody = response.data;
+
+    if (responseBody == null || responseBody['success'] != true) {
+      throw UnexpectedException(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Failed to create booking.',
+      );
     }
-    throw const UnexpectedException(message: 'Failed to create booking');
+
+    final bookingData = responseBody['data'];
+
+    if (bookingData is! Map) {
+      throw const UnexpectedException(
+        message: 'Invalid booking response data.',
+      );
+    }
+
+    return BookingModel.fromJson(
+      Map<String, dynamic>.from(bookingData),
+    );
   }
 
   @override
@@ -94,16 +137,49 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
           reasonNote: reasonNote,
         );
 
-    final response = await apiService.post<BookingModel>(
-      ApiConstants.cancelBooking(effectiveRequest.bookingId),
-      data: effectiveRequest.toJson(),
-      fromJson: (json) => BookingModel.fromJson(json as Map<String, dynamic>),
+    if (effectiveRequest.bookingId.isEmpty) {
+      throw const BadRequestException(
+        message: 'Booking ID is required.',
+      );
+    }
+
+    final response = await apiService.post<Map<String, dynamic>>(
+      ApiConstants.cancelAppointment(effectiveRequest.bookingId),
+      data: {
+        'reason': effectiveRequest.reason,
+      },
+      fromJson: (json) {
+        if (json is! Map) {
+          throw const FormatException(
+            'Invalid cancellation response.',
+          );
+        }
+
+        return Map<String, dynamic>.from(json);
+      },
     );
 
-    if (response.data != null) {
-      return response.data!;
+    final responseBody = response.data;
+
+    if (responseBody == null || responseBody['success'] != true) {
+      throw UnexpectedException(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Failed to cancel booking.',
+      );
     }
-    throw const UnexpectedException(message: 'Failed to cancel booking');
+
+    final bookingData = responseBody['data'];
+
+    if (bookingData is! Map) {
+      throw const UnexpectedException(
+        message: 'Invalid cancellation response data.',
+      );
+    }
+
+    return BookingModel.fromJson(
+      Map<String, dynamic>.from(bookingData),
+    );
   }
 }
 
@@ -140,7 +216,12 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
           description: 'Includes consultation, hair wash, scalp massage, master styling',
           price: 699.0,
           duration: '50 mins',
-          features: ['Hair Consultation', 'Scalp Massage', 'Precision Cut', 'Matte Finish'],
+          features: [
+            'Hair Consultation',
+            'Scalp Massage',
+            'Precision Cut',
+            'Matte Finish'
+          ],
         ),
         branch: const BranchModel(
           id: 'br_downtown',
@@ -154,7 +235,13 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
           openingTime: '09:00',
           closingTime: '21:00',
           isActive: true,
-          amenities: ['Valet Parking', 'Free Wi-Fi', 'Complimentary Beverage', 'Private VIP Suite', 'AC'],
+          amenities: [
+            'Valet Parking',
+            'Free Wi-Fi',
+            'Complimentary Beverage',
+            'Private VIP Suite',
+            'AC'
+          ],
         ),
         address: const AddressModel(
           id: 'addr_branch_01',
@@ -214,7 +301,12 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
           description: 'Deep pore vacuum, hyaluronic infusion, gold mask & LED light therapy',
           price: 1799.0,
           duration: '60 mins',
-          features: ['Deep Pore Extraction', 'Hyaluronic Infusion', 'Cryo Toning', 'LED Therapy'],
+          features: [
+            'Deep Pore Extraction',
+            'Hyaluronic Infusion',
+            'Cryo Toning',
+            'LED Therapy'
+          ],
         ),
         branch: const BranchModel(
           id: 'br_uptown',
@@ -288,7 +380,11 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
           description: 'Deep mask, scalp massage and ozone steaming',
           price: 1299.0,
           duration: '60 mins',
-          features: ['Pure Argan Treatment', 'Aromatherapy Scalp Massage', 'Micro-Mist Steam'],
+          features: [
+            'Pure Argan Treatment',
+            'Aromatherapy Scalp Massage',
+            'Micro-Mist Steam'
+          ],
         ),
         branch: const BranchModel(
           id: 'br_metro',
@@ -366,9 +462,11 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
       );
     }
 
-    final match = _bookings.where(
-      (b) => b.id == bookingId || b.bookingReference == bookingId,
-    ).firstOrNull;
+    final match = _bookings
+        .where(
+          (b) => b.id == bookingId || b.bookingReference == bookingId,
+    )
+        .firstOrNull;
 
     if (match != null) {
       return match;
@@ -383,103 +481,40 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
     BookingSummaryModel? summary,
     PaymentMethodModel? paymentMethod,
   }) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 150));
 
     if (shouldFail) {
       throw const UnexpectedException(
-        message: "We couldn't confirm your booking. Please try again.",
+        message: 'Failed to create booking. Please try again.',
       );
     }
 
-    final reference =
-        'SC-2026-${_counter.toString().padLeft(6, '0')}';
-    _counter++;
+    // Use the selected summary when available.
+    if (summary == null || paymentMethod == null) {
+      throw const UnexpectedException(
+        message: 'Booking summary or payment method is missing.',
+      );
+    }
 
-    // Preserve actual selected checkout state if provided
-    final ServiceModel service = summary?.service ??
-        ServiceModel(
-          id: request.serviceId,
-          categoryId: 'cat_cleaning',
-          name: 'Home Deep Cleaning',
-          description: 'Standard deep clean',
-          startingPrice: request.totalAmount,
-        );
-
-    final ServicePackageModel package = summary?.package ??
-        ServicePackageModel(
-          id: request.packageId,
-          serviceId: request.serviceId,
-          name: 'Premium Deep Cleaning',
-          description: 'Complete home service',
-          price: request.totalAmount,
-          duration: '2-3 hrs',
-          features: const ['Deep Cleaning', 'Sanitization'],
-        );
-
-    final AddressModel address = summary?.address ??
-        AddressModel(
-          id: request.addressId,
-          userId: 'user_current',
-          label: 'Home',
-          houseNumber: 'Flat 302',
-          addressLine: 'Royal Palms, Vaishali Nagar',
-          city: 'Jaipur',
-          state: 'Rajasthan',
-          pincode: '302021',
-        );
-
-    final ServiceDateModel scheduledDate = summary?.scheduledDate ??
-        ServiceDateModel(
-          date: DateTime.tryParse(request.scheduledDate) ?? DateTime.now(),
-          isAvailable: true,
-        );
-
-    final TimeSlotModel timeSlot = summary?.timeSlot ??
-        TimeSlotModel(
-          id: request.timeSlotId,
-          startTime: '10:00 AM',
-          endTime: '12:00 PM',
-          isAvailable: true,
-        );
-
-    final PaymentMethodModel payment = paymentMethod ??
-        PaymentMethodModel(
-          id: request.paymentMethodId,
-          title: 'UPI',
-          subtitle: 'Google Pay, PhonePe, Paytm, BHIM',
-          type: PaymentMethodType.upi,
-          isAvailable: true,
-        );
-
-    final PricingBreakdown pricing = summary?.pricing ??
-        PricingBreakdown.calculate(
-          packagePrice: request.totalAmount,
-          discount: 0,
-        );
-
-    final createdBooking = BookingModel(
-      id: 'bk_${DateTime.now().millisecondsSinceEpoch}',
-      bookingReference: reference,
+    final booking = BookingModel(
+      id: 'bk_mock_${_counter++}',
+      bookingReference:
+      'LX-${DateTime.now().year}-${_counter.toString().padLeft(4, '0')}',
       status: BookingStatus.confirmed,
-      service: service,
-      package: package,
-      address: address,
-      scheduledDate: scheduledDate,
-      timeSlot: timeSlot,
-      paymentMethod: payment,
-      pricing: pricing,
+      service: summary.service,
+      package: summary.package,
+      address: summary.address,
+      branch: summary.branch,
+      scheduledDate: summary.scheduledDate,
+      timeSlot: summary.timeSlot,
+      paymentMethod: paymentMethod,
+      pricing: summary.pricing,
       createdAt: DateTime.now(),
     );
 
-    // Session-level in-memory persistence: insert at top
-    _bookings.insert(0, createdBooking);
+    _bookings.insert(0, booking);
 
-    return createdBooking;
-  }
-
-  void addBooking(BookingModel booking) {
-    _bookings.add(booking);
+    return booking;
   }
 
   @override
@@ -489,45 +524,38 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
     String? reason,
     String? reasonNote,
   }) async {
-    final effectiveRequest = request ??
-        CancelBookingRequestModel(
-          bookingId: bookingId ?? '',
-          reason: reason ?? '',
-          reasonNote: reasonNote,
-        );
-
     await Future.delayed(const Duration(milliseconds: 150));
 
     if (shouldFail) {
       throw const UnexpectedException(
-        message: "Couldn't cancel this booking. Please try again.",
+        message: 'Failed to cancel booking. Please try again.',
       );
     }
 
+    final effectiveBookingId = request?.bookingId ?? bookingId ?? '';
+
     final index = _bookings.indexWhere(
-      (b) => b.id == effectiveRequest.bookingId || b.bookingReference == effectiveRequest.bookingId,
+          (booking) =>
+      booking.id == effectiveBookingId ||
+          booking.bookingReference == effectiveBookingId,
     );
 
     if (index == -1) {
-      throw const NotFoundException(message: 'Booking not found');
+      throw const NotFoundException(message: 'Booking not found.');
     }
 
-    final targetBooking = _bookings[index];
+    final existingBooking = _bookings[index];
 
-    if (!targetBooking.isCancellable) {
-      throw const BadRequestException(
-        message: 'This booking cannot be cancelled.',
-      );
-    }
-
-    final updatedBooking = targetBooking.copyWith(
+    final updatedBooking = existingBooking.copyWith(
       status: BookingStatus.cancelled,
-      cancellationReason: effectiveRequest.reason,
-      cancellationNote: effectiveRequest.reasonNote,
+      cancellationReason: request?.reason ?? reason ?? '',
+      cancellationNote: request?.reasonNote ?? reasonNote,
       cancelledAt: DateTime.now(),
     );
 
     _bookings[index] = updatedBooking;
+
     return updatedBooking;
   }
+
 }

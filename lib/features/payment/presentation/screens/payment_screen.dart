@@ -259,10 +259,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         onPressed: bp.isCreating
                             ? null
                             : () async {
-                                final booking = await bp.createBooking(
-                                  summary: summary,
-                                  paymentMethod: selectedMethod,
-                                );
+                          final summaryProvider = context.read<BookingSummaryProvider>();
+                          final selectedProduct = summaryProvider.selectedProduct;
+
+                          if (selectedProduct == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please select a product before booking.'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          final booking = await bp.createBooking(
+                            summary: summary,
+                            paymentMethod: selectedMethod,
+                            selectedProduct: selectedProduct,
+                          );
 
                                 if (booking != null && context.mounted) {
                                   Navigator.of(bottomSheetContext).pop();

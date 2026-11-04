@@ -11,6 +11,7 @@ class PricingBreakdown {
     required this.taxRate,
     required this.taxAmount,
     required this.totalAmount,
+
   });
 
   /// Check if a discount is applied

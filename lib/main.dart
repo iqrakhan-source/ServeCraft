@@ -23,6 +23,9 @@ import 'features/booking_summary/domain/repositories/booking_summary_repository.
 import 'features/bookings/data/datasources/booking_remote_data_source.dart';
 import 'features/bookings/data/repositories/booking_repository_impl.dart';
 import 'features/bookings/domain/repositories/booking_repository.dart';
+import 'features/offers/data/repositories/coupon_repository_impl.dart';
+import 'features/offers/datasources/coupon_remote_data_source.dart';
+import 'features/offers/domain/repositories/coupon_repository.dart';
 import 'features/payment/data/datasources/payment_remote_data_source.dart';
 import 'features/payment/data/repositories/payment_repository_impl.dart';
 import 'features/payment/domain/repositories/payment_repository.dart';
@@ -72,7 +75,7 @@ void main() async {
 
   // 4. Initialize Data Sources & Repositories
   final AuthRemoteDataSource authRemoteDataSource =
-      AuthRemoteDataSourceImpl(apiService: apiClient);
+      AuthRemoteDataSourceImpl(apiService: apiClient, storageService: storageService);
   final AuthRepository authRepository = AuthRepositoryImpl(
     remoteDataSource: authRemoteDataSource,
     storageService: storageService,
@@ -98,9 +101,11 @@ void main() async {
     apiService: apiClient,
   );
 
-  final ServiceRepository serviceRepository = ServiceRepositoryImpl(
+  final serviceRepository = ServiceRepositoryImpl(
     remoteDataSource: serviceRemoteDataSource,
-    productsRemoteDataSource: productsRemoteDataSource,
+    productsRemoteDataSource: ServiceProductsRemoteDataSourceImpl(
+      apiService: apiClient,
+    ),
   );
 
   final HomeRemoteDataSource homeRemoteDataSource = MockHomeRemoteDataSource(
@@ -123,6 +128,13 @@ void main() async {
     remoteDataSource: dateTimeRemoteDataSource,
   );
 
+  final CouponRemoteDataSource couponRemoteDataSource =
+  CouponRemoteDataSourceImpl(apiClient: apiClient);
+
+  final CouponRepository couponRepository = CouponRepositoryImpl(
+    remoteDataSource: couponRemoteDataSource,
+  );
+
   final BookingSummaryRemoteDataSource bookingSummaryRemoteDataSource =
       MockBookingSummaryRemoteDataSource();
   final BookingSummaryRepository bookingSummaryRepository =
@@ -136,11 +148,17 @@ void main() async {
     remoteDataSource: paymentRemoteDataSource,
   );
 
+
   final BookingRemoteDataSource bookingRemoteDataSource =
-      MockBookingRemoteDataSource();
+  BookingRemoteDataSourceImpl(
+    apiService: apiClient,
+  );
+
   final BookingRepository bookingRepository = BookingRepositoryImpl(
     remoteDataSource: bookingRemoteDataSource,
   );
+
+
 
   // 5. Launch application
   runApp(
@@ -156,6 +174,7 @@ void main() async {
       bookingSummaryRepository: bookingSummaryRepository,
       paymentRepository: paymentRepository,
       bookingRepository: bookingRepository,
+      couponRepository: couponRepository,
     ),
   );
 }

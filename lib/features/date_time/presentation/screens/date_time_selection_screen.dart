@@ -35,19 +35,32 @@ class DateTimeSelectionScreen extends StatefulWidget {
       _DateTimeSelectionScreenState();
 }
 
-class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
+class _DateTimeSelectionScreenState
+    extends State<DateTimeSelectionScreen> {
+  bool get _isPickerMode {
+    final args =
+    ModalRoute.of(context)?.settings.arguments
+    as Map<String, dynamic>?;
+    return args?['isPickerMode'] as bool? ?? false;
+  }
+
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<DateTimeProvider>();
-      provider.initContext(
+      if (!mounted) return;
+
+      final dateTimeProvider = context.read<DateTimeProvider>();
+
+      dateTimeProvider.initContext(
         serviceId: widget.serviceId,
         serviceName: widget.serviceName,
         packageId: widget.packageId,
         packageName: widget.packageName,
       );
-      provider.loadAvailableDates();
+
+      dateTimeProvider.loadAvailableDates();
     });
   }
 
@@ -55,18 +68,23 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
   Widget build(BuildContext context) {
     final dateTimeProvider = context.watch<DateTimeProvider>();
 
-    final displayServiceName = widget.serviceName ??
-        dateTimeProvider.serviceName ??
-        'Home Service';
-    final displayPackageName = widget.packageName ??
-        dateTimeProvider.packageName ??
-        'Selected Package';
+    final displayServiceName =
+        widget.serviceName ??
+            dateTimeProvider.serviceName ??
+            'Home Service';
+
+    final displayPackageName =
+        widget.packageName ??
+            dateTimeProvider.packageName ??
+            'Selected Package';
+
+    final pickerMode = _isPickerMode;
+
+    final canContinue = dateTimeProvider.isSelectionComplete;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(
-        title: 'Select Date & Time',
-      ),
+      appBar: const CustomAppBar(title: 'Select Date & Time'),
       body: Builder(
         builder: (context) {
           if (dateTimeProvider.datesState.isLoading ||
@@ -77,8 +95,9 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
           if (dateTimeProvider.datesState.isError) {
             return AppErrorView(
               message: "Couldn't load available times",
-              onRetry: () =>
-                  dateTimeProvider.loadAvailableDates(forceRefresh: true),
+              onRetry: () => dateTimeProvider.loadAvailableDates(
+                forceRefresh: true,
+              ),
             );
           }
 
@@ -88,16 +107,15 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
           final selectedSlot = dateTimeProvider.selectedTimeSlot;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Service Summary Context Card
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: AppCard(
                     borderRadius: 12,
-                    padding: const EdgeInsets.all(14.0),
+                    padding: const EdgeInsets.all(14),
                     child: Row(
                       children: [
                         Container(
@@ -119,23 +137,23 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
                             children: [
                               Text(
                                 displayServiceName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: AppTypography.titleSmall.copyWith(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
                                   color: AppColors.textPrimary,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 displayPackageName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: AppTypography.bodySmall.copyWith(
                                   color: AppColors.textSecondary,
                                   fontSize: 12,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -145,10 +163,8 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // 2. Date Selection Header & Horizontal Selector
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
                     'Select a date',
                     style: AppTypography.titleMedium.copyWith(
@@ -162,15 +178,11 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
                 DateSelectorWidget(
                   dates: dates,
                   selectedDate: selectedDate,
-                  onDateSelected: (date) {
-                    dateTimeProvider.selectDate(date);
-                  },
+                  onDateSelected: dateTimeProvider.selectDate,
                 ),
                 const SizedBox(height: 28),
-
-                // 3. Time Slots Header & Grid
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -184,7 +196,9 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
                       ),
                       if (selectedDate != null)
                         Text(
-                          '${selectedDate.dayName}, ${selectedDate.dayNumber} ${selectedDate.monthName}',
+                          '${selectedDate.dayName}, '
+                              '${selectedDate.dayNumber} '
+                              '${selectedDate.monthName}',
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.textSecondary,
                             fontWeight: FontWeight.w600,
@@ -195,18 +209,16 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
                   ),
                 ),
                 const SizedBox(height: 14),
-
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: dateTimeProvider.slotsState.isLoading
                       ? _buildSlotsLoadingGrid()
                       : TimeSlotGrid(
-                          slots: timeSlots,
-                          selectedSlot: selectedSlot,
-                          onSlotSelected: (slot) {
-                            dateTimeProvider.selectTimeSlot(slot);
-                          },
-                        ),
+                    slots: timeSlots,
+                    selectedSlot: selectedSlot,
+                    onSlotSelected:
+                    dateTimeProvider.selectTimeSlot,
+                  ),
                 ),
                 const SizedBox(height: 24),
               ],
@@ -214,14 +226,18 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
           );
         },
       ),
-
-      // Sticky Bottom CTA
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 14,
+        ),
         decoration: const BoxDecoration(
           color: AppColors.surface,
           border: Border(
-            top: BorderSide(color: AppColors.border, width: 1.0),
+            top: BorderSide(
+              color: AppColors.border,
+              width: 1,
+            ),
           ),
           boxShadow: [
             BoxShadow(
@@ -239,78 +255,116 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
             children: [
               AppButton(
                 text: 'Continue',
-                onPressed: dateTimeProvider.isSelectionComplete
+                onPressed: canContinue
                     ? () {
-                        final args = ModalRoute.of(context)?.settings.arguments
-                            as Map<String, dynamic>?;
-                        final isPickerMode =
-                            args?['isPickerMode'] as bool? ?? false;
+                  if (pickerMode) {
+                    Navigator.of(context).pop({
+                      'selectedDate':
+                      dateTimeProvider.selectedDate,
+                      'selectedTimeSlot':
+                      dateTimeProvider.selectedTimeSlot,
+                    });
+                    return;
+                  }
 
-                        if (isPickerMode ||
-                            (args != null &&
-                                !args.containsKey('packageId') &&
-                                Navigator.of(context).canPop())) {
-                          Navigator.of(context).pop({
-                            'selectedDate': dateTimeProvider.selectedDate,
-                            'selectedTimeSlot': dateTimeProvider.selectedTimeSlot,
-                          });
-                          return;
-                        }
+                  final routeArgs =
+                  ModalRoute.of(context)?.settings.arguments
+                  as Map<String, dynamic>?;
 
-                        final branch =
-                            context.read<BranchProvider>().selectedBranch;
-                        final serviceProv = context.read<ServiceProvider>();
-                        final services = serviceProv.services;
-                        final service = services
-                                .cast<ServiceModel?>()
-                                .firstWhere(
-                                  (s) =>
-                                      s?.id ==
-                                      (widget.serviceId ??
-                                          dateTimeProvider.serviceId),
-                                  orElse: () => null,
-                                ) ??
-                            const ServiceModel(
-                              id: 'srv_exec_haircut',
-                              categoryId: 'cat_hair_styling',
-                              name: 'Executive Haircut & Styling',
-                              description: 'Salon precision haircut & styling',
-                              startingPrice: 499.0,
-                              duration: '45 mins',
-                            );
+                  if (routeArgs != null &&
+                      !routeArgs.containsKey('packageId') &&
+                      Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop({
+                      'selectedDate':
+                      dateTimeProvider.selectedDate,
+                      'selectedTimeSlot':
+                      dateTimeProvider.selectedTimeSlot,
+                    });
+                    return;
+                  }
 
-                        final package = service.packages
-                                .cast<ServicePackageModel?>()
-                                .firstWhere(
-                                  (p) =>
-                                      p?.id ==
-                                      (widget.packageId ??
-                                          dateTimeProvider.packageId),
-                                  orElse: () => null,
-                                ) ??
-                            (service.packages.isNotEmpty
-                                ? service.packages.first
-                                : ServicePackageModel(
-                                    id: 'pkg_classic',
-                                    serviceId: service.id,
-                                    name: widget.packageName ?? service.name,
-                                    description: service.description,
-                                    price: service.startingPrice,
-                                    duration: service.duration,
-                                    features: const ['Service Included'],
-                                  ));
+                  final branch =
+                      context.read<BranchProvider>().selectedBranch;
 
-                        Navigator.of(context).pushNamed(
-                          AppRoutes.bookingSummary,
-                          arguments: {
-                            'service': service,
-                            'package': package,
-                            'branch': branch,
-                            'scheduledDate': dateTimeProvider.selectedDate,
-                            'timeSlot': dateTimeProvider.selectedTimeSlot,
-                          },
-                        );
-                      }
+                  final serviceProvider =
+                  context.read<ServiceProvider>();
+                  final services = serviceProvider.services;
+
+                  final serviceId =
+                      widget.serviceId ??
+                          dateTimeProvider.serviceId;
+
+                  final matchingServices =
+                  services.where((s) => s.id == serviceId);
+
+                  if (matchingServices.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'The selected service could not be found. '
+                              'Please go back and select the service again.',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
+                  final ServiceModel service =
+                      matchingServices.first;
+
+                  final packageId =
+                      widget.packageId ??
+                          dateTimeProvider.packageId;
+
+                  debugPrint('========== BOOKING DEBUG ==========');
+                  debugPrint('Service ID: ${service.id}');
+                  debugPrint('Service Name: ${service.name}');
+                  debugPrint('Widget Package ID: ${widget.packageId}');
+                  debugPrint('Provider Package ID: ${dateTimeProvider.packageId}');
+                  debugPrint('Final Package ID: $packageId');
+//debugPrint('Total Packages: ${service.packages.length}');
+
+                  for (final package in service.packages) {
+                    debugPrint('Package ID: ${package.id}');
+                    debugPrint('Package Name: ${package.name}');
+                  }
+
+                  debugPrint('===================================');
+
+                  final matchingPackages = service.packages
+                      .where((p) => p.id == packageId);
+
+                  final ServicePackageModel? selectedPackage =
+                  matchingPackages.isNotEmpty
+                      ? matchingPackages.first
+                      : (service.packages.isNotEmpty
+                      ? service.packages.first
+                      : null);
+
+                  if (selectedPackage == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'No package is available for this service.',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
+                  Navigator.of(context).pushNamed(
+                    AppRoutes.bookingSummary,
+                    arguments: {
+                      'service': service,
+                      'package': selectedPackage,
+                      'branch': branch,
+                      'scheduledDate':
+                      dateTimeProvider.selectedDate,
+                      'timeSlot':
+                      dateTimeProvider.selectedTimeSlot,
+                    },
+                  );
+                }
                     : null,
               ),
               if (!dateTimeProvider.isSelectionComplete) ...[
@@ -335,28 +389,23 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
 
   Widget _buildLoadingState() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Summary skeleton
           const AppSkeleton(
             height: 68,
             width: double.infinity,
             borderRadius: 12,
           ),
           const SizedBox(height: 24),
-
-          // Date header skeleton
           const AppSkeleton(height: 20, width: 120),
           const SizedBox(height: 12),
-
-          // Horizontal dates skeleton
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(
               4,
-              (index) => const AppSkeleton(
+                  (index) => const AppSkeleton(
                 height: 98,
                 width: 68,
                 borderRadius: 12,
@@ -364,12 +413,8 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
             ),
           ),
           const SizedBox(height: 28),
-
-          // Time slot header skeleton
           const AppSkeleton(height: 20, width: 160),
           const SizedBox(height: 14),
-
-          // Slots grid skeleton
           _buildSlotsLoadingGrid(),
         ],
       ),
@@ -383,8 +428,8 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
       itemCount: 6,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 10.0,
-        mainAxisSpacing: 10.0,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
         childAspectRatio: 2.8,
       ),
       itemBuilder: (context, index) {

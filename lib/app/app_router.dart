@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:prop_crm/core/storage/storage_keys.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_typography.dart';
 import '../core/constants/route_names.dart';
 import '../core/widgets/app_button.dart';
 import '../core/widgets/custom_app_bar.dart';
 import '../features/auth/presentation/screens/complete_profile_screen.dart';
-import '../features/auth/presentation/screens/forgot_password_otp_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
+//import '../features/auth/presentation/screens/forgot_password_screen.dart' hide ForgotPasswordScreen;
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/mobile_login_screen.dart';
-import '../features/auth/presentation/screens/otp_verification_screen.dart';
+//import '../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../features/auth/presentation/screens/profile_screen.dart';
 import '../features/auth/presentation/screens/reset_password_screen.dart';
 import '../features/auth/presentation/screens/signup_screen.dart';
@@ -69,44 +70,44 @@ abstract class AppRouter {
           builder: (_) => const ForgotPasswordScreen(),
         );
 
-      case AppRoutes.forgotPasswordOtp: {
-        final email = settings.arguments as String?;
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (_) => ForgotPasswordOtpScreen(email: email),
-        );
-      }
+      // case AppRoutes.forgotPasswordOtp: {
+      //   final email = settings.arguments as String?;
+      //   return MaterialPageRoute(
+      //     settings: settings,
+      //     builder: (_) => ForgotPasswordOtpScreen(email: email),
+      //   );
+      // }
 
       case AppRoutes.resetPassword: {
         final email = settings.arguments as String?;
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => ResetPasswordScreen(email: email),
+          builder: (_) => ResetPasswordScreen(email: email,resetToken: StorageKeys.resetToken,),
         );
       }
 
-      case AppRoutes.otpVerification: {
-        final args = settings.arguments;
-        String? phone;
-        String? email;
-        if (args is Map<String, dynamic>) {
-          phone = args['phone'] as String?;
-          email = args['email'] as String?;
-        } else if (args is String) {
-          if (args.contains('@')) {
-            email = args;
-          } else {
-            phone = args;
-          }
-        }
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (_) => OtpVerificationScreen(
-            phone: phone,
-            email: email,
-          ),
-        );
-      }
+      // case AppRoutes.otpVerification: {
+      //   final args = settings.arguments;
+      //   String? phone;
+      //   String? email;
+      //   if (args is Map<String, dynamic>) {
+      //     phone = args['phone'] as String?;
+      //     email = args['email'] as String?;
+      //   } else if (args is String) {
+      //     if (args.contains('@')) {
+      //       email = args;
+      //     } else {
+      //       phone = args;
+      //     }
+      //   }
+      //   return MaterialPageRoute(
+      //     settings: settings,
+      //     builder: (_) => OtpVerificationScreen(
+      //       phone: phone,
+      //       email: email,
+      //     ),
+      //   );
+      // }
 
       case AppRoutes.completeProfile:
         return MaterialPageRoute(
@@ -195,8 +196,10 @@ abstract class AppRouter {
         );
       }
 
-      case AppRoutes.dateTimeSelection: {
+
+      case AppRoutes.dateTimeSelection:
         final args = settings.arguments as Map<String, dynamic>?;
+
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => DateTimeSelectionScreen(
@@ -206,7 +209,7 @@ abstract class AppRouter {
             packageName: args?['packageName'] as String?,
           ),
         );
-      }
+
 
       case AppRoutes.bookingSummary: {
         final args = settings.arguments as Map<String, dynamic>?;

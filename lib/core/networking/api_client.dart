@@ -36,7 +36,6 @@ class ApiClient {
       // Use default values if AppConfig is not initialized.
     }
 
-    debugPrint('API BASE URL: $resolvedBaseUrl');
     final options = BaseOptions(
       baseUrl: resolvedBaseUrl,
       connectTimeout: connectTimeout,
@@ -70,8 +69,9 @@ class ApiClient {
           responseBody: true,
           responseHeader: true,
           error: true,
-          compact: true,
-          maxWidth: 90,
+          compact: false,
+          enabled: true,
+          request: true,
         ),
       );
     }
@@ -133,23 +133,11 @@ class ApiClient {
         Options? options,
         T Function(dynamic json)? fromJson,
       }) async {
-    debugPrint('========== POST METHOD CALLED ==========');
-    debugPrint('POST PATH: $path');
-    debugPrint('REGISTER PATH: ${ApiConstants.registerCustomer}');
-    debugPrint('IS REGISTER: ${path == ApiConstants.registerCustomer}');
     try {
       // Debug only the Create Account request.
       if (path == ApiConstants.registerCustomer) {
-        debugPrint('========== REGISTER REQUEST ==========');
-        debugPrint('POST URL: ${dio.options.baseUrl}$path');
 
-        if (data is Map) {
-          debugPrint('POST body keys: ${data.keys.toList()}');
-          debugPrint('POST phone present: ${data.containsKey('phone')}');
-          debugPrint('POST phone value: ${data['phone']}');
-        }
-
-        debugPrint('======================================');
+        if (data is Map) {}
       }
 
       final response = await dio.post(

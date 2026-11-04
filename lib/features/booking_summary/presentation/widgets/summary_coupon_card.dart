@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/widgets/app_card.dart';
-import '../../../offers/data/models/coupon_model.dart';
+import '../../../offers/model/models/coupon_model.dart';
 import '../../../offers/presentation/screens/offers_screen.dart';
 
 class SummaryCouponCard extends StatefulWidget {

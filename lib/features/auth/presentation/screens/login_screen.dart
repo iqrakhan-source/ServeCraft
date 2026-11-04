@@ -39,33 +39,33 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Future<void> _handleLogin() async {
-    FocusScope.of(context).unfocus();
-
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    // UI-only prototype: simulate short interaction and navigate to Home / MainNav
-    setState(() {
-      _isLoading = true;
-    });
-
-    await Future.delayed(const Duration(milliseconds: 600));
-
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = false;
-    });
-
-
-
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      AppRoutes.mainNav,
-      (route) => false,
-    );
-  }
+  // Future<void> _handleLogin() async {
+  //   FocusScope.of(context).unfocus();
+  //
+  //   if (!_formKey.currentState!.validate()) {
+  //     return;
+  //   }
+  //
+  //   // UI-only prototype: simulate short interaction and navigate to Home / MainNav
+  //   setState(() {
+  //     _isLoading = true;
+  //   });
+  //
+  //   await Future.delayed(const Duration(milliseconds: 600));
+  //
+  //   if (!mounted) return;
+  //
+  //   setState(() {
+  //     _isLoading = false;
+  //   });
+  //
+  //
+  //
+  //   Navigator.of(context).pushNamedAndRemoveUntil(
+  //     AppRoutes.mainNav,
+  //     (route) => false,
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -225,6 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   AppButton(
                     text: AppStrings.signIn,
                     isLoading: _isLoading,
+
                     onPressed: () async {
                       FocusScope.of(context).unfocus();
 
@@ -235,6 +236,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       setState(() => _isLoading = true);
 
                       try {
+                        debugPrint('[LOGIN UI] Login button pressed');
+                        debugPrint('[LOGIN UI] Email: ${_emailController.text.trim()}');
+
                         final authProvider = Provider.of<AuthProvider>(
                           context,
                           listen: false,
@@ -245,12 +249,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           _passwordController.text,
                         );
 
+                        debugPrint('[LOGIN UI] Success: $success');
+                        debugPrint('[LOGIN UI] Error: ${authProvider.errorMessage}');
+                        debugPrint(
+                          '[LOGIN UI] Profile incomplete: ${authProvider.isProfileIncomplete}',
+                        );
+
                         if (!mounted) return;
 
                         if (success) {
                           final nextRoute = authProvider.isProfileIncomplete
                               ? AppRoutes.editProfile
                               : AppRoutes.mainNav;
+
+                          debugPrint('[LOGIN UI] Navigating to: $nextRoute');
 
                           Navigator.of(context).pushNamedAndRemoveUntil(
                             nextRoute,
@@ -260,17 +272,28 @@ class _LoginScreenState extends State<LoginScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                authProvider.errorMessage ?? 'Login failed. Please try again.',
+                                authProvider.errorMessage ??
+                                    'Login failed. Please check your credentials.',
                               ),
                             ),
                           );
                         }
+                      } catch (e, stackTrace) {
+                        debugPrint('[LOGIN UI] Exception: $e');
+                        debugPrintStack(stackTrace: stackTrace);
+
+                        if (!mounted) return;
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Unable to log in. Please try again.')),
+                        );
                       } finally {
                         if (mounted) {
                           setState(() => _isLoading = false);
                         }
                       }
                     },
+
                   ),
 
                   const SizedBox(height: 28),

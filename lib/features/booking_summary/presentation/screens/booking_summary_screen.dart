@@ -17,6 +17,7 @@ import '../../../date_time/data/models/time_slot_model.dart';
 import '../../../offers/presentation/providers/offer_provider.dart';
 import '../../../services/data/models/service_model.dart';
 import '../../../services/data/models/service_package_model.dart';
+import '../../../services/data/models/service_products_response.dart';
 import '../../data/models/booking_summary_model.dart';
 import '../providers/booking_summary_provider.dart';
 import '../widgets/summary_branch_card.dart';
@@ -33,6 +34,7 @@ class BookingSummaryScreen extends StatefulWidget {
   final ServiceDateModel? scheduledDate;
   final TimeSlotModel? timeSlot;
   final BookingSummaryModel? initialSummary;
+  final ConsumableProduct? selectedProduct;
 
   const BookingSummaryScreen({
     super.key,
@@ -43,6 +45,7 @@ class BookingSummaryScreen extends StatefulWidget {
     this.scheduledDate,
     this.timeSlot,
     this.initialSummary,
+    this.selectedProduct
   });
 
   @override
@@ -64,6 +67,10 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     if (widget.initialSummary != null) {
       provider.setSummary(widget.initialSummary!);
       return;
+    }
+
+    if (widget.selectedProduct != null) {
+      provider.setSelectedProduct(widget.selectedProduct);
     }
 
     final service = widget.service;

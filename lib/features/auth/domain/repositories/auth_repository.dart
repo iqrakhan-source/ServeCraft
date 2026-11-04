@@ -1,8 +1,11 @@
 import 'package:prop_crm/features/auth/data/models/login_request.dart';
 import 'package:prop_crm/features/auth/data/models/login_response.dart';
 
+import '../../data/models/forgot_password_request.dart';
+import '../../data/models/password_reset_response.dart';
 import '../../data/models/register_customer_request.dart';
 import '../../data/models/register_customer_response.dart';
+import '../../data/models/reset_password_request.dart';
 import '../../data/models/send_otp_response.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/verify_otp_response.dart';
@@ -13,8 +16,17 @@ abstract class AuthRepository {
       );
   Future<SendOtpResponse> sendOtp(String phone);
   Future<LoginResponse> login(String email, String password);
-  Future<SendOtpResponse> sendSignupOtp(String email);
-  Future<VerifyOtpResponse> verifyOtp(String phone, String otp);
+ // Future<SendOtpResponse> sendSignupOtp(String email);
+ // Future<VerifyOtpResponse> verifyOtp(String phone, String otp);
+  Future<PasswordResetResponse> forgotPassword(
+      ForgotPasswordRequest request,
+      );
+
+  Future<PasswordResetResponse> resetPassword(
+      ResetPasswordRequest request,
+      );
+
+
   Future<UserModel> completeProfile({
     required String name,
     String? email,
