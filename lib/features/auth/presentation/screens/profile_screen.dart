@@ -296,7 +296,42 @@ class ProfileScreen extends StatelessWidget {
                       Navigator.of(context).pushNamed(AppRoutes.offers);
                     },
                   ),
+
                   const Divider(),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryLight,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.workspace_premium_outlined,
+                        size: 20,
+                        color: AppColors.secondary,
+                      ),
+                    ),
+                    title: Text(
+                      'My Subscriptions',
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Explore membership plans & exclusive benefits',
+                      style: AppTypography.bodySmall,
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    ),
+                    onTap: () {
+                      Navigator.of(context).pushNamed(AppRoutes.subscriptions);
+                    },
+                  ),
+
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: Container(

@@ -55,7 +55,7 @@ abstract class ApiConstants {
   static const String home = '/home';
 
   // Categories & Services
-  static const String categories = '/api/v1/customer/categories';
+  //static const String categories = '/api/v1/customer/categories';
   static String categoryById(String id) => '/categories/$id';
   static const String services = '/api/v1/customer/services';
   static String serviceById(String id) => '/services/$id';
@@ -76,25 +76,55 @@ abstract class ApiConstants {
   static const String calculateCombo = '/api/v1/customer/calculate-combo';
 
   // Booking & Slots
-  static const String bookingSlots = '/api/v1/customer/booking/slots';
-  static const String createBooking = '/api/v1/customer/booking/create';
+  static const String createBooking = '/api/customer/bookings';
+
+  //static const String calculatePricing ='/api/customer/bookings/calculate-pricing';
+
+  static String availableSlots(String branchId) =>
+      '/api/customer/branches/$branchId/available-slots';
+
+// Appointments / Bookings
+  static const String appointments = '/api/customer/bookings';
+
+  static String appointmentById(String id) =>
+      '/api/customer/bookings/$id';
+
+  static String cancelAppointment(String id) =>
+      '/api/customer/bookings/$id/cancel';
+
+  static String rescheduleAppointment(String id) =>
+      '/api/customer/bookings/$id/reschedule';
+
+// Backwards-compatible aliases
+  static const String bookings = appointments;
+
+  static String bookingById(String id) => appointmentById(id);
+
+  static String bookingDetails(String id) => appointmentById(id);
+
+  static String cancelBooking(String id) => cancelAppointment(id);
+
+  static String rescheduleBooking(String id) =>
+      rescheduleAppointment(id);
+
+  static const String bookingSummary = '/checkout/summary';
 
   // Appointments (Customer Appointments)
-  static const String appointments = '/api/v1/customer/appointments';
-  static String appointmentById(String id) =>
-      '/api/v1/customer/appointments/$id';
-  static String cancelAppointment(String id) =>
-      '/api/v1/customer/appointments/$id/cancel';
-  static String rescheduleAppointment(String id) =>
-      '/api/v1/customer/appointments/$id/reschedule';
-
-  // Backwards-compatible aliases for Bookings
-  static const String bookings = appointments;
-  static String bookingById(String id) => appointmentById(id);
-  static String bookingDetails(String id) => appointmentById(id);
-  static String cancelBooking(String id) => cancelAppointment(id);
-  static String rescheduleBooking(String id) => rescheduleAppointment(id);
-  static const String bookingSummary = '/checkout/summary';
+  // static const String appointments = '/api/v1/customer/appointments';
+  // static String appointmentById(String id) =>
+  //     '/api/v1/customer/appointments/$id';
+  // static String cancelAppointment(String id) =>
+  //     '/api/v1/customer/appointments/$id/cancel';
+  // static String rescheduleAppointment(String id) =>
+  //     '/api/v1/customer/appointments/$id/reschedule';
+  //
+  // // Backwards-compatible aliases for Bookings
+  // static const String bookings = appointments;
+  // static String bookingById(String id) => appointmentById(id);
+  // static String bookingDetails(String id) => appointmentById(id);
+  // static String cancelBooking(String id) => cancelAppointment(id);
+  // static String rescheduleBooking(String id) => rescheduleAppointment(id);
+  // static const String bookingSummary = '/checkout/summary';
 
   // Payments
   static const String paymentMethods = '/payments/methods';
@@ -107,14 +137,15 @@ abstract class ApiConstants {
   static String reviewsByServiceId(String serviceId) => '/services/$serviceId/reviews';
 
   // Offers
-  static const String offers = '/offers';
-  static const String applyCoupon = '/offers/apply';
+  //static const String offers = '/offers';
+  //static const String applyCoupon = '/offers/apply';
 
   // Coupons
   static const String customerCoupons = '/api/customer/coupons';
   static const String applyCustomerCoupon = '/api/customer/coupons/apply';
 
-
+  static const String subscriptionPlans =
+      '/api/customer/subscriptions/plans';
 
 }
 

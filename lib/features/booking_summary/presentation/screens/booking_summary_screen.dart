@@ -11,6 +11,7 @@ import '../../../../core/widgets/app_loading_indicator.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../addresses/data/models/address_model.dart';
 import '../../../branches/data/models/branch_model.dart';
+import '../../../branches/presentation/providers/branch_provider.dart';
 import '../../../branches/presentation/screens/branch_selection_screen.dart';
 import '../../../date_time/data/models/service_date_model.dart';
 import '../../../date_time/data/models/time_slot_model.dart';
@@ -65,18 +66,41 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     final provider = context.read<BookingSummaryProvider>();
 
     if (widget.initialSummary != null) {
-      provider.setSummary(widget.initialSummary!);
-      return;
-    }
+      final existingSummary = widget.initialSummary!;
 
-    if (widget.selectedProduct != null) {
-      provider.setSelectedProduct(widget.selectedProduct);
+      final selectedBranch = existingSummary.branch ??
+          widget.branch ??
+          context.read<BranchProvider>().selectedBranch;
+
+      provider.setSummary(existingSummary);
+
+      if (selectedBranch != null && existingSummary.branch == null) {
+        provider.updateBranch(selectedBranch);
+      }
+
+      debugPrint('========== INITIAL SUMMARY DEBUG ==========');
+      debugPrint('Initial Branch: ${existingSummary.branch?.id}');
+      debugPrint('Selected Branch: ${selectedBranch?.id}');
+      debugPrint('============================================');
+
+      return;
     }
 
     final service = widget.service;
     final package = widget.package;
     final scheduledDate = widget.scheduledDate;
     final timeSlot = widget.timeSlot;
+
+    final branch = widget.branch ??
+        context.read<BranchProvider>().selectedBranch;
+
+    debugPrint('========== SUMMARY INIT DEBUG ==========');
+    debugPrint('Widget Branch ID: ${widget.branch?.id}');
+    debugPrint(
+      'Provider Branch ID: ${context.read<BranchProvider>().selectedBranch?.id}',
+    );
+    debugPrint('Final Branch ID: ${branch?.id}');
+    debugPrint('=========================================');
 
     if (service != null &&
         package != null &&
@@ -86,12 +110,13 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
         service: service,
         package: package,
         address: widget.address,
-        branch: widget.branch,
+        branch: branch,
         date: scheduledDate,
         timeSlot: timeSlot,
       );
     }
   }
+
 
   Future<void> _handleEditBranch() async {
     final updatedBranch = await Navigator.of(context).push<BranchModel>(
@@ -106,6 +131,25 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
   }
 
   Future<void> _handleEditSchedule(BookingSummaryModel summary) async {
+    final branch = summary.branch ??
+        context.read<BranchProvider>().selectedBranch;
+
+    debugPrint('========== EDIT SCHEDULE DEBUG ==========');
+    debugPrint('Summary Branch: ${summary.branch?.name}');
+    debugPrint('Summary Branch ID: ${summary.branch?.id}');
+    debugPrint('Provider Branch: ${context.read<BranchProvider>().selectedBranch?.id}');
+    debugPrint('Final Branch ID: ${branch?.id}');
+    debugPrint('==========================================');
+
+    if (branch?.id == null || branch!.id.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a salon branch first.'),
+        ),
+      );
+      return;
+    }
+
     final updatedSchedule = await Navigator.of(context).pushNamed(
       AppRoutes.dateTimeSelection,
       arguments: {
@@ -113,12 +157,14 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
         'serviceName': summary.service.name,
         'packageId': summary.package.id,
         'packageName': summary.package.name,
+        'branchId': branch.id,
       },
     );
 
     if (updatedSchedule is Map<String, dynamic> && mounted) {
       final date = updatedSchedule['selectedDate'] as ServiceDateModel?;
       final slot = updatedSchedule['selectedTimeSlot'] as TimeSlotModel?;
+
       if (date != null && slot != null) {
         context.read<BookingSummaryProvider>().updateSchedule(date, slot);
       }
@@ -194,19 +240,18 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                 const SizedBox(height: 16),
 
                 // Salon Branch Location Card
-                SummaryBranchCard(
-                  branch: summary.branch ??
-                      const BranchModel(
-                        id: 'branch-1',
-                        name: 'Downtown Luxury Lounge',
-                        address: '104 Royal Palms, Downtown Luxury Avenue, Mumbai',
-                        phone: '+91 98765 43210',
-                        openingTime: '09:00',
-                        closingTime: '21:00',
-                        isActive: true,
-                      ),
-                  onEdit: _handleEditBranch,
-                ),
+                if (summary.branch != null)
+                  SummaryBranchCard(
+                    branch: summary.branch!,
+                    onEdit: _handleEditBranch,
+                  )
+                else
+                  AppEmptyState(
+                    title: 'Salon branch not selected',
+                    subtitle: 'Please select a salon branch before continuing.',
+                    actionText: 'Select Branch',
+                    onActionPressed: _handleEditBranch,
+                  ),
                 const SizedBox(height: 16),
 
                 // Coupon Card

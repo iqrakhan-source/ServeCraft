@@ -1,9 +1,11 @@
+
 class TimeSlotModel {
   final String id;
   final String startTime;
   final String endTime;
   final bool isAvailable;
   final String? displayLabel;
+  final int? availableCapacity;
 
   const TimeSlotModel({
     required this.id,
@@ -11,10 +13,23 @@ class TimeSlotModel {
     required this.endTime,
     this.isAvailable = true,
     this.displayLabel,
+    this.availableCapacity,
   });
 
-  /// Display string, e.g. "09:00 AM - 10:00 AM"
-  String get formattedLabel => displayLabel ?? '$startTime - $endTime';
+  // Exact value expected by the booking API.
+  String get bookingTimeSlot => id;
+
+  String get formattedLabel => displayLabel ?? startTime;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'timeSlot': id,
+      'startTime': startTime,
+      'endTime': endTime,
+      'display': displayLabel,
+      'availableCapacity': availableCapacity,
+    };
+  }
 
   TimeSlotModel copyWith({
     String? id,
@@ -22,6 +37,7 @@ class TimeSlotModel {
     String? endTime,
     bool? isAvailable,
     String? displayLabel,
+    int? availableCapacity,
   }) {
     return TimeSlotModel(
       id: id ?? this.id,
@@ -29,59 +45,23 @@ class TimeSlotModel {
       endTime: endTime ?? this.endTime,
       isAvailable: isAvailable ?? this.isAvailable,
       displayLabel: displayLabel ?? this.displayLabel,
+      availableCapacity: availableCapacity ?? this.availableCapacity,
     );
   }
 
   factory TimeSlotModel.fromJson(Map<String, dynamic> json) {
-    final slot24 = json['slot24'] ?? json['timeSlot'];
-    final display = json['display']?.toString();
-    final id = (json['id'] ?? json['_id'] ?? slot24 ?? '').toString();
-    final startTime = (json['startTime'] ?? display ?? slot24 ?? '').toString();
-    final endTime = (json['endTime'] ?? '').toString();
-    final bool isAvailable;
-    if (json.containsKey('available')) {
-      isAvailable = json['available'] == true && json['disabled'] != true;
-    } else if (json.containsKey('isAvailable')) {
-      isAvailable = json['isAvailable'] as bool? ?? true;
-    } else {
-      isAvailable = true;
-    }
+    final timeSlot =
+    (json['timeSlot'] ?? json['slot24'] ?? '').toString();
+
+    final capacity = (json['availableCapacity'] as num?)?.toInt();
 
     return TimeSlotModel(
-      id: id,
-      startTime: startTime,
-      endTime: endTime,
-      isAvailable: isAvailable,
-      displayLabel: display ?? json['displayLabel'] as String?,
+      id: timeSlot,
+      startTime: (json['startTime'] ?? timeSlot).toString(),
+      endTime: (json['endTime'] ?? '').toString(),
+      displayLabel: json['display']?.toString(),
+      isAvailable: capacity == null || capacity > 0,
+      availableCapacity: capacity,
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'startTime': startTime,
-      'endTime': endTime,
-      'isAvailable': isAvailable,
-      'displayLabel': displayLabel,
-    };
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TimeSlotModel &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          startTime == other.startTime &&
-          endTime == other.endTime &&
-          isAvailable == other.isAvailable &&
-          displayLabel == other.displayLabel;
-
-  @override
-  int get hashCode =>
-      id.hashCode ^
-      startTime.hashCode ^
-      endTime.hashCode ^
-      isAvailable.hashCode ^
-      displayLabel.hashCode;
 }

@@ -191,6 +191,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         'serviceName': booking.service.name,
         'packageId': booking.package.id,
         'packageName': booking.package.name,
+        'branchId':booking.branch?.id,
       },
     );
 

@@ -156,9 +156,20 @@ class _BranchSelectionScreenState extends State<BranchSelectionScreen> {
                         BranchCard(
                           branch: branch,
                           isSelected: isSelected,
-                          onTap: () {
-                            final success = branchProvider.selectBranch(branch);
+                          onTap: () async {
+                            final success = await branchProvider.selectBranch(branch);
+
+                            if (!mounted) return;
+
                             if (success) {
+                              debugPrint('========== BRANCH SELECTION CONFIRMED ==========');
+                              debugPrint('Branch Name: ${branch.name}');
+                              debugPrint('Branch ID: ${branch.id}');
+                              debugPrint(
+                                'Provider Branch ID: ${branchProvider.selectedBranch?.id}',
+                              );
+                              debugPrint('=================================================');
+
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('Selected ${branch.name}'),
@@ -166,6 +177,7 @@ class _BranchSelectionScreenState extends State<BranchSelectionScreen> {
                                   duration: const Duration(seconds: 1),
                                 ),
                               );
+
                               if (widget.isSelectionMode) {
                                 Navigator.of(context).pop(branch);
                               }

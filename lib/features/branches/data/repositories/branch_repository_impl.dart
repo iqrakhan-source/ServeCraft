@@ -7,9 +7,14 @@ class BranchRepositoryImpl implements BranchRepository {
 
   BranchRepositoryImpl({required this.remoteDataSource});
 
+
   @override
-  Future<List<BranchModel>> getBranches({bool activeOnly = false}) async {
-    return await remoteDataSource.getBranches(activeOnly: activeOnly);
+  Future<List<BranchModel>> getBranches({
+    bool activeOnly = false,
+  }) async {
+    return await remoteDataSource.getBranches(
+      activeOnly: activeOnly,
+    );
   }
 
   @override

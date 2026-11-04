@@ -1,4 +1,3 @@
-
 import 'package:prop_crm/features/booking_summary/data/models/booking_summary_model.dart';
 import 'package:prop_crm/features/payment/data/models/payment_method_model.dart';
 
@@ -9,7 +8,9 @@ class CreateBookingRequestModel {
   final String paymentMethod;
   final String serviceId;
   final String productId;
-  final int productQuantity;
+  final String stylistId;
+  final String? couponCode;
+  final String? notes;
 
   const CreateBookingRequestModel({
     required this.branchId,
@@ -18,7 +19,9 @@ class CreateBookingRequestModel {
     required this.paymentMethod,
     required this.serviceId,
     required this.productId,
-    this.productQuantity = 1,
+    this.stylistId = 'any',
+    this.couponCode,
+    this.notes,
   });
 
   factory CreateBookingRequestModel.fromSummaryAndPayment({
@@ -26,19 +29,25 @@ class CreateBookingRequestModel {
     required PaymentMethodModel paymentMethod,
     required String branchId,
     required String productId,
-    int productQuantity = 1,
+    String stylistId = 'any',
+    String? couponCode,
+    String? notes,
   }) {
-    final dateStr =
-        summary.scheduledDate.date.toIso8601String().split('T').first;
+    final dateStr = summary.scheduledDate.date
+        .toIso8601String()
+        .split('T')
+        .first;
 
     return CreateBookingRequestModel(
       branchId: branchId,
       date: dateStr,
-      timeSlot: summary.timeSlot.startTime,
+      timeSlot: summary.timeSlot.bookingTimeSlot,
       paymentMethod: paymentMethod.title,
       serviceId: summary.service.id,
       productId: productId,
-      productQuantity: productQuantity,
+      stylistId: stylistId,
+      couponCode: couponCode,
+      notes: notes,
     );
   }
 
@@ -49,7 +58,9 @@ class CreateBookingRequestModel {
     String? paymentMethod,
     String? serviceId,
     String? productId,
-    int? productQuantity,
+    String? stylistId,
+    String? couponCode,
+    String? notes,
   }) {
     return CreateBookingRequestModel(
       branchId: branchId ?? this.branchId,
@@ -58,23 +69,28 @@ class CreateBookingRequestModel {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       serviceId: serviceId ?? this.serviceId,
       productId: productId ?? this.productId,
-      productQuantity: productQuantity ?? this.productQuantity,
+      stylistId: stylistId ?? this.stylistId,
+      couponCode: couponCode ?? this.couponCode,
+      notes: notes ?? this.notes,
     );
   }
 
   factory CreateBookingRequestModel.fromJson(Map<String, dynamic> json) {
-    final bookingItem =
-        json['bookingItem'] as Map<String, dynamic>? ?? {};
+    final items = json['items'] as List? ?? [];
+    final item = items.isNotEmpty && items.first is Map
+        ? Map<String, dynamic>.from(items.first as Map)
+        : <String, dynamic>{};
 
     return CreateBookingRequestModel(
       branchId: json['branchId'] as String? ?? '',
       date: json['date'] as String? ?? '',
       timeSlot: json['timeSlot'] as String? ?? '',
       paymentMethod: json['paymentMethod'] as String? ?? '',
-      serviceId: bookingItem['serviceId'] as String? ?? '',
-      productId: bookingItem['productId'] as String? ?? '',
-      productQuantity:
-      (bookingItem['productQuantity'] as num?)?.toInt() ?? 1,
+      serviceId: item['serviceId'] as String? ?? '',
+      productId: item['productId'] as String? ?? '',
+      stylistId: item['stylistId'] as String? ?? 'any',
+      couponCode: json['couponCode'] as String?,
+      notes: json['notes'] as String?,
     );
   }
 
@@ -83,26 +99,33 @@ class CreateBookingRequestModel {
       'branchId': branchId,
       'date': date,
       'timeSlot': timeSlot,
+      'items': [
+        {
+          'serviceId': serviceId,
+          'productId': productId,
+          'stylistId': stylistId,
+        },
+      ],
       'paymentMethod': paymentMethod,
-      'bookingItem': {
-        'serviceId': serviceId,
-        'productId': productId,
-        'productQuantity': productQuantity,
-      },
+      if (couponCode != null && couponCode!.trim().isNotEmpty)
+        'couponCode': couponCode,
+      if (notes != null && notes!.trim().isNotEmpty) 'notes': notes,
     };
   }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is CreateBookingRequestModel &&
-              branchId == other.branchId &&
-              date == other.date &&
-              timeSlot == other.timeSlot &&
-              paymentMethod == other.paymentMethod &&
-              serviceId == other.serviceId &&
-              productId == other.productId &&
-              productQuantity == other.productQuantity;
+      other is CreateBookingRequestModel &&
+          branchId == other.branchId &&
+          date == other.date &&
+          timeSlot == other.timeSlot &&
+          paymentMethod == other.paymentMethod &&
+          serviceId == other.serviceId &&
+          productId == other.productId &&
+          stylistId == other.stylistId &&
+          couponCode == other.couponCode &&
+          notes == other.notes;
 
   @override
   int get hashCode => Object.hash(
@@ -112,6 +135,8 @@ class CreateBookingRequestModel {
     paymentMethod,
     serviceId,
     productId,
-    productQuantity,
+    stylistId,
+    couponCode,
+    notes,
   );
 }

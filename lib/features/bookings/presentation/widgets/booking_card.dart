@@ -140,7 +140,8 @@ class BookingCard extends StatelessWidget {
                 ],
               ),
               Row(
-                mainAxisSize: MainAxisSize.min,
+               // mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     'View Details',
@@ -149,7 +150,7 @@ class BookingCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 2),
                   const Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 12,

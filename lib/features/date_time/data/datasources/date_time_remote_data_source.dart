@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/constants/api_constants.dart';
 import 'package:prop_crm/core/networking/api_client.dart';
 import '../models/service_date_model.dart';
@@ -76,64 +77,48 @@ class DateTimeRemoteDataSourceImpl implements DateTimeRemoteDataSource {
     String? branchId,
     String? categoryId,
   }) async {
+    debugPrint('========== SLOT API DEBUG ==========');
+    debugPrint('SLOT API METHOD CALLED');
+    debugPrint('SERVICE ID: $serviceId');
+    debugPrint('BRANCH ID: $branchId');
+    debugPrint('PACKAGE ID: $packageId');
+    debugPrint('CATEGORY ID: $categoryId');
+    debugPrint('SELECTED DATE: $date');
+    if (branchId == null || branchId.isEmpty) {
+      throw ArgumentError(
+        'branchId is required to fetch available time slots.',
+      );
+    }
+
     final dateStr =
-        "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+        '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
 
-    // First try GET /api/v1/customer/booking/slots
-    try {
-      final queryParams = <String, dynamic>{
-        'branchId': (branchId != null && branchId.isNotEmpty)
-            ? branchId
-            : '6ace182c092ec489511e74ce',
-        'categoryId': (categoryId != null && categoryId.isNotEmpty)
-            ? categoryId
-            : '6ace182d092ec489511e74d2',
-        'date': dateStr,
-      };
+    final response = await apiService.get<List<TimeSlotModel>>(
+      ApiConstants.availableSlots(branchId),
+      queryParameters: {'date': dateStr},
+      fromJson: (json) {
+        final slotsJson = json is Map
+            ? (json['availableSlots'] ?? json['slots'])
+            : json;
 
-      final response = await apiService.get<List<TimeSlotModel>>(
-        ApiConstants.bookingSlots,
-        queryParameters: queryParams,
-        fromJson: (json) {
-          final list = json is Map && json['slots'] is List
-              ? json['slots'] as List
-              : (json is List ? json : []);
-          return list
-              .map((item) =>
-                  TimeSlotModel.fromJson(item as Map<String, dynamic>))
-              .toList();
-        },
-      );
-      if (response.data != null && response.data!.isNotEmpty) {
-        return response.data!;
-      }
-    } catch (_) {
-      // Fallback
-    }
+        if (slotsJson is! List) {
+          return <TimeSlotModel>[];
+        }
 
-    final queryParams = <String, dynamic>{'date': dateStr};
-    if (packageId != null && packageId.isNotEmpty) {
-      queryParams['packageId'] = packageId;
-    }
+        return slotsJson
+            .whereType<Map>()
+            .map(
+              (item) => TimeSlotModel.fromJson(
+            Map<String, dynamic>.from(item),
+          ),
+        )
+            .toList();
+      },
+    );
 
-    try {
-      final response = await apiService.get<List<TimeSlotModel>>(
-        ApiConstants.serviceSlotsByDate(serviceId, dateStr),
-        queryParameters: queryParams,
-        fromJson: (json) {
-          if (json is List) {
-            return json
-                .map((item) =>
-                    TimeSlotModel.fromJson(item as Map<String, dynamic>))
-                .toList();
-          }
-          return [];
-        },
-      );
-      return response.data ?? [];
-    } catch (_) {
-      return [];
-    }
+    return response.data ?? [];
   }
 }
 

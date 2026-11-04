@@ -1,12 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/base/view_state.dart';
 import 'package:prop_crm/core/error/error_handler.dart';
+import '../../../../core/storage/storage_service.dart';
 import '../../data/models/service_date_model.dart';
 import '../../data/models/time_slot_model.dart';
 import '../../domain/repositories/date_time_repository.dart';
 
 class DateTimeProvider extends ChangeNotifier {
   final DateTimeRepository repository;
+  final StorageService? storageService;
+
 
   ViewState<List<ServiceDateModel>> _datesState = ViewState.initial();
   ViewState<List<TimeSlotModel>> _slotsState = ViewState.initial();
@@ -18,8 +21,9 @@ class DateTimeProvider extends ChangeNotifier {
   String? _serviceName;
   String? _packageId;
   String? _packageName;
+  String? _branchId;
 
-  DateTimeProvider({required this.repository});
+  DateTimeProvider({required this.repository,this.storageService});
 
   ViewState<List<ServiceDateModel>> get datesState => _datesState;
   ViewState<List<TimeSlotModel>> get slotsState => _slotsState;
@@ -34,6 +38,7 @@ class DateTimeProvider extends ChangeNotifier {
   String? get serviceName => _serviceName;
   String? get packageId => _packageId;
   String? get packageName => _packageName;
+  String? get branchId => _branchId;
 
   bool get isLoading => _datesState.isLoading || _slotsState.isLoading;
   bool get hasError => _datesState.isError || _slotsState.isError;
@@ -52,11 +57,21 @@ class DateTimeProvider extends ChangeNotifier {
     String? serviceName,
     String? packageId,
     String? packageName,
+    String? branchId,
+
   }) {
     _serviceId = serviceId ?? _serviceId;
     _serviceName = serviceName ?? _serviceName;
     _packageId = packageId ?? _packageId;
     _packageName = packageName ?? _packageName;
+    _branchId = branchId ?? _branchId;
+
+    debugPrint('DATE TIME CONTEXT');
+    debugPrint('Service ID: $_serviceId');
+    debugPrint('Package ID: $_packageId');
+    debugPrint('Branch ID: $_branchId');
+
+
     notifyListeners();
   }
 
@@ -151,6 +166,23 @@ class DateTimeProvider extends ChangeNotifier {
   Future<void> loadTimeSlots(DateTime date) async {
     final sId = _serviceId ?? 'srv_default';
 
+    debugPrint('========== LOAD TIME SLOTS ==========');
+    debugPrint('Service ID: $sId');
+    debugPrint('Branch ID: $_branchId');
+    debugPrint('Package ID: $_packageId');
+    debugPrint('Date: $date');
+    debugPrint('=====================================');
+
+    if (_branchId == null || _branchId!.trim().isEmpty) {
+      debugPrint('ERROR: Branch ID is missing. API will not be called.');
+
+      _slotsState = ViewState.error(
+        'Please select a valid salon branch.',
+      );
+      notifyListeners();
+      return;
+    }
+
     _slotsState = ViewState.loading();
     notifyListeners();
 
@@ -159,14 +191,20 @@ class DateTimeProvider extends ChangeNotifier {
         serviceId: sId,
         date: date,
         packageId: _packageId,
+        branchId: _branchId,
       );
+
+      debugPrint('Slots returned: ${slots.length}');
 
       if (slots.isEmpty) {
         _slotsState = ViewState.empty();
       } else {
         _slotsState = ViewState.success(slots);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('LOAD TIME SLOTS ERROR: $e');
+      debugPrint('$stackTrace');
+
       final appError = ErrorHandler.handleError(e);
       _slotsState = ViewState.error(
         appError.message,
@@ -176,7 +214,6 @@ class DateTimeProvider extends ChangeNotifier {
 
     notifyListeners();
   }
-
   /// Select a time slot
   void selectTimeSlot(TimeSlotModel slot) {
     if (!slot.isAvailable) {

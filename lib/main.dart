@@ -40,6 +40,10 @@ import 'features/services/data/repositories/service_repository_impl.dart';
 import 'features/services/domain/repositories/service_repository.dart';
 import 'package:prop_crm/features/services/data/datasources/service_products_remote_data_source.dart';
 
+import 'features/subscriptions/data/datasources/subscription_remote_data_source.dart';
+import 'features/subscriptions/data/repositories/subscription_repository.dart';
+import 'features/subscriptions/data/repositories/subscription_repository_impl.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -158,6 +162,16 @@ void main() async {
     remoteDataSource: bookingRemoteDataSource,
   );
 
+  final SubscriptionRemoteDataSource subscriptionRemoteDataSource =
+  SubscriptionRemoteDataSourceImpl(
+    apiClient: apiClient,
+  );
+
+  final SubscriptionRepository subscriptionRepository =
+  SubscriptionRepositoryImpl(
+    remoteDataSource: subscriptionRemoteDataSource,
+  );
+
 
 
   // 5. Launch application
@@ -175,6 +189,7 @@ void main() async {
       paymentRepository: paymentRepository,
       bookingRepository: bookingRepository,
       couponRepository: couponRepository,
+      subscriptionRepository: subscriptionRepository,
     ),
   );
 }

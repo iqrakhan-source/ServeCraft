@@ -154,7 +154,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           crossAxisCount: 2,
                           crossAxisSpacing: 14,
                           mainAxisSpacing: 14,
-                          childAspectRatio: 0.88,
+                          childAspectRatio: 0.7,
                         ),
                         itemBuilder: (context, index) {
                           final category = filteredCategories[index];

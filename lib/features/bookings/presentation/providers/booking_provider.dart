@@ -7,8 +7,10 @@ import 'package:prop_crm/features/date_time/data/models/time_slot_model.dart';
 import 'package:prop_crm/features/payment/data/models/payment_method_model.dart';
 import '../../../services/data/models/service_products_response.dart';
 import '../../data/models/booking_model.dart';
+import '../../data/models/booking_pricing_response_model.dart';
 import '../../data/models/cancel_booking_request_model.dart';
 import '../../data/models/create_booking_request_model.dart';
+import '../../data/models/create_booking_response_model.dart';
 import '../../domain/repositories/booking_repository.dart';
 
 enum BookingFilter {
@@ -25,8 +27,14 @@ class BookingProvider extends ChangeNotifier {
   final BookingRepository repository;
 
   // Booking creation state
-  ViewState<BookingModel> _bookingState = ViewState.initial();
-  BookingModel? _createdBooking;
+  ViewState<CreateBookingResponseModel> _bookingState =
+  ViewState.initial();
+
+  CreateBookingResponseModel? _createdBooking;
+
+  // Booking pricing state
+  ViewState<BookingPricingResponseModel> _pricingState =
+  ViewState.initial();
 
   // Bookings list state
   ViewState<List<BookingModel>> _bookingsState = ViewState.initial();
@@ -55,8 +63,8 @@ class BookingProvider extends ChangeNotifier {
   String? get rescheduleError => _rescheduleState.errorMessage;
 
   // Creation getters
-  ViewState<BookingModel> get bookingState => _bookingState;
-  BookingModel? get createdBooking => _createdBooking;
+  ViewState<CreateBookingResponseModel> get bookingState => _bookingState;
+  CreateBookingResponseModel? get createdBooking => _createdBooking;
   bool get isCreating => _bookingState.isLoading;
   bool get isSuccess => _bookingState.isSuccess;
   bool get hasError => _bookingState.isError;
@@ -80,6 +88,17 @@ class BookingProvider extends ChangeNotifier {
   BookingModel? get selectedBooking => _selectedBooking;
   bool get isLoadingDetails => _detailsState.isLoading;
   String? get detailsErrorMessage => _detailsState.errorMessage;
+
+
+  // Pricing getters
+  ViewState<BookingPricingResponseModel> get pricingState => _pricingState;
+
+  BookingPricingResponseModel? get calculatedPricing =>
+      _pricingState.data;
+
+  bool get isCalculatingPricing => _pricingState.isLoading;
+
+  String? get pricingErrorMessage => _pricingState.errorMessage;
 
   /// Filtered list of bookings based on active tab
   List<BookingModel> get filteredBookings {
@@ -195,8 +214,47 @@ class BookingProvider extends ChangeNotifier {
     return true;
   }
 
+  /// Calculates booking subtotal, discount, tax, and final amount.
+  Future<BookingPricingResponseModel?> calculatePricing({
+    required String branchId,
+    required List<Map<String, dynamic>> items,
+    String? couponCode,
+  }) async {
+    if (_pricingState.isLoading) return null;
+
+    if (branchId.trim().isEmpty || items.isEmpty) {
+      _pricingState = ViewState.error(
+        'Branch and at least one service item are required.',
+      );
+      notifyListeners();
+      return null;
+    }
+
+    _pricingState = ViewState.loading();
+    notifyListeners();
+
+    try {
+      final pricing = await repository.calculatePricing(
+        branchId: branchId,
+        items: items,
+        couponCode: couponCode,
+      );
+
+      _pricingState = ViewState.success(pricing);
+      notifyListeners();
+
+      return pricing;
+    } catch (e) {
+      final appError = ErrorHandler.handleError(e);
+      _pricingState = ViewState.error(appError.message);
+      notifyListeners();
+
+      return null;
+    }
+  }
+
   /// Confirms and creates a booking from review summary
-  Future<BookingModel?> createBooking({
+  Future<CreateBookingResponseModel?> createBooking({
     required BookingSummaryModel summary,
     required PaymentMethodModel paymentMethod,
     required ConsumableProduct selectedProduct,
@@ -239,25 +297,17 @@ class BookingProvider extends ChangeNotifier {
         productId: selectedProduct.id,
       );
 
-      final booking = await repository.createBooking(
+      final bookingResponse = await repository.createBooking(
         request: request,
         summary: summary,
         paymentMethod: paymentMethod,
       );
 
-      _createdBooking = booking;
-      _bookingState = ViewState.success(booking);
-
-      if (_bookingsState.isSuccess && _bookingsState.data != null) {
-        final currentList = List<BookingModel>.from(
-          _bookingsState.data!,
-        );
-        currentList.insert(0, booking);
-        _bookingsState = ViewState.success(currentList);
-      }
+      _createdBooking = bookingResponse;
+      _bookingState = ViewState.success(bookingResponse);
 
       notifyListeners();
-      return booking;
+      return bookingResponse;
     } catch (e) {
       final appError = ErrorHandler.handleError(e);
       _bookingState = ViewState.error(appError.message);
@@ -267,7 +317,7 @@ class BookingProvider extends ChangeNotifier {
   }
 
   /// Direct assignment helper for testing / navigation arguments
-  void setCreatedBooking(BookingModel booking) {
+  void setCreatedBooking(CreateBookingResponseModel booking) {
     _createdBooking = booking;
     _bookingState = ViewState.success(booking);
     notifyListeners();
@@ -419,6 +469,7 @@ class BookingProvider extends ChangeNotifier {
   void reset() {
     _bookingState = ViewState.initial();
     _createdBooking = null;
+    _pricingState = ViewState.initial();
     notifyListeners();
   }
 }

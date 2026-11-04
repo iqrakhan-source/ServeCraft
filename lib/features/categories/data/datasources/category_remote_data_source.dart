@@ -17,7 +17,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   @override
   Future<List<CategoryModel>> getCategories() async {
     final response = await apiService.get<List<CategoryModel>>(
-      ApiConstants.categories,
+      ApiConstants.services,
       fromJson: (json) {
         dynamic categoriesJson;
 

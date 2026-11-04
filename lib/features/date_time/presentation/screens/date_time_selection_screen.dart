@@ -12,6 +12,7 @@ import 'package:prop_crm/features/services/data/models/service_model.dart';
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
 import 'package:prop_crm/features/services/presentation/providers/service_provider.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/storage/storage_service.dart';
 import '../providers/date_time_provider.dart';
 import '../widgets/date_selector_widget.dart';
 import '../widgets/time_slot_grid.dart';
@@ -21,6 +22,7 @@ class DateTimeSelectionScreen extends StatefulWidget {
   final String? serviceName;
   final String? packageId;
   final String? packageName;
+  final String? branchId;
 
   const DateTimeSelectionScreen({
     super.key,
@@ -28,6 +30,7 @@ class DateTimeSelectionScreen extends StatefulWidget {
     this.serviceName,
     this.packageId,
     this.packageName,
+    this.branchId
   });
 
   @override
@@ -43,6 +46,12 @@ class _DateTimeSelectionScreenState
     as Map<String, dynamic>?;
     return args?['isPickerMode'] as bool? ?? false;
   }
+  // StorageService? storageService;
+  //
+  // String get _storageKeyBranchId => 'selected_salon_branch_id';
+
+
+
 
   @override
   void initState() {
@@ -51,6 +60,24 @@ class _DateTimeSelectionScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
+      final branchProvider = context.read<BranchProvider>();
+      final selectedBranch = branchProvider.selectedBranch;
+
+      final branchId = widget.branchId ?? selectedBranch?.id;
+
+      debugPrint('========== DATE SCREEN INIT ==========');
+      debugPrint('Widget Branch ID: ${widget.branchId}');
+      debugPrint('Provider Branch ID: ${selectedBranch?.id}');
+      debugPrint('Final Branch ID: $branchId');
+      debugPrint('Widget Service ID: ${widget.serviceId}');
+      debugPrint('Widget Package ID: ${widget.packageId}');
+      debugPrint('======================================');
+
+      if (branchId == null || branchId.isEmpty) {
+        debugPrint('ERROR: Branch ID is missing from BranchProvider!');
+        return;
+      }
+
       final dateTimeProvider = context.read<DateTimeProvider>();
 
       dateTimeProvider.initContext(
@@ -58,6 +85,7 @@ class _DateTimeSelectionScreenState
         serviceName: widget.serviceName,
         packageId: widget.packageId,
         packageName: widget.packageName,
+        branchId: branchId,
       );
 
       dateTimeProvider.loadAvailableDates();
@@ -322,7 +350,7 @@ class _DateTimeSelectionScreenState
                   debugPrint('Widget Package ID: ${widget.packageId}');
                   debugPrint('Provider Package ID: ${dateTimeProvider.packageId}');
                   debugPrint('Final Package ID: $packageId');
-//debugPrint('Total Packages: ${service.packages.length}');
+debugPrint('Total Packages: ${service.packages.length}');
 
                   for (final package in service.packages) {
                     debugPrint('Package ID: ${package.id}');

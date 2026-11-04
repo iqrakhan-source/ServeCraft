@@ -7,14 +7,13 @@ import '../core/widgets/app_button.dart';
 import '../core/widgets/custom_app_bar.dart';
 import '../features/auth/presentation/screens/complete_profile_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
-//import '../features/auth/presentation/screens/forgot_password_screen.dart' hide ForgotPasswordScreen;
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/mobile_login_screen.dart';
-//import '../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../features/auth/presentation/screens/profile_screen.dart';
 import '../features/auth/presentation/screens/reset_password_screen.dart';
 import '../features/auth/presentation/screens/signup_screen.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
+import '../features/bookings/data/models/create_booking_response_model.dart';
 import '../features/branches/data/models/branch_model.dart';
 import '../features/branches/presentation/screens/branch_selection_screen.dart';
 import '../features/offers/presentation/screens/offers_screen.dart';
@@ -42,6 +41,7 @@ import '../features/auth/presentation/screens/edit_profile_screen.dart';
 import '../features/branches/presentation/screens/branch_details_screen.dart';
 import '../features/notifications/presentation/screens/notifications_screen.dart';
 import '../features/services/presentation/screens/service_search_screen.dart';
+import '../features/subscriptions/presentation/screens/subscriptions_screen.dart';
 
 abstract class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -207,6 +207,7 @@ abstract class AppRouter {
             serviceName: args?['serviceName'] as String?,
             packageId: args?['packageId'] as String?,
             packageName: args?['packageName'] as String?,
+            branchId: args?['branchId'] as String?,
           ),
         );
 
@@ -237,15 +238,15 @@ abstract class AppRouter {
         );
       }
 
-      case AppRoutes.bookingConfirmation: {
+      case AppRoutes.bookingConfirmation:
         final args = settings.arguments as Map<String, dynamic>?;
+
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => BookingConfirmationScreen(
-            booking: args?['booking'] as BookingModel?,
+            booking: args?['booking'] as CreateBookingResponseModel?,
           ),
         );
-      }
 
       case AppRoutes.bookings:
       case AppRoutes.myBookings:
@@ -302,6 +303,11 @@ abstract class AppRouter {
           builder: (_) => BranchDetailsScreen(branch: branch),
         );
       }
+      case AppRoutes.subscriptions:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SubscriptionsScreen(),
+        );
 
       case AppRoutes.notifications:
         return MaterialPageRoute(

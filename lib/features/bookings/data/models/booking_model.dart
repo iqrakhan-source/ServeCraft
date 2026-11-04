@@ -202,49 +202,146 @@ class BookingModel {
   }
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
+    // Safely convert a value to a map.
+    Map<String, dynamic> asMap(dynamic value) {
+      if (value is Map) {
+        return Map<String, dynamic>.from(value);
+      }
+      return <String, dynamic>{};
+    }
+
+    final services = json['services'] is List
+        ? json['services'] as List
+        : <dynamic>[];
+
+    final firstService = services.isNotEmpty
+        ? asMap(services.first)
+        : <String, dynamic>{};
+
+    final branchJson = asMap(json['branch']);
+
+    final rawDate = json['scheduledDate'] ?? json['date'];
+    final parsedDate = rawDate is String
+        ? DateTime.tryParse(rawDate) ?? DateTime.now()
+        : DateTime.now();
+
+    final rawTimeSlot = json['timeSlot'];
+    final timeSlotJson = asMap(rawTimeSlot);
+
+    final timeValue = rawTimeSlot is String
+        ? rawTimeSlot
+        : (timeSlotJson['timeSlot'] ??
+        timeSlotJson['startTime'] ??
+        '09:00')
+        .toString();
+
+    final rawTotal = json['total'] ??
+        json['totalAmount'] ??
+        asMap(json['pricing'])['totalAmount'];
+
+    final total = rawTotal is num
+        ? rawTotal.toDouble()
+        : double.tryParse(rawTotal?.toString() ?? '') ?? 0.0;
+
+    final service = ServiceModel(
+      id: (firstService['_id'] ?? firstService['id'] ?? '').toString(),
+      categoryId: (firstService['categoryId'] ?? '').toString(),
+      name: (firstService['name'] ?? 'Salon Service').toString(),
+      description: (firstService['description'] ?? '').toString(),
+      startingPrice: ((firstService['price'] ?? total) as num).toDouble(),
+      duration: '${firstService['duration'] ?? 45} mins',
+    );
+
+    final dateModel = ServiceDateModel(
+      date: parsedDate,
+    );
+
+    final timeSlotModel = TimeSlotModel(
+      id: timeValue,
+      startTime: timeValue,
+      endTime: timeValue,
+    );
+
+    final paymentJson = asMap(json['paymentMethod']);
+
+    final paymentMethod = PaymentMethodModel(
+      id: (paymentJson['id'] ?? '').toString(),
+      title: (paymentJson['title'] ?? 'Payment').toString(),
+      subtitle: (paymentJson['subtitle'] ?? '').toString(),
+      type: PaymentMethodType.fromString(
+        (paymentJson['type'] ?? 'upi').toString(),
+      ),
+    );
+
+    final pricingJson = asMap(json['pricing']);
+
+    final discount = (pricingJson['discount'] as num?)?.toDouble() ?? 0.0;
+    final taxAmount = (pricingJson['taxAmount'] as num?)?.toDouble() ?? 0.0;
+
+    final pricing = PricingBreakdown(
+      packagePrice: (pricingJson['packagePrice'] as num?)?.toDouble() ??
+          (total - taxAmount + discount),
+      discount: discount,
+      taxRate: (pricingJson['taxRate'] as num?)?.toDouble() ?? 0.18,
+      taxAmount: taxAmount,
+      totalAmount: total,
+    );
+
+    final addressJson = asMap(json['address']);
+
+    final address = addressJson.isNotEmpty
+        ? AddressModel.fromJson(addressJson)
+        : AddressModel(
+      id: 'branch_loc',
+      userId: 'salon',
+      label: 'Salon Branch',
+      houseNumber: '',
+      addressLine: (branchJson['name'] ?? 'Salon Branch').toString(),
+      city: (branchJson['city'] ?? '').toString(),
+      state: '',
+      pincode: '',
+    );
+
     return BookingModel(
-      id: json['id'] as String? ?? '',
-      bookingReference: json['bookingReference'] as String? ?? '',
-      status: BookingStatus.fromString(json['status'] as String? ?? 'confirmed'),
-      service: ServiceModel.fromJson(json['service'] as Map<String, dynamic>),
-      package: ServicePackageModel.fromJson(
-          json['package'] as Map<String, dynamic>),
-      address: json['address'] != null
-          ? AddressModel.fromJson(json['address'] as Map<String, dynamic>)
-          : const AddressModel(
-              id: 'branch_loc',
-              userId: 'salon',
-              label: 'Salon Branch',
-              houseNumber: '',
-              addressLine: 'Salon Branch Location',
-              city: '',
-              state: '',
-              pincode: '',
-            ),
-      branch: json['branch'] != null
-          ? BranchModel.fromJson(json['branch'] as Map<String, dynamic>)
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      bookingReference:
+      (json['appointmentCode'] ?? json['bookingReference'] ?? '').toString(),
+      status: BookingStatus.fromString(
+        (json['status'] ?? 'pending').toString(),
+      ),
+      service: service,
+      package: const ServicePackageModel(
+        id: '',
+        serviceId: '',
+        name: 'Standard',
+        description: '',
+        price: 0,
+        duration: '45 mins',
+        features: [],
+      ),
+      address: address,
+      branch: branchJson.isNotEmpty
+          ? BranchModel.fromJson(branchJson)
           : null,
-      scheduledDate: ServiceDateModel.fromJson(
-          json['scheduledDate'] as Map<String, dynamic>),
-      timeSlot:
-          TimeSlotModel.fromJson(json['timeSlot'] as Map<String, dynamic>),
-      paymentMethod: PaymentMethodModel.fromJson(
-          json['paymentMethod'] as Map<String, dynamic>),
-      pricing: PricingBreakdown.fromJson(
-          json['pricing'] as Map<String, dynamic>),
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
-          : DateTime.now(),
-      cancellationReason: json['cancellationReason'] as String?,
-      cancellationNote: json['cancellationNote'] as String?,
-      cancelledAt: json['cancelledAt'] != null
-          ? DateTime.parse(json['cancelledAt'] as String)
-          : null,
-      rescheduledAt: json['rescheduledAt'] != null
-          ? DateTime.parse(json['rescheduledAt'] as String)
-          : null,
+      scheduledDate: dateModel,
+      timeSlot: timeSlotModel,
+      paymentMethod: paymentMethod,
+      pricing: pricing,
+      createdAt: DateTime.tryParse(
+        (json['createdAt'] ?? '').toString(),
+      ) ??
+          DateTime.now(),
+      cancellationReason: json['cancellationReason']?.toString(),
+      cancellationNote: json['cancellationNote']?.toString(),
+      cancelledAt: DateTime.tryParse(
+        (json['cancelledAt'] ?? '').toString(),
+      ),
+      rescheduledAt: DateTime.tryParse(
+        (json['rescheduledAt'] ?? '').toString(),
+      ),
     );
   }
+
 
   Map<String, dynamic> toJson() {
     return {
@@ -256,7 +353,7 @@ class BookingModel {
       'address': address.toJson(),
       if (branch != null) 'branch': branch!.toJson(),
       'scheduledDate': scheduledDate.toJson(),
-      'timeSlot': timeSlot.toJson(),
+      'timeSlot': timeSlot,
       'paymentMethod': paymentMethod.toJson(),
       'pricing': pricing.toJson(),
       'createdAt': createdAt.toIso8601String(),

@@ -27,6 +27,8 @@ import '../features/services/presentation/providers/service_provider.dart';
 import '../features/branches/domain/repositories/branch_repository.dart';
 import '../features/branches/presentation/providers/branch_provider.dart';
 import '../features/offers/presentation/providers/offer_provider.dart';
+import '../features/subscriptions/data/repositories/subscription_repository.dart';
+import '../features/subscriptions/presentation/providers/subscription_provider.dart';
 import 'app_router.dart';
 import 'app_theme.dart';
 
@@ -43,6 +45,8 @@ class ServeCraftApp extends StatelessWidget {
   final PaymentRepository paymentRepository;
   final BookingRepository bookingRepository;
   final CouponRepository couponRepository;
+  final SubscriptionRepository subscriptionRepository;
+
 
   const ServeCraftApp({
     super.key,
@@ -58,6 +62,7 @@ class ServeCraftApp extends StatelessWidget {
     required this.paymentRepository,
     required this.bookingRepository,
     required this.couponRepository,
+    required this.subscriptionRepository,
   });
 
   @override
@@ -80,7 +85,9 @@ class ServeCraftApp extends StatelessWidget {
         Provider<BookingRepository>.value(value: bookingRepository),
         Provider<BranchRepository>.value(value: branchRepository),
         Provider<CouponRepository>.value(value: couponRepository),
-
+        Provider<SubscriptionRepository>.value(
+          value: subscriptionRepository,
+        ),
         // Branch Provider
         ChangeNotifierProvider<BranchProvider>(
           create: (_) => BranchProvider(
@@ -151,6 +158,13 @@ class ServeCraftApp extends StatelessWidget {
         // Booking Cart Provider
         ChangeNotifierProvider<BookingCartProvider>(
           create: (_) => BookingCartProvider(),
+        ),
+
+        // Subscription Provider
+        ChangeNotifierProvider<SubscriptionProvider>(
+          create: (_) => SubscriptionProvider(
+            repository: subscriptionRepository,
+          ),
         ),
       ],
       child: MaterialApp(

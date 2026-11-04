@@ -1,42 +1,50 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utilities/formatters.dart';
 import '../../../../core/widgets/app_card.dart';
-import '../../data/models/booking_model.dart';
+import '../../../booking_summary/data/models/booking_summary_model.dart';
+import '../../data/models/create_booking_response_model.dart';
 
 class BookingSummarySuccessCard extends StatelessWidget {
-  final BookingModel booking;
+  final CreateBookingResponseModel booking;
+  final BookingSummaryModel summary;
 
   const BookingSummarySuccessCard({
     super.key,
     required this.booking,
+    required this.summary,
   });
 
   IconData _getPaymentIcon(String type) {
-    switch (type.toLowerCase()) {
-      case 'upi':
-        return Icons.qr_code_2_rounded;
-      case 'card':
-        return Icons.credit_card_rounded;
-      case 'cod':
-      default:
-        return Icons.storefront_rounded;
+    final value = type.toLowerCase();
+
+    if (value.contains('online') || value.contains('gateway')) {
+      return Icons.payment_rounded;
     }
+
+    if (value.contains('upi')) {
+      return Icons.qr_code_2_rounded;
+    }
+
+    if (value.contains('card')) {
+      return Icons.credit_card_rounded;
+    }
+
+    return Icons.storefront_rounded;
   }
 
   @override
   Widget build(BuildContext context) {
-    final branchName = booking.branch?.name ?? 'Downtown Luxury Lounge';
-    final branchAddress = booking.branch?.address ??
-        '${booking.address.houseNumber}, ${booking.address.addressLine}, ${booking.address.city}';
+    final appointment = booking.appointment;
 
     return AppCard(
       borderRadius: 16,
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Service & Package
+          // Service and package
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -58,7 +66,7 @@ class BookingSummarySuccessCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      booking.service.name,
+                      summary.service.name,
                       style: AppTypography.titleSmall.copyWith(
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -67,7 +75,7 @@ class BookingSummarySuccessCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      booking.package.name,
+                      summary.package.name,
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
@@ -78,102 +86,78 @@ class BookingSummarySuccessCard extends StatelessWidget {
               ),
             ],
           ),
+
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 14.0),
+            padding: EdgeInsets.symmetric(vertical: 14),
             child: Divider(color: AppColors.border, height: 1),
           ),
 
-          // 2. Schedule
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                Icons.calendar_today_outlined,
-                size: 18,
-                color: AppColors.textTertiary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Appointment Schedule',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      booking.formattedSchedule,
-                      style: AppTypography.bodySmall.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          // Appointment schedule
+          _buildDetailRow(
+            icon: Icons.calendar_today_outlined,
+            label: 'Appointment Date',
+            value: appointment.date,
           ),
           const SizedBox(height: 12),
 
-          // 3. Salon Branch
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                Icons.storefront_rounded,
-                size: 18,
-                color: AppColors.textTertiary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Salon Branch Location',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      branchName,
-                      style: AppTypography.bodySmall.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      branchAddress,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          _buildDetailRow(
+            icon: Icons.access_time_rounded,
+            label: 'Time Slot',
+            value: appointment.timeSlot,
           ),
+          const SizedBox(height: 12),
+
+          _buildDetailRow(
+            icon: Icons.timelapse_rounded,
+            label: 'Duration',
+            value: '${appointment.totalDuration} minutes',
+          ),
+
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 14.0),
+            padding: EdgeInsets.symmetric(vertical: 14),
             child: Divider(color: AppColors.border, height: 1),
           ),
 
-          // 4. Payment Method & Total
+          // Branch
+          _buildDetailRow(
+            icon: Icons.storefront_rounded,
+            label: 'Salon Branch',
+            value: appointment.branchName,
+          ),
+
+          if (appointment.stylistName != null &&
+              appointment.stylistName!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildDetailRow(
+              icon: Icons.person_outline_rounded,
+              label: 'Stylist',
+              value: appointment.stylistName!,
+            ),
+          ],
+
+          if (appointment.chairNumber != null &&
+              appointment.chairNumber!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildDetailRow(
+              icon: Icons.event_seat_outlined,
+              label: 'Chair',
+              value: appointment.chairNumber!,
+            ),
+          ],
+
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 14),
+            child: Divider(color: AppColors.border, height: 1),
+          ),
+
+          // Payment method and total
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Payment method
               Expanded(
                 child: Row(
                   children: [
                     Icon(
-                      _getPaymentIcon(
-                          booking.paymentMethod.type.toFormattedString()),
+                      _getPaymentIcon(appointment.paymentMethod),
                       size: 18,
                       color: AppColors.primary,
                     ),
@@ -189,13 +173,19 @@ class BookingSummarySuccessCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            booking.paymentMethod.title,
+                            appointment.paymentMethod,
                             style: AppTypography.bodySmall.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'Status: ${appointment.paymentStatus}',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -204,8 +194,6 @@ class BookingSummarySuccessCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-
-              // Total Amount
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -216,7 +204,9 @@ class BookingSummarySuccessCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    booking.formattedTotal,
+                    AppFormatters.formatCurrency(
+                      appointment.totalAmount,
+                    ),
                     style: AppTypography.titleMedium.copyWith(
                       fontWeight: FontWeight.w800,
                       color: AppColors.primary,
@@ -229,6 +219,45 @@ class BookingSummarySuccessCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: AppColors.textTertiary,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

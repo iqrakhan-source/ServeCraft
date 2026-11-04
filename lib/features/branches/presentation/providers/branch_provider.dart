@@ -34,37 +34,82 @@ class BranchProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final list = await repository.getBranches(activeOnly: activeOnly);
+      final list = await repository.getBranches(
+        activeOnly: activeOnly,
+      );
+
       _branchesState = ViewState.success(list);
 
-      // Restore previously saved branch or default to first active branch
-      final savedId = storageService?.getString(_storageKeyBranchId);
-      if (savedId != null && list.any((b) => b.id == savedId && b.isActive)) {
-        _selectedBranch = list.firstWhere((b) => b.id == savedId);
-      } else if (list.any((b) => b.isActive)) {
-        _selectedBranch = list.firstWhere((b) => b.isActive);
-      } else if (list.isNotEmpty) {
-        _selectedBranch = list.first;
+      final savedId = storageService?.getString(
+        _storageKeyBranchId,
+      );
+
+      // Restore only a valid, active saved branch.
+      if (savedId != null && savedId.isNotEmpty) {
+        final matchingBranches = list.where(
+              (branch) => branch.id == savedId && branch.isActive,
+        );
+
+        _selectedBranch = matchingBranches.isNotEmpty
+            ? matchingBranches.first
+            : null;
+      } else {
+        _selectedBranch = null;
       }
+
       _errorMessage = null;
     } catch (e) {
       _branchesState = ViewState.error(e.toString());
       _errorMessage = e.toString();
+      _selectedBranch = null;
     }
+
     notifyListeners();
   }
-
-  bool selectBranch(BranchModel branch) {
+  Future<bool> selectBranch(BranchModel branch) async {
     if (!branch.isActive) {
-      _errorMessage = 'This salon branch is temporarily closed and cannot accept new bookings.';
+      _errorMessage =
+      'This salon branch is temporarily closed and cannot accept new bookings.';
       notifyListeners();
       return false;
     }
 
-    _selectedBranch = branch;
-    _errorMessage = null;
-    storageService?.setString(_storageKeyBranchId, branch.id);
-    notifyListeners();
-    return true;
-  }
-}
+    if (storageService == null) {
+      debugPrint('BRANCH SAVE ERROR: StorageService is null');
+      _errorMessage = 'Unable to save selected branch.';
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      final saved = await storageService!.setString(
+        _storageKeyBranchId,
+        branch.id,
+      );
+
+      final storedId = storageService!.getString(_storageKeyBranchId);
+
+      debugPrint('========== BRANCH SAVE DEBUG ==========');
+      debugPrint('Selected Branch ID: ${branch.id}');
+      debugPrint('Save Result: $saved');
+      debugPrint('Stored Branch ID: $storedId');
+      debugPrint('========================================');
+
+      if (!saved || storedId != branch.id) {
+        _errorMessage = 'Failed to save selected branch.';
+        notifyListeners();
+        return false;
+      }
+
+      _selectedBranch = branch;
+      _errorMessage = null;
+      notifyListeners();
+
+      return true;
+    } catch (e) {
+      debugPrint('BRANCH SAVE ERROR: $e');
+      _errorMessage = 'Unable to save selected branch.';
+      notifyListeners();
+      return false;
+    }
+  }}

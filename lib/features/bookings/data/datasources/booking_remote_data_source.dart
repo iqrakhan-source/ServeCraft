@@ -10,13 +10,22 @@ import 'package:prop_crm/features/payment/data/models/payment_method_model.dart'
 import 'package:prop_crm/features/services/data/models/service_model.dart';
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
 import '../models/booking_model.dart';
+import '../models/booking_pricing_response_model.dart';
 import '../models/cancel_booking_request_model.dart';
 import '../models/create_booking_request_model.dart';
+import '../models/create_booking_response_model.dart';
 
 abstract class BookingRemoteDataSource {
   Future<List<BookingModel>> getBookings();
   Future<BookingModel> getBookingById(String bookingId);
-  Future<BookingModel> createBooking({
+  Future<BookingPricingResponseModel> calculatePricing({
+    required String branchId,
+    required List<Map<String, dynamic>> items,
+    String? couponCode,
+  });
+
+
+  Future<CreateBookingResponseModel> createBooking({
     required CreateBookingRequestModel request,
     BookingSummaryModel? summary,
     PaymentMethodModel? paymentMethod,
@@ -34,22 +43,35 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   BookingRemoteDataSourceImpl({required this.apiService});
 
+
   @override
   Future<List<BookingModel>> getBookings() async {
     final response = await apiService.get<List<BookingModel>>(
       ApiConstants.appointments,
       fromJson: (json) {
-        if (json is! List) {
+        dynamic bookingsJson;
+
+        if (json is List) {
+          bookingsJson = json;
+        } else if (json is Map) {
+          // Backend response: { "bookings": [...] }
+          bookingsJson = json['bookings'];
+
+          // Also support a nested data object if provided.
+          if (bookingsJson == null && json['data'] is Map) {
+            bookingsJson = json['data']['bookings'];
+          }
+        }
+
+        if (bookingsJson is! List) {
           throw const FormatException(
-            'Expected a list of bookings.',
+            'Expected a list of bookings in the response.',
           );
         }
 
-        return json.map((item) {
+        return bookingsJson.map((item) {
           if (item is! Map) {
-            throw const FormatException(
-              'Invalid booking item.',
-            );
+            throw const FormatException('Invalid booking item.');
           }
 
           return BookingModel.fromJson(
@@ -67,6 +89,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
     return response.data ?? <BookingModel>[];
   }
+
   @override
   Future<BookingModel> getBookingById(String bookingId) async {
     final response = await apiService.get<BookingModel>(
@@ -81,7 +104,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
-  Future<BookingModel> createBooking({
+  Future<CreateBookingResponseModel> createBooking({
     required CreateBookingRequestModel request,
     BookingSummaryModel? summary,
     PaymentMethodModel? paymentMethod,
@@ -100,9 +123,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       },
     );
 
-    final responseBody = response.data;
-
-    if (responseBody == null || responseBody['success'] != true) {
+    if (!response.success) {
       throw UnexpectedException(
         message: response.message.isNotEmpty
             ? response.message
@@ -110,18 +131,65 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       );
     }
 
-    final bookingData = responseBody['data'];
+    final responseData = response.data;
 
-    if (bookingData is! Map) {
+    if (responseData == null) {
       throw const UnexpectedException(
-        message: 'Invalid booking response data.',
+        message: 'Booking response data is missing.',
       );
     }
 
-    return BookingModel.fromJson(
-      Map<String, dynamic>.from(bookingData),
-    );
+    return CreateBookingResponseModel.fromJson(responseData);
   }
+
+
+  @override
+  Future<BookingPricingResponseModel> calculatePricing({
+    required String branchId,
+    required List<Map<String, dynamic>> items,
+    String? couponCode,
+  }) async {
+    final requestBody = <String, dynamic>{
+      'branchId': branchId,
+      'items': items,
+      if (couponCode != null && couponCode.trim().isNotEmpty)
+        'couponCode': couponCode.trim(),
+    };
+
+    final response = await apiService.post<Map<String, dynamic>>(
+      ApiConstants.calculatePricing,
+      data: requestBody,
+      fromJson: (json) {
+        if (json is! Map) {
+          throw const FormatException(
+            'Invalid pricing response.',
+          );
+        }
+
+        return Map<String, dynamic>.from(json);
+      },
+    );
+
+    if (!response.success) {
+      throw UnexpectedException(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Failed to calculate booking price.',
+      );
+    }
+
+    final responseData = response.data;
+
+    if (responseData == null) {
+      throw const UnexpectedException(
+        message: 'Pricing response data is missing.',
+      );
+    }
+
+    return BookingPricingResponseModel.fromJson(responseData);
+  }
+
+  
 
   @override
   Future<BookingModel> cancelBooking({
@@ -475,47 +543,18 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
     throw const NotFoundException(message: 'Booking not found');
   }
 
+
   @override
-  Future<BookingModel> createBooking({
+  Future<CreateBookingResponseModel> createBooking({
     required CreateBookingRequestModel request,
     BookingSummaryModel? summary,
     PaymentMethodModel? paymentMethod,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 150));
-
-    if (shouldFail) {
-      throw const UnexpectedException(
-        message: 'Failed to create booking. Please try again.',
-      );
-    }
-
-    // Use the selected summary when available.
-    if (summary == null || paymentMethod == null) {
-      throw const UnexpectedException(
-        message: 'Booking summary or payment method is missing.',
-      );
-    }
-
-    final booking = BookingModel(
-      id: 'bk_mock_${_counter++}',
-      bookingReference:
-      'LX-${DateTime.now().year}-${_counter.toString().padLeft(4, '0')}',
-      status: BookingStatus.confirmed,
-      service: summary.service,
-      package: summary.package,
-      address: summary.address,
-      branch: summary.branch,
-      scheduledDate: summary.scheduledDate,
-      timeSlot: summary.timeSlot,
-      paymentMethod: paymentMethod,
-      pricing: summary.pricing,
-      createdAt: DateTime.now(),
+    throw UnimplementedError(
+      'Mock booking creation is not implemented.',
     );
-
-    _bookings.insert(0, booking);
-
-    return booking;
   }
+
 
   @override
   Future<BookingModel> cancelBooking({
@@ -556,6 +595,12 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
     _bookings[index] = updatedBooking;
 
     return updatedBooking;
+  }
+
+  @override
+  Future<BookingPricingResponseModel> calculatePricing({required String branchId, required List<Map<String, dynamic>> items, String? couponCode}) {
+    // TODO: implement calculatePricing
+    throw UnimplementedError();
   }
 
 }
