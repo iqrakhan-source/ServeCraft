@@ -16,14 +16,14 @@ class TimeSlotModel {
     this.availableCapacity,
   });
 
-  // Exact value expected by the booking API.
+  // Exact timeSlot value expected by the booking API.
   String get bookingTimeSlot => id;
 
   String get formattedLabel => displayLabel ?? startTime;
 
   Map<String, dynamic> toJson() {
     return {
-      'timeSlot': id,
+      'timeSlot': bookingTimeSlot,
       'startTime': startTime,
       'endTime': endTime,
       'display': displayLabel,
@@ -31,29 +31,12 @@ class TimeSlotModel {
     };
   }
 
-  TimeSlotModel copyWith({
-    String? id,
-    String? startTime,
-    String? endTime,
-    bool? isAvailable,
-    String? displayLabel,
-    int? availableCapacity,
-  }) {
-    return TimeSlotModel(
-      id: id ?? this.id,
-      startTime: startTime ?? this.startTime,
-      endTime: endTime ?? this.endTime,
-      isAvailable: isAvailable ?? this.isAvailable,
-      displayLabel: displayLabel ?? this.displayLabel,
-      availableCapacity: availableCapacity ?? this.availableCapacity,
-    );
-  }
-
   factory TimeSlotModel.fromJson(Map<String, dynamic> json) {
     final timeSlot =
     (json['timeSlot'] ?? json['slot24'] ?? '').toString();
 
-    final capacity = (json['availableCapacity'] as num?)?.toInt();
+    final capacity =
+    (json['availableCapacity'] as num?)?.toInt();
 
     return TimeSlotModel(
       id: timeSlot,

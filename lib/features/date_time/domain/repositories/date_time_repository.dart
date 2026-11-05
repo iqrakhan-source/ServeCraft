@@ -1,9 +1,12 @@
+
 import '../../data/models/service_date_model.dart';
 import '../../data/models/time_slot_model.dart';
 
 abstract class DateTimeRepository {
+
   Future<List<ServiceDateModel>> getAvailableDates({
     required String serviceId,
+    required String branchId,
     String? packageId,
   });
 
@@ -11,7 +14,7 @@ abstract class DateTimeRepository {
     required String serviceId,
     required DateTime date,
     String? packageId,
-    String? branchId,
+    required String branchId,
     String? categoryId,
   });
 }

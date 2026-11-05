@@ -1,24 +1,34 @@
 
 class ServiceProductsResponse {
   final bool success;
-  final ServiceProductInfo service;
+  final ServiceProductInfo? service;
   final List<ConsumableProduct> products;
 
   const ServiceProductsResponse({
     required this.success,
-    required this.service,
+    this.service,
     required this.products,
   });
 
   factory ServiceProductsResponse.fromJson(
       Map<String, dynamic> json,
       ) {
+    // Actual API response: { count: 2, data: { products: [] } }
+    final data = json['data'] is Map
+        ? Map<String, dynamic>.from(json['data'] as Map)
+        : <String, dynamic>{};
+
+    final rawProducts = data['products'] as List? ?? [];
+
     return ServiceProductsResponse(
       success: json['success'] == true,
-      service: ServiceProductInfo.fromJson(
+      service: json['service'] is Map
+          ? ServiceProductInfo.fromJson(
         Map<String, dynamic>.from(json['service'] as Map),
-      ),
-      products: (json['products'] as List? ?? [])
+      )
+          : null,
+      products: rawProducts
+          .where((item) => item is Map)
           .map(
             (item) => ConsumableProduct.fromJson(
           Map<String, dynamic>.from(item as Map),
@@ -80,9 +90,11 @@ class ConsumableProduct {
       id: json['_id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       brand: json['brand']?.toString() ?? '',
-      description: json['description']?.toString() ?? '',
-      addedPrice: (json['addedPrice'] as num?)?.toDouble() ?? 0,
-      addedDuration: (json['addedDuration'] as num?)?.toInt() ?? 0,
+      description: json['category']?.toString() ?? '',
+      addedPrice:
+      (json['servicePriceModifier'] as num?)?.toDouble() ?? 0,
+      addedDuration:
+      (json['durationModifier'] as num?)?.toInt() ?? 0,
       price: (json['price'] as num?)?.toDouble() ?? 0,
     );
   }

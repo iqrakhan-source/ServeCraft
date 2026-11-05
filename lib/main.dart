@@ -127,7 +127,9 @@ void main() async {
   );
 
   final DateTimeRemoteDataSource dateTimeRemoteDataSource =
-      MockDateTimeRemoteDataSource();
+  DateTimeRemoteDataSourceImpl(
+    apiService: apiClient,
+  );
   final DateTimeRepository dateTimeRepository = DateTimeRepositoryImpl(
     remoteDataSource: dateTimeRemoteDataSource,
   );

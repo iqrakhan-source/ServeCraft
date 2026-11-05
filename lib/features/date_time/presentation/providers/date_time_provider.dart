@@ -1,3 +1,4 @@
+
 import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/base/view_state.dart';
 import 'package:prop_crm/core/error/error_handler.dart';
@@ -9,7 +10,6 @@ import '../../domain/repositories/date_time_repository.dart';
 class DateTimeProvider extends ChangeNotifier {
   final DateTimeRepository repository;
   final StorageService? storageService;
-
 
   ViewState<List<ServiceDateModel>> _datesState = ViewState.initial();
   ViewState<List<TimeSlotModel>> _slotsState = ViewState.initial();
@@ -23,7 +23,10 @@ class DateTimeProvider extends ChangeNotifier {
   String? _packageName;
   String? _branchId;
 
-  DateTimeProvider({required this.repository,this.storageService});
+  DateTimeProvider({
+    required this.repository,
+    this.storageService,
+  });
 
   ViewState<List<ServiceDateModel>> get datesState => _datesState;
   ViewState<List<TimeSlotModel>> get slotsState => _slotsState;
@@ -42,49 +45,85 @@ class DateTimeProvider extends ChangeNotifier {
 
   bool get isLoading => _datesState.isLoading || _slotsState.isLoading;
   bool get hasError => _datesState.isError || _slotsState.isError;
-  String? get errorMessage => _datesState.errorMessage ?? _slotsState.errorMessage;
 
-  /// Both a valid date and an available time slot must be selected
+  String? get errorMessage =>
+      _datesState.errorMessage ?? _slotsState.errorMessage;
+
+  // Both a valid date and an available time slot must be selected.
   bool get isSelectionComplete =>
       _selectedDate != null &&
-      _selectedDate!.isAvailable &&
-      _selectedTimeSlot != null &&
-      _selectedTimeSlot!.isAvailable;
+          _selectedDate!.isAvailable &&
+          _selectedTimeSlot != null &&
+          _selectedTimeSlot!.isAvailable;
 
-  /// Initialize service & package context passed from previous flow
+  // Initialize booking context.
   void initContext({
     String? serviceId,
     String? serviceName,
     String? packageId,
     String? packageName,
     String? branchId,
-
   }) {
-    _serviceId = serviceId ?? _serviceId;
-    _serviceName = serviceName ?? _serviceName;
-    _packageId = packageId ?? _packageId;
-    _packageName = packageName ?? _packageName;
-    _branchId = branchId ?? _branchId;
+    final newServiceId = serviceId ?? _serviceId;
+    final newBranchId = branchId ?? _branchId;
 
-    debugPrint('DATE TIME CONTEXT');
+    // Clear previous selections when service or branch changes.
+    if (_serviceId != newServiceId || _branchId != newBranchId) {
+      _selectedDate = null;
+      _selectedTimeSlot = null;
+      _datesState = ViewState.initial();
+      _slotsState = ViewState.initial();
+    }
+
+    _serviceId = newServiceId;
+    _serviceName = serviceName ?? _serviceName;
+
+    // Null is valid: a service may have no selected package.
+    _packageId = packageId;
+    _packageName = packageName;
+
+    _branchId = newBranchId;
+
+    debugPrint('========== DATE TIME CONTEXT ==========');
     debugPrint('Service ID: $_serviceId');
     debugPrint('Package ID: $_packageId');
     debugPrint('Branch ID: $_branchId');
-
+    debugPrint('=======================================');
 
     notifyListeners();
   }
 
-  /// Load available dates for the specified service
+  // Load available dates.
   Future<void> loadAvailableDates({
     String? serviceId,
     String? packageId,
     bool forceRefresh = false,
-  }) async {
-    final sId = serviceId ?? _serviceId ?? 'srv_default';
-    final pId = packageId ?? _packageId;
 
-    if (!forceRefresh && _datesState.isSuccess && availableDates.isNotEmpty) {
+  }) async {
+
+    final sId = serviceId ?? _serviceId;
+    final pId = packageId ?? _packageId;
+    final bId = _branchId;
+    debugPrint('[DATE TIME] Calling available dates API');
+    debugPrint('[DATE TIME] Branch ID: $bId');
+
+    if (sId == null || sId.trim().isEmpty) {
+      _datesState = ViewState.error('Please select a valid service.');
+      notifyListeners();
+      return;
+    }
+
+    if (bId == null || bId.trim().isEmpty) {
+      _datesState = ViewState.error('Please select a valid salon branch.');
+      notifyListeners();
+      return;
+    }
+
+    if (!forceRefresh &&
+        _datesState.isSuccess &&
+        availableDates.isNotEmpty) {
+      debugPrint(
+          '[DATE TIME] Returning cached dates: ${availableDates.length}',);
       return;
     }
 
@@ -92,36 +131,42 @@ class DateTimeProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('[DATE TIME] Calling repository.getAvailableDates()');
+      debugPrint('[DATE TIME] Service ID: $sId');
+      debugPrint('[DATE TIME] Branch ID: $bId');
+
       final dates = await repository.getAvailableDates(
         serviceId: sId,
+        branchId: bId,
         packageId: pId,
       );
 
       if (dates.isEmpty) {
         _datesState = ViewState.empty();
         _selectedDate = null;
+        _selectedTimeSlot = null;
         _slotsState = ViewState.empty();
       } else {
         _datesState = ViewState.success(dates);
 
-        // Auto-select the first available date if nothing is selected or current selection is invalid
         ServiceDateModel? targetDate;
+
         if (_selectedDate != null) {
-          try {
-            targetDate = dates.firstWhere((d) => d.dateKey == _selectedDate!.dateKey);
-          } catch (_) {
-            targetDate = null;
+          for (final date in dates) {
+            if (date.dateKey == _selectedDate!.dateKey) {
+              targetDate = date;
+              break;
+            }
           }
         }
 
         targetDate ??= dates.firstWhere(
-          (d) => d.isAvailable,
+              (date) => date.isAvailable,
           orElse: () => dates.first,
         );
 
         _selectedDate = targetDate;
 
-        // Populate slots for the selected date
         if (targetDate.slots.isNotEmpty) {
           _slotsState = ViewState.success(targetDate.slots);
         } else {
@@ -130,6 +175,7 @@ class DateTimeProvider extends ChangeNotifier {
       }
     } catch (e) {
       final appError = ErrorHandler.handleError(e);
+
       _datesState = ViewState.error(
         appError.message,
         statusCode: appError.statusCode,
@@ -139,19 +185,15 @@ class DateTimeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Select a date and update the available time slots
+  // Select a date and load its slots.
   Future<void> selectDate(ServiceDateModel date) async {
-    if (!date.isAvailable) {
-      // Disallowed: date is unavailable
-      return;
-    }
+    if (!date.isAvailable) return;
 
-    if (_selectedDate?.dateKey == date.dateKey) {
-      return;
-    }
+    if (_selectedDate?.dateKey == date.dateKey) return;
 
     _selectedDate = date;
-    _selectedTimeSlot = null; // Clear previously selected time slot
+    _selectedTimeSlot = null;
+
     notifyListeners();
 
     if (date.slots.isNotEmpty) {
@@ -162,9 +204,9 @@ class DateTimeProvider extends ChangeNotifier {
     }
   }
 
-  /// Load time slots for a specific date
+  // Load time slots for a specific date.
   Future<void> loadTimeSlots(DateTime date) async {
-    final sId = _serviceId ?? 'srv_default';
+    final sId = _serviceId;
 
     debugPrint('========== LOAD TIME SLOTS ==========');
     debugPrint('Service ID: $sId');
@@ -173,8 +215,14 @@ class DateTimeProvider extends ChangeNotifier {
     debugPrint('Date: $date');
     debugPrint('=====================================');
 
+    if (sId == null || sId.trim().isEmpty) {
+      _slotsState = ViewState.error('Please select a valid service.');
+      notifyListeners();
+      return;
+    }
+
     if (_branchId == null || _branchId!.trim().isEmpty) {
-      debugPrint('ERROR: Branch ID is missing. API will not be called.');
+      debugPrint('ERROR: Branch ID is missing.');
 
       _slotsState = ViewState.error(
         'Please select a valid salon branch.',
@@ -191,13 +239,14 @@ class DateTimeProvider extends ChangeNotifier {
         serviceId: sId,
         date: date,
         packageId: _packageId,
-        branchId: _branchId,
+        branchId: _branchId!,
       );
 
       debugPrint('Slots returned: ${slots.length}');
 
       if (slots.isEmpty) {
         _slotsState = ViewState.empty();
+        _selectedTimeSlot = null;
       } else {
         _slotsState = ViewState.success(slots);
       }
@@ -206,6 +255,7 @@ class DateTimeProvider extends ChangeNotifier {
       debugPrint('$stackTrace');
 
       final appError = ErrorHandler.handleError(e);
+
       _slotsState = ViewState.error(
         appError.message,
         statusCode: appError.statusCode,
@@ -214,17 +264,16 @@ class DateTimeProvider extends ChangeNotifier {
 
     notifyListeners();
   }
-  /// Select a time slot
+
+  // Select an available time slot.
   void selectTimeSlot(TimeSlotModel slot) {
-    if (!slot.isAvailable) {
-      // Slot is fully booked or past
-      return;
-    }
+    if (!slot.isAvailable) return;
+
     _selectedTimeSlot = slot;
     notifyListeners();
   }
 
-  /// Clear the current date & slot selection
+  // Clear current date and time selection.
   void clearSelection() {
     _selectedDate = null;
     _selectedTimeSlot = null;

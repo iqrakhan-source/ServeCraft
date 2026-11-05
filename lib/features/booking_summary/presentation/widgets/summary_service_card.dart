@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
@@ -8,16 +9,22 @@ import 'package:prop_crm/features/services/data/models/service_package_model.dar
 
 class SummaryServiceCard extends StatelessWidget {
   final ServiceModel service;
-  final ServicePackageModel package;
+  final ServicePackageModel? package;
 
   const SummaryServiceCard({
     super.key,
     required this.service,
-    required this.package,
+    this.package,
   });
 
   @override
   Widget build(BuildContext context) {
+    final packageName = package?.name ?? 'Standard Service';
+
+    final duration = (package?.duration.isNotEmpty ?? false)
+        ? package!.duration
+        : service.duration;
+
     return AppCard(
       borderRadius: 14,
       padding: const EdgeInsets.all(14.0),
@@ -58,9 +65,9 @@ class SummaryServiceCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
 
-                // Selected Package Name
+                // Selected Package Name or Standard Service
                 Text(
-                  package.name,
+                  packageName,
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
@@ -94,9 +101,7 @@ class SummaryServiceCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            package.duration.isNotEmpty
-                                ? package.duration
-                                : service.duration,
+                            duration,
                             style: AppTypography.bodySmall.copyWith(
                               fontSize: 11,
                               color: AppColors.textSecondary,
@@ -116,7 +121,7 @@ class SummaryServiceCard extends StatelessWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFEF3C7), // Amber light
+                          color: const Color(0xFFFEF3C7),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Row(
@@ -125,7 +130,7 @@ class SummaryServiceCard extends StatelessWidget {
                             const Icon(
                               Icons.star_rounded,
                               size: 13,
-                              color: Color(0xFFD97706), // Amber
+                              color: Color(0xFFD97706),
                             ),
                             const SizedBox(width: 3),
                             Text(

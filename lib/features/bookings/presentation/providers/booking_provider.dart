@@ -257,7 +257,7 @@ class BookingProvider extends ChangeNotifier {
   Future<CreateBookingResponseModel?> createBooking({
     required BookingSummaryModel summary,
     required PaymentMethodModel paymentMethod,
-    required ConsumableProduct selectedProduct,
+    ConsumableProduct? selectedProduct,
   }) async {
     if (isCreating) return null;
 
@@ -278,13 +278,13 @@ class BookingProvider extends ChangeNotifier {
       return null;
     }
 
-    if (selectedProduct.id.isEmpty) {
-      _bookingState = ViewState.error(
-        'Please select a valid product.',
-      );
-      notifyListeners();
-      return null;
-    }
+    // if (selectedProduct?.id == null) {
+    //   _bookingState = ViewState.error(
+    //     'Please select a valid product.',
+    //   );
+    //   notifyListeners();
+    //   return null;
+    // }
 
     _bookingState = ViewState.loading();
     notifyListeners();
@@ -294,7 +294,7 @@ class BookingProvider extends ChangeNotifier {
         summary: summary,
         paymentMethod: paymentMethod,
         branchId: branchId,
-        productId: selectedProduct.id,
+        productId: selectedProduct?.id ?? '',
       );
 
       final bookingResponse = await repository.createBooking(

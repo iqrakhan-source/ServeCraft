@@ -1,8 +1,6 @@
 import 'package:prop_crm/features/booking_summary/data/models/booking_summary_model.dart';
 import 'package:prop_crm/features/bookings/data/models/booking_pricing_response_model.dart';
 import 'package:prop_crm/features/payment/data/models/payment_method_model.dart';
-
-import '../../../../core/networking/api_client.dart';
 import '../../domain/repositories/booking_repository.dart';
 import '../datasources/booking_remote_data_source.dart';
 import '../models/booking_model.dart';

@@ -1,3 +1,4 @@
+
 import '../../domain/repositories/date_time_repository.dart';
 import '../datasources/date_time_remote_data_source.dart';
 import '../models/service_date_model.dart';
@@ -12,9 +13,11 @@ class DateTimeRepositoryImpl implements DateTimeRepository {
   Future<List<ServiceDateModel>> getAvailableDates({
     required String serviceId,
     String? packageId,
+    required String branchId,
   }) {
     return remoteDataSource.getAvailableDates(
       serviceId: serviceId,
+      branchId: branchId,
       packageId: packageId,
     );
   }
@@ -24,7 +27,7 @@ class DateTimeRepositoryImpl implements DateTimeRepository {
     required String serviceId,
     required DateTime date,
     String? packageId,
-    String? branchId,
+    required String branchId,
     String? categoryId,
   }) {
     return remoteDataSource.getTimeSlots(

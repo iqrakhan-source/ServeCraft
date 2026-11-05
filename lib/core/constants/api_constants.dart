@@ -37,14 +37,14 @@ abstract class ApiConstants {
   static const String logout = '/api/customer/auth/logout';
 
   // Customer Profile
-  static const String profile = '/api/v1/customer/profile';
-  static const String updateProfile = '/api/v1/customer/profile';
+  static const String profile = '/api/customer/profile';
+  static const String updateProfile = '/api/customer/profile';
   static const String clinicalPreferences =
-      '/api/v1/customer/profile/clinical-preferences';
+      '/api/customer/profile/clinical-preferences';
   static const String updateClinicalPreferences = clinicalPreferences;
 
   // Branches
-  static const String branches = '/api/v1/customer/branches';
+  static const String branches = '/api/customer/branches';
 
   // Addresses
   static const String addresses = '/addresses';
@@ -55,9 +55,9 @@ abstract class ApiConstants {
   static const String home = '/home';
 
   // Categories & Services
-  //static const String categories = '/api/v1/customer/categories';
+  static const String categories = '/api/customer/categories';
   static String categoryById(String id) => '/categories/$id';
-  static const String services = '/api/v1/customer/services';
+  static const String services = '/api/customer/services';
   static String serviceById(String id) => '/services/$id';
   static String packagesByServiceId(String serviceId) => '/services/$serviceId/packages';
   static String serviceAvailability(String serviceId) => '/services/$serviceId/availability';
@@ -67,13 +67,15 @@ abstract class ApiConstants {
 
   // Products
   static const String productsForService =
-      '/api/v1/customer/products-for-service';
+      '/api/customer/bookings/products-for-service';
   static String productsForServiceById(String serviceId) =>
-      '/api/v1/customer/products-for-service/$serviceId';
+      '/api/customer/bookings/products-for-service/$serviceId';
 
   // Pricing & Combo Calculations
-  static const String calculatePricing = '/api/v1/customer/calculate-pricing';
-  static const String calculateCombo = '/api/v1/customer/calculate-combo';
+  static const String calculatePricing =
+      '/api/customer/bookings/calculate-pricing';
+
+  static const String calculateCombo = '/api/customer/calculate-combo';
 
   // Booking & Slots
   static const String createBooking = '/api/customer/bookings';

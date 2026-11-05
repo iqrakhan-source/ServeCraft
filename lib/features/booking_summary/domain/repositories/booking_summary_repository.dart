@@ -9,7 +9,7 @@ import '../../data/models/pricing_breakdown_model.dart';
 abstract class BookingSummaryRepository {
   Future<BookingSummaryModel> getBookingSummary({
     required ServiceModel service,
-    required ServicePackageModel package,
+    required ServicePackageModel? package,
     required AddressModel address,
     required ServiceDateModel date,
     required TimeSlotModel timeSlot,

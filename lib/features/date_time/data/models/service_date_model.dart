@@ -84,16 +84,27 @@ class ServiceDateModel {
     );
   }
 
+
   factory ServiceDateModel.fromJson(Map<String, dynamic> json) {
+    final rawSlots = json['availableSlots'] ?? json['slots'];
+
+    final parsedSlots = rawSlots is List
+        ? rawSlots
+        .whereType<Map>()
+        .map(
+          (item) => TimeSlotModel.fromJson(
+        Map<String, dynamic>.from(item),
+      ),
+    )
+        .toList()
+        : <TimeSlotModel>[];
+
     return ServiceDateModel(
       date: DateTime.parse(json['date'] as String),
-      isAvailable: json['isAvailable'] as bool? ?? true,
+      isAvailable: json['isAvailable'] as bool? ??
+          parsedSlots.any((slot) => slot.isAvailable),
       unavailableReason: json['unavailableReason'] as String?,
-      slots: (json['slots'] as List<dynamic>?)
-              ?.map((item) =>
-                  TimeSlotModel.fromJson(item as Map<String, dynamic>))
-              .toList() ??
-          const [],
+      slots: parsedSlots,
     );
   }
 

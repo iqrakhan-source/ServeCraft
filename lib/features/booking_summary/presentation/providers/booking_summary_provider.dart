@@ -1,3 +1,4 @@
+
 import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/base/view_state.dart';
 import 'package:prop_crm/core/error/error_handler.dart';
@@ -13,7 +14,6 @@ import '../../data/models/booking_summary_model.dart';
 import '../../data/models/pricing_breakdown_model.dart';
 import '../../domain/repositories/booking_summary_repository.dart';
 
-
 class BookingSummaryProvider extends ChangeNotifier {
   final BookingSummaryRepository repository;
 
@@ -22,9 +22,6 @@ class BookingSummaryProvider extends ChangeNotifier {
   double _taxRate = PricingBreakdown.defaultTaxRate;
   CouponModel? _appliedCoupon;
   String? _couponError;
-
-
-
 
   BookingSummaryProvider({required this.repository});
 
@@ -43,9 +40,17 @@ class BookingSummaryProvider extends ChangeNotifier {
   ServiceDateModel? get scheduledDate => summary?.scheduledDate;
   TimeSlotModel? get timeSlot => summary?.timeSlot;
   PricingBreakdown? get pricing => summary?.pricing;
-  CouponModel? get appliedCoupon => _appliedCoupon ?? summary?.appliedCoupon;
+
+  CouponModel? get appliedCoupon =>
+      _appliedCoupon ?? summary?.appliedCoupon;
+
   String? get couponError => _couponError;
 
+  // Uses package price when selected, otherwise service starting price.
+  double get selectedBookingPrice =>
+      summary?.package?.price ??
+          summary?.service.startingPrice ??
+          0.0;
 
   ConsumableProduct? _selectedProduct;
 
@@ -56,10 +61,10 @@ class BookingSummaryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Loads or calculates a full booking summary with all selections
+  // Loads or calculates a full booking summary with all selections.
   Future<void> loadSummary({
     required ServiceModel service,
-    required ServicePackageModel package,
+    required ServicePackageModel? package,
     AddressModel? address,
     BranchModel? branch,
     required ServiceDateModel date,
@@ -113,7 +118,7 @@ class BookingSummaryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Directly set a pre-calculated or loaded summary model
+  // Directly set a pre-calculated or loaded summary model.
   void setSummary(BookingSummaryModel summary) {
     _summaryState = ViewState.success(summary);
     _discount = summary.pricing.discount;
@@ -122,7 +127,7 @@ class BookingSummaryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Updates the salon branch in the summary
+  // Updates the salon branch in the summary.
   void updateBranch(BranchModel newBranch) {
     final current = summary;
     if (current == null) return;
@@ -132,7 +137,7 @@ class BookingSummaryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Updates the delivery address in the summary (for backward compatibility)
+  // Updates the delivery address in the summary (for backward compatibility).
   void updateAddress(AddressModel newAddress) {
     final current = summary;
     if (current == null) return;
@@ -142,7 +147,7 @@ class BookingSummaryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Updates the scheduled date and time slot in the summary
+  // Updates the scheduled date and time slot in the summary.
   void updateSchedule(ServiceDateModel newDate, TimeSlotModel newSlot) {
     final current = summary;
     if (current == null) return;
@@ -151,19 +156,24 @@ class BookingSummaryProvider extends ChangeNotifier {
       scheduledDate: newDate,
       timeSlot: newSlot,
     );
+
     _summaryState = ViewState.success(updated);
     notifyListeners();
   }
 
-  /// Apply a salon discount coupon
+  // Apply a salon discount coupon.
   void applyCoupon(CouponModel coupon) {
     final current = summary;
     if (current == null) return;
 
-    final discountAmount = coupon.calculateDiscount(current.package.price);
+    final bookingPrice =
+        current.package?.price ?? current.service.startingPrice;
+
+    final discountAmount = coupon.calculateDiscount(bookingPrice);
+
     if (discountAmount <= 0) {
       _couponError =
-          'Booking minimum of ₹${coupon.minBookingAmount.toInt()} not met for this coupon.';
+      'Booking minimum of ₹${coupon.minBookingAmount.toInt()} not met for this coupon.';
       notifyListeners();
       return;
     }
@@ -173,7 +183,7 @@ class BookingSummaryProvider extends ChangeNotifier {
     _couponError = null;
 
     final newPricing = PricingBreakdown.calculate(
-      packagePrice: current.package.price,
+      packagePrice: bookingPrice,
       discount: discountAmount,
       taxRate: _taxRate,
     );
@@ -182,11 +192,12 @@ class BookingSummaryProvider extends ChangeNotifier {
       pricing: newPricing,
       appliedCoupon: coupon,
     );
+
     _summaryState = ViewState.success(updated);
     notifyListeners();
   }
 
-  /// Remove currently applied coupon
+  // Remove currently applied coupon.
   void removeCoupon() {
     final current = summary;
     if (current == null) return;
@@ -195,8 +206,11 @@ class BookingSummaryProvider extends ChangeNotifier {
     _discount = 0.0;
     _couponError = null;
 
+    final bookingPrice =
+        current.package?.price ?? current.service.startingPrice;
+
     final newPricing = PricingBreakdown.calculate(
-      packagePrice: current.package.price,
+      packagePrice: bookingPrice,
       discount: 0.0,
       taxRate: _taxRate,
     );
@@ -205,11 +219,12 @@ class BookingSummaryProvider extends ChangeNotifier {
       pricing: newPricing,
       appliedCoupon: null,
     );
+
     _summaryState = ViewState.success(updated);
     notifyListeners();
   }
 
-  /// Updates package and recalculates pricing breakdown
+  // Updates package and recalculates pricing breakdown.
   Future<void> updatePackage(ServicePackageModel newPackage) async {
     final current = summary;
     if (current == null) return;
@@ -226,7 +241,7 @@ class BookingSummaryProvider extends ChangeNotifier {
     );
   }
 
-  /// Clears the summary state
+  // Clears the summary state.
   void clear() {
     _summaryState = ViewState.initial();
     _discount = 0.0;

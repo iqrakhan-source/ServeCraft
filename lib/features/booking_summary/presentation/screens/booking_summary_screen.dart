@@ -1,5 +1,7 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/route_names.dart';
@@ -46,17 +48,19 @@ class BookingSummaryScreen extends StatefulWidget {
     this.scheduledDate,
     this.timeSlot,
     this.initialSummary,
-    this.selectedProduct
+    this.selectedProduct,
   });
 
   @override
-  State<BookingSummaryScreen> createState() => _BookingSummaryScreenState();
+  State<BookingSummaryScreen> createState() =>
+      _BookingSummaryScreenState();
 }
 
 class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeSummary();
     });
@@ -91,19 +95,21 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     final scheduledDate = widget.scheduledDate;
     final timeSlot = widget.timeSlot;
 
-    final branch = widget.branch ??
-        context.read<BranchProvider>().selectedBranch;
+    final branch =
+        widget.branch ?? context.read<BranchProvider>().selectedBranch;
 
     debugPrint('========== SUMMARY INIT DEBUG ==========');
     debugPrint('Widget Branch ID: ${widget.branch?.id}');
     debugPrint(
-      'Provider Branch ID: ${context.read<BranchProvider>().selectedBranch?.id}',
+      'Provider Branch ID: '
+          '${context.read<BranchProvider>().selectedBranch?.id}',
     );
     debugPrint('Final Branch ID: ${branch?.id}');
+    debugPrint('Package ID: ${package?.id ?? "No package selected"}');
     debugPrint('=========================================');
 
+    // Package is optional. Service, date and time are still required.
     if (service != null &&
-        package != null &&
         scheduledDate != null &&
         timeSlot != null) {
       provider.loadSummary(
@@ -117,11 +123,11 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     }
   }
 
-
   Future<void> _handleEditBranch() async {
     final updatedBranch = await Navigator.of(context).push<BranchModel>(
       MaterialPageRoute(
-        builder: (_) => const BranchSelectionScreen(isSelectionMode: true),
+        builder: (_) =>
+        const BranchSelectionScreen(isSelectionMode: true),
       ),
     );
 
@@ -130,18 +136,23 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     }
   }
 
-  Future<void> _handleEditSchedule(BookingSummaryModel summary) async {
+  Future<void> _handleEditSchedule(
+      BookingSummaryModel summary,
+      ) async {
     final branch = summary.branch ??
         context.read<BranchProvider>().selectedBranch;
 
     debugPrint('========== EDIT SCHEDULE DEBUG ==========');
     debugPrint('Summary Branch: ${summary.branch?.name}');
     debugPrint('Summary Branch ID: ${summary.branch?.id}');
-    debugPrint('Provider Branch: ${context.read<BranchProvider>().selectedBranch?.id}');
+    debugPrint(
+      'Provider Branch: '
+          '${context.read<BranchProvider>().selectedBranch?.id}',
+    );
     debugPrint('Final Branch ID: ${branch?.id}');
     debugPrint('==========================================');
 
-    if (branch?.id == null || branch!.id.trim().isEmpty) {
+    if (branch == null || branch.id.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a salon branch first.'),
@@ -150,23 +161,33 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
       return;
     }
 
+    // Always pass service and branch details.
+    // Package details are passed only when a package exists.
+    final Map<String, dynamic> routeArguments = {
+      'serviceId': summary.service.id,
+      'serviceName': summary.service.name,
+      'branchId': branch.id,
+    };
+
+    if (summary.package != null) {
+      routeArguments['packageId'] = summary.package!.id;
+      routeArguments['packageName'] = summary.package!.name;
+    }
+
     final updatedSchedule = await Navigator.of(context).pushNamed(
       AppRoutes.dateTimeSelection,
-      arguments: {
-        'serviceId': summary.service.id,
-        'serviceName': summary.service.name,
-        'packageId': summary.package.id,
-        'packageName': summary.package.name,
-        'branchId': branch.id,
-      },
+      arguments: routeArguments,
     );
 
     if (updatedSchedule is Map<String, dynamic> && mounted) {
       final date = updatedSchedule['selectedDate'] as ServiceDateModel?;
-      final slot = updatedSchedule['selectedTimeSlot'] as TimeSlotModel?;
+      final slot =
+      updatedSchedule['selectedTimeSlot'] as TimeSlotModel?;
 
       if (date != null && slot != null) {
-        context.read<BookingSummaryProvider>().updateSchedule(date, slot);
+        context
+            .read<BookingSummaryProvider>()
+            .updateSchedule(date, slot);
       }
     }
   }
@@ -191,12 +212,14 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
       ),
       body: Builder(
         builder: (context) {
-          // 1. Loading State
+          // Loading State
           if (summaryProvider.isLoading) {
-            return const Center(child: AppLoadingIndicator());
+            return const Center(
+              child: AppLoadingIndicator(),
+            );
           }
 
-          // 2. Error State
+          // Error State
           if (summaryProvider.hasError) {
             return AppErrorView(
               message: summaryProvider.errorMessage ??
@@ -207,20 +230,26 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
 
           final summary = summaryProvider.summary;
 
-          // 3. Incomplete State
+          // Incomplete State
           if (summary == null || !summary.isValid) {
             return AppEmptyState(
               title: 'Booking Details Incomplete',
               subtitle:
-                  'Some required booking information is missing. Please complete all previous steps before reviewing the summary.',
+              'Some required booking information is missing. '
+                  'Please complete all previous steps before reviewing '
+                  'the summary.',
               actionText: 'Go Back',
-              onActionPressed: () => Navigator.of(context).maybePop(),
+              onActionPressed: () =>
+                  Navigator.of(context).maybePop(),
             );
           }
 
-          // 4. Valid Appointment Summary Review
+          // Valid Appointment Summary Review
           return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 16.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -248,7 +277,8 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                 else
                   AppEmptyState(
                     title: 'Salon branch not selected',
-                    subtitle: 'Please select a salon branch before continuing.',
+                    subtitle:
+                    'Please select a salon branch before continuing.',
                     actionText: 'Select Branch',
                     onActionPressed: _handleEditBranch,
                   ),
@@ -259,15 +289,27 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                   appliedCoupon: summary.appliedCoupon,
                   onApplyCoupon: (code) {
                     try {
-                      final offerProv = Provider.of<OfferProvider>(context, listen: false);
+                      final offerProv =
+                      Provider.of<OfferProvider>(
+                        context,
+                        listen: false,
+                      );
+
+                      // Use service starting price when package is absent.
+                      final bookingPrice = summary.package?.price ??
+                          summary.service.startingPrice;
+
                       final coupon = offerProv.validateCoupon(
                         code,
-                        summary.package.price,
+                        bookingPrice,
                       );
+
                       if (coupon != null) {
                         summaryProvider.applyCoupon(coupon);
                       }
-                    } catch (_) {}
+                    } catch (e) {
+                      debugPrint('Coupon validation error: $e');
+                    }
                   },
                   onRemoveCoupon: () {
                     summaryProvider.removeCoupon();
@@ -290,64 +332,76 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
       // Sticky Bottom CTA Bar
       bottomNavigationBar: summaryProvider.isValid
           ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: const BoxDecoration(
-                color: AppColors.surface,
-                border: Border(
-                  top: BorderSide(color: AppColors.border, width: 1.0),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadowMedium,
-                    offset: Offset(0, -4),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                top: false,
-                child: Row(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 14,
+        ),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(
+            top: BorderSide(
+              color: AppColors.border,
+              width: 1.0,
+            ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadowMedium,
+              offset: Offset(0, -4),
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            children: [
+              // Price Summary
+              Expanded(
+                flex: 4,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Price summary
-                    Expanded(
-                      flex: 4,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total Amount',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
-                          Text(
-                            AppFormatters.formatCurrency(
-                              summaryProvider.summary!.pricing.totalAmount,
-                            ),
-                            style: AppTypography.priceLarge.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ],
+                    Text(
+                      'Total Amount',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textTertiary,
                       ),
                     ),
-
-                    // Proceed CTA
-                    Expanded(
-                      flex: 6,
-                      child: AppButton(
-                        text: 'Continue to Payment',
-                        onPressed: () =>
-                            _handleProceedToPayment(summaryProvider.summary!),
+                    Text(
+                      AppFormatters.formatCurrency(
+                        summaryProvider.summary!.pricing.totalAmount,
+                      ),
+                      style: AppTypography.priceLarge.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
                       ),
                     ),
                   ],
                 ),
               ),
-            )
+
+              // Proceed CTA
+              Expanded(
+                flex: 6,
+                child: AppButton(
+                  text: 'Continue to Payment',
+                  onPressed: () {
+                    final currentSummary =
+                        summaryProvider.summary;
+
+                    if (currentSummary != null) {
+                      _handleProceedToPayment(currentSummary);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      )
           : null,
     );
   }

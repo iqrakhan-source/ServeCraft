@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
@@ -12,6 +13,7 @@ import 'package:prop_crm/features/booking_summary/presentation/providers/booking
 import 'package:prop_crm/features/bookings/presentation/providers/booking_provider.dart';
 import 'package:prop_crm/features/payment/data/models/payment_method_model.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/payment_provider.dart';
 import '../widgets/payment_amount_card.dart';
 import '../widgets/payment_method_tile.dart';
@@ -33,6 +35,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializePayment();
     });
@@ -42,6 +45,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final paymentProvider = context.read<PaymentProvider>();
 
     BookingSummaryModel? summary = widget.bookingSummary;
+
     if (summary == null) {
       try {
         summary = context.read<BookingSummaryProvider>().summary;
@@ -60,7 +64,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final summary = paymentProvider.bookingSummary;
     final selectedMethod = paymentProvider.selectedMethod;
 
-    if (!paymentProvider.isSelectionValid || summary == null || selectedMethod == null) {
+    if (!paymentProvider.isSelectionValid ||
+        summary == null ||
+        selectedMethod == null) {
       return;
     }
 
@@ -68,10 +74,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _showPaymentReviewSheet(
-    BuildContext context,
-    BookingSummaryModel summary,
-    PaymentMethodModel selectedMethod,
-  ) {
+      BuildContext context,
+      BookingSummaryModel summary,
+      PaymentMethodModel selectedMethod,
+      ) {
     final bookingProvider = context.read<BookingProvider>();
 
     showModalBottomSheet(
@@ -88,7 +94,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
               return Container(
                 decoration: const BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
                 ),
                 padding: EdgeInsets.only(
                   top: 20,
@@ -135,21 +143,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         child: Column(
                           children: [
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(
                                   child: Text(
                                     summary.service.name,
-                                    style: AppTypography.labelLarge.copyWith(
+                                    style:
+                                    AppTypography.labelLarge.copyWith(
                                       fontWeight: FontWeight.w700,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                const SizedBox(width: 8),
                                 Text(
-                                  summary.package.name,
-                                  style: AppTypography.bodySmall.copyWith(
+                                  summary.package?.name ??
+                                      'Standard Service',
+                                  style:
+                                  AppTypography.bodySmall.copyWith(
                                     color: AppColors.textSecondary,
                                   ),
                                 ),
@@ -157,7 +170,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             ),
                             const SizedBox(height: 8),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
                               children: [
                                 Row(
                                   children: [
@@ -169,7 +183,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                     const SizedBox(width: 4),
                                     Text(
                                       summary.timeSlot.formattedLabel,
-                                      style: AppTypography.bodySmall.copyWith(
+                                      style:
+                                      AppTypography.bodySmall.copyWith(
                                         color: AppColors.textSecondary,
                                       ),
                                     ),
@@ -185,7 +200,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                     const SizedBox(width: 4),
                                     Text(
                                       selectedMethod.title,
-                                      style: AppTypography.bodySmall.copyWith(
+                                      style:
+                                      AppTypography.bodySmall.copyWith(
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -194,20 +210,27 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 ),
                               ],
                             ),
-                            const Divider(height: 16, color: AppColors.border),
+                            const Divider(
+                              height: 16,
+                              color: AppColors.border,
+                            ),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   'Payable Amount',
-                                  style: AppTypography.labelSmall.copyWith(
+                                  style:
+                                  AppTypography.labelSmall.copyWith(
                                     color: AppColors.textSecondary,
                                   ),
                                 ),
                                 Text(
                                   AppFormatters.formatCurrency(
-                                      summary.pricing.totalAmount),
-                                  style: AppTypography.titleSmall.copyWith(
+                                    summary.pricing.totalAmount,
+                                  ),
+                                  style:
+                                  AppTypography.titleSmall.copyWith(
                                     fontWeight: FontWeight.w800,
                                     color: AppColors.primary,
                                   ),
@@ -227,7 +250,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             color: AppColors.error.withValues(alpha: 0.10),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                                color: AppColors.error.withValues(alpha: 0.3)),
+                              color:
+                              AppColors.error.withValues(alpha: 0.3),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -240,7 +265,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               Expanded(
                                 child: Text(
                                   bp.errorMessage!,
-                                  style: AppTypography.bodySmall.copyWith(
+                                  style:
+                                  AppTypography.bodySmall.copyWith(
                                     color: AppColors.error,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -252,24 +278,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         const SizedBox(height: 14),
                       ],
 
-                      // CTA Confirm Button
+                      // Confirm Booking Button
                       AppButton(
                         text: bp.hasError ? 'Retry' : 'Confirm Booking',
                         isLoading: bp.isCreating,
                         onPressed: bp.isCreating
                             ? null
                             : () async {
-                          final summaryProvider = context.read<BookingSummaryProvider>();
-                          final selectedProduct = summaryProvider.selectedProduct;
+                          final summaryProvider =
+                          context.read<BookingSummaryProvider>();
 
-                          if (selectedProduct == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please select a product before booking.'),
-                              ),
-                            );
-                            return;
-                          }
+                          // Product is optional.
+                          final selectedProduct =
+                              summaryProvider.selectedProduct;
 
                           final booking = await bp.createBooking(
                             summary: summary,
@@ -277,18 +298,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             selectedProduct: selectedProduct,
                           );
 
-                                if (booking != null && context.mounted) {
-                                  Navigator.of(bottomSheetContext).pop();
-                                  Navigator.of(context).pushNamedAndRemoveUntil(
-                                    AppRoutes.bookingConfirmation,
-                                    (route) =>
-                                        route.settings.name ==
-                                            AppRoutes.mainNav ||
-                                        route.isFirst,
-                                    arguments: {'booking': booking},
-                                  );
-                                }
-                              },
+                          if (booking != null && context.mounted) {
+                            Navigator.of(bottomSheetContext).pop();
+
+                            Navigator.of(context)
+                                .pushNamedAndRemoveUntil(
+                              AppRoutes.bookingConfirmation,
+                                  (route) =>
+                              route.settings.name ==
+                                  AppRoutes.mainNav ||
+                                  route.isFirst,
+                              arguments: {'booking': booking},
+                            );
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -317,22 +340,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
           constraints: const BoxConstraints(maxWidth: 600),
           child: Builder(
             builder: (context) {
-              // 1. Loading state
+              // Loading state
               if (paymentProvider.isLoading) {
                 return _buildLoadingState();
               }
 
-              // 2. Error state
+              // Error state
               if (paymentProvider.hasError) {
                 return AppErrorView(
                   message: paymentProvider.errorMessage ??
                       "Couldn't load payment options",
-                  onRetry: () =>
-                      paymentProvider.loadPaymentMethods(forceRefresh: true),
+                  onRetry: () => paymentProvider.loadPaymentMethods(
+                    forceRefresh: true,
+                  ),
                 );
               }
 
-              // 3. Fallback when booking summary is completely missing
+              // Fallback when booking summary is missing
               if (summary == null || payableAmount <= 0) {
                 return _buildIncompleteState();
               }
@@ -340,7 +364,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               final methods = paymentProvider.paymentMethods;
               final selectedMethod = paymentProvider.selectedMethod;
 
-              // 4. Main Payment Selection Content
+              // Main Payment Selection Content
               return SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20.0,
@@ -353,7 +377,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     PaymentAmountCard(
                       amount: payableAmount,
                       serviceName: summary.service.name,
-                      packageName: summary.package.name,
+                      packageName:
+                      summary.package?.name ?? 'Standard Service',
                     ),
                     const SizedBox(height: 24),
 
@@ -370,7 +395,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
                     // Payment Method List
                     ...methods.map((method) {
-                      final isSelected = selectedMethod?.id == method.id;
+                      final isSelected =
+                          selectedMethod?.id == method.id;
+
                       return PaymentMethodTile(
                         method: method,
                         isSelected: isSelected,
@@ -394,65 +421,70 @@ class _PaymentScreenState extends State<PaymentScreen> {
       // Sticky Bottom CTA Bar
       bottomNavigationBar: paymentProvider.payableAmount > 0
           ? Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: const BoxDecoration(
-                color: AppColors.surface,
-                border: Border(
-                  top: BorderSide(color: AppColors.border, width: 1.0),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadowMedium,
-                    offset: Offset(0, -4),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                top: false,
-                child: Row(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 14,
+        ),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(
+            top: BorderSide(
+              color: AppColors.border,
+              width: 1.0,
+            ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadowMedium,
+              offset: Offset(0, -4),
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            children: [
+              // Payable Amount Summary
+              Expanded(
+                flex: 4,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Payable Amount Summary
-                    Expanded(
-                      flex: 4,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total to Pay',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
-                          Text(
-                            AppFormatters.formatCurrency(payableAmount),
-                            style: AppTypography.priceLarge.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ],
+                    Text(
+                      'Total to Pay',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textTertiary,
                       ),
                     ),
-                    const SizedBox(width: 14),
-
-                    // Primary CTA
-                    Expanded(
-                      flex: 6,
-                      child: AppButton(
-                        text: 'Continue',
-                        onPressed: paymentProvider.isSelectionValid
-                            ? _handleContinue
-                            : null,
+                    Text(
+                      AppFormatters.formatCurrency(payableAmount),
+                      style: AppTypography.priceLarge.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
                       ),
                     ),
                   ],
                 ),
               ),
-            )
+              const SizedBox(width: 14),
+
+              // Primary CTA
+              Expanded(
+                flex: 6,
+                child: AppButton(
+                  text: 'Continue',
+                  onPressed: paymentProvider.isSelectionValid
+                      ? _handleContinue
+                      : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+      )
           : null,
     );
   }
@@ -507,28 +539,55 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Widget _buildLoadingState() {
     return const SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: 20.0,
+        vertical: 16.0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Amount Card skeleton
-          AppSkeleton(height: 96, width: double.infinity, borderRadius: 14),
+          AppSkeleton(
+            height: 96,
+            width: double.infinity,
+            borderRadius: 14,
+          ),
           SizedBox(height: 24),
 
           // Heading skeleton
-          AppSkeleton(height: 20, width: 180, borderRadius: 6),
+          AppSkeleton(
+            height: 20,
+            width: 180,
+            borderRadius: 6,
+          ),
           SizedBox(height: 14),
 
           // Method tiles skeleton
-          AppSkeleton(height: 72, width: double.infinity, borderRadius: 12),
+          AppSkeleton(
+            height: 72,
+            width: double.infinity,
+            borderRadius: 12,
+          ),
           SizedBox(height: 12),
-          AppSkeleton(height: 72, width: double.infinity, borderRadius: 12),
+          AppSkeleton(
+            height: 72,
+            width: double.infinity,
+            borderRadius: 12,
+          ),
           SizedBox(height: 12),
-          AppSkeleton(height: 72, width: double.infinity, borderRadius: 12),
+          AppSkeleton(
+            height: 72,
+            width: double.infinity,
+            borderRadius: 12,
+          ),
           SizedBox(height: 16),
 
           // Security note skeleton
-          AppSkeleton(height: 56, width: double.infinity, borderRadius: 10),
+          AppSkeleton(
+            height: 56,
+            width: double.infinity,
+            borderRadius: 10,
+          ),
         ],
       ),
     );

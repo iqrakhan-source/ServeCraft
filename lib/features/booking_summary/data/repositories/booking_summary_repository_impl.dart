@@ -16,7 +16,7 @@ class BookingSummaryRepositoryImpl implements BookingSummaryRepository {
   @override
   Future<BookingSummaryModel> getBookingSummary({
     required ServiceModel service,
-    required ServicePackageModel package,
+    required ServicePackageModel? package,
     required AddressModel address,
     required ServiceDateModel date,
     required TimeSlotModel timeSlot,

@@ -1,110 +1,138 @@
+
 import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/constants/api_constants.dart';
 import 'package:prop_crm/core/networking/api_client.dart';
+
 import '../models/service_date_model.dart';
 import '../models/time_slot_model.dart';
 
 abstract class DateTimeRemoteDataSource {
   Future<List<ServiceDateModel>> getAvailableDates({
     required String serviceId,
+    required String branchId,
     String? packageId,
   });
 
   Future<List<TimeSlotModel>> getTimeSlots({
     required String serviceId,
     required DateTime date,
+    required String branchId,
     String? packageId,
-    String? branchId,
     String? categoryId,
   });
 }
 
-/// Production implementation connecting to REST backend via ApiService
+// Production implementation connecting to the REST backend.
 class DateTimeRemoteDataSourceImpl implements DateTimeRemoteDataSource {
   final ApiClient apiService;
 
   DateTimeRemoteDataSourceImpl({required this.apiService});
 
+  String _formatDate(DateTime date) {
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+
+    return '$year-$month-$day';
+  }
+
   @override
   Future<List<ServiceDateModel>> getAvailableDates({
     required String serviceId,
+    required String branchId,
     String? packageId,
   }) async {
-    final queryParams = <String, dynamic>{};
-    if (packageId != null && packageId.isNotEmpty) {
-      queryParams['packageId'] = packageId;
+    if (branchId.trim().isEmpty) {
+      throw ArgumentError('branchId is required to fetch available dates.');
     }
 
-    try {
-      final response = await apiService.get<List<ServiceDateModel>>(
-        ApiConstants.serviceAvailability(serviceId),
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
-        fromJson: (json) {
-          if (json is List) {
-            return json
-                .map((item) =>
-                    ServiceDateModel.fromJson(item as Map<String, dynamic>))
-                .toList();
-          }
-          return [];
-        },
-      );
-      if (response.data != null && response.data!.isNotEmpty) {
-        return response.data!;
-      }
-    } catch (_) {
-      // Fall through to generate upcoming rolling dates if endpoint is unavailable
-    }
+    debugPrint('========== AVAILABLE DATES API ==========');
+    debugPrint('SERVICE ID: $serviceId');
+    debugPrint('BRANCH ID: $branchId');
+    debugPrint('PACKAGE ID: $packageId');
 
-    // Default 14 upcoming rolling days for the salon
+    // Generate the next 14 calendar dates.
+    // Actual availability is determined by the backend.
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    return List.generate(14, (i) {
-      final d = today.add(Duration(days: i));
-      return ServiceDateModel(
-        date: d,
-        isAvailable: true,
-        slots: const [],
-      );
-    });
+
+    final dates = List.generate(
+      14,
+          (index) => today.add(Duration(days: index)),
+    );
+
+    // Fetch real availability for every date.
+    // If a request fails, let the error reach the provider.
+    // Never mark an unverified date as available.
+    final results = await Future.wait(
+      dates.map((date) async {
+        final slots = await getTimeSlots(
+          serviceId: serviceId,
+          date: date,
+          branchId: branchId,
+          packageId: packageId,
+        );
+
+        return ServiceDateModel(
+          date: date,
+          isAvailable: slots.any((slot) => slot.isAvailable),
+          unavailableReason:
+          slots.any((slot) => slot.isAvailable)
+              ? null
+              : 'No available slots',
+          slots: slots,
+        );
+      }),
+    );
+
+    debugPrint('AVAILABLE DATES RETURNED: ${results.length}');
+    debugPrint(
+      'DATES WITH AVAILABILITY: '
+          '${results.where((date) => date.isAvailable).length}',
+    );
+
+    return results;
   }
 
   @override
   Future<List<TimeSlotModel>> getTimeSlots({
     required String serviceId,
     required DateTime date,
+    required String branchId,
     String? packageId,
-    String? branchId,
     String? categoryId,
   }) async {
+    if (branchId.trim().isEmpty) {
+      throw ArgumentError(
+        'branchId is required to fetch available time slots.',
+      );
+    }
+
+    final dateStr = _formatDate(date);
+
     debugPrint('========== SLOT API DEBUG ==========');
     debugPrint('SLOT API METHOD CALLED');
     debugPrint('SERVICE ID: $serviceId');
     debugPrint('BRANCH ID: $branchId');
     debugPrint('PACKAGE ID: $packageId');
     debugPrint('CATEGORY ID: $categoryId');
-    debugPrint('SELECTED DATE: $date');
-    if (branchId == null || branchId.isEmpty) {
-      throw ArgumentError(
-        'branchId is required to fetch available time slots.',
-      );
-    }
-
-    final dateStr =
-        '${date.year.toString().padLeft(4, '0')}-'
-        '${date.month.toString().padLeft(2, '0')}-'
-        '${date.day.toString().padLeft(2, '0')}';
+    debugPrint('SELECTED DATE: $dateStr');
 
     final response = await apiService.get<List<TimeSlotModel>>(
       ApiConstants.availableSlots(branchId),
-      queryParameters: {'date': dateStr},
+      queryParameters: {
+        'date': dateStr,
+      },
       fromJson: (json) {
         final slotsJson = json is Map
             ? (json['availableSlots'] ?? json['slots'])
             : json;
 
         if (slotsJson is! List) {
-          return <TimeSlotModel>[];
+          throw const FormatException(
+            'Invalid available-slots response: '
+                'availableSlots list not found.',
+          );
         }
 
         return slotsJson
@@ -118,23 +146,29 @@ class DateTimeRemoteDataSourceImpl implements DateTimeRemoteDataSource {
       },
     );
 
-    return response.data ?? [];
+    final slots = response.data ?? [];
+
+    debugPrint('SLOTS RETURNED: ${slots.length}');
+    debugPrint(
+      'OPEN SLOTS: ${slots.where((slot) => slot.isAvailable).length}',
+    );
+
+    return slots;
   }
 }
 
-/// TEMPORARY: Isolated mock data source providing realistic dynamic rolling availability
+// TEMPORARY: Mock data source for UI testing only.
 class MockDateTimeRemoteDataSource implements DateTimeRemoteDataSource {
-  // Session cache so availability remains stable across date clicks during a session
   final Map<String, List<ServiceDateModel>> _cache = {};
 
   final List<Map<String, String>> _standardSlotTemplates = const [
-    {'id': 'slot_morning_1', 'start': '10:00 AM', 'end': '11:00 AM'},
-    {'id': 'slot_morning_2', 'start': '11:00 AM', 'end': '12:00 PM'},
-    {'id': 'slot_afternoon_1', 'start': '01:00 PM', 'end': '02:00 PM'},
-    {'id': 'slot_afternoon_2', 'start': '02:00 PM', 'end': '03:00 PM'},
-    {'id': 'slot_afternoon_3', 'start': '03:00 PM', 'end': '04:00 PM'},
-    {'id': 'slot_evening_1', 'start': '05:00 PM', 'end': '06:00 PM'},
-    {'id': 'slot_evening_2', 'start': '06:00 PM', 'end': '07:00 PM'},
+    {'id': '10:00', 'start': '10:00', 'end': '11:00'},
+    {'id': '11:00', 'start': '11:00', 'end': '12:00'},
+    {'id': '13:00', 'start': '13:00', 'end': '14:00'},
+    {'id': '14:00', 'start': '14:00', 'end': '15:00'},
+    {'id': '15:00', 'start': '15:00', 'end': '16:00'},
+    {'id': '17:00', 'start': '17:00', 'end': '18:00'},
+    {'id': '18:00', 'start': '18:00', 'end': '19:00'},
   ];
 
   List<ServiceDateModel> _generateMockDates() {
@@ -148,18 +182,17 @@ class MockDateTimeRemoteDataSource implements DateTimeRemoteDataSource {
       final isDay4 = dayOffset == 4;
       final isDay3 = dayOffset == 3;
 
-      // Business Rule: Day 4 is fully booked to test disabled date UI
       if (isDay4) {
         dates.add(
           ServiceDateModel(
             date: date,
             isAvailable: false,
             unavailableReason: 'Fully Booked',
-            slots: _standardSlotTemplates.map((t) {
+            slots: _standardSlotTemplates.map((template) {
               return TimeSlotModel(
-                id: '${date.millisecondsSinceEpoch}_${t['id']}',
-                startTime: t['start']!,
-                endTime: t['end']!,
+                id: template['id']!,
+                startTime: template['start']!,
+                endTime: template['end']!,
                 isAvailable: false,
               );
             }).toList(),
@@ -168,31 +201,27 @@ class MockDateTimeRemoteDataSource implements DateTimeRemoteDataSource {
         continue;
       }
 
-      // Generate slots for this day
       final slots = <TimeSlotModel>[];
+
       for (int i = 0; i < _standardSlotTemplates.length; i++) {
-        final t = _standardSlotTemplates[i];
+        final template = _standardSlotTemplates[i];
         bool isSlotAvailable = true;
 
         if (dayOffset == 0) {
-          // Today: earlier slots might be unavailable
           if (i < 3) isSlotAvailable = false;
         } else if (isDay3) {
-          // Limited availability day: only slots 2 and 5 available
-          isSlotAvailable = (i == 2 || i == 5);
+          isSlotAvailable = i == 2 || i == 5;
         } else if (isSunday) {
-          // Sunday: afternoon half off
           if (i >= 5) isSlotAvailable = false;
         } else {
-          // Normal weekday: slot 3 (lunch hour) occasionally booked
           if (i == 3) isSlotAvailable = false;
         }
 
         slots.add(
           TimeSlotModel(
-            id: '${date.millisecondsSinceEpoch}_${t['id']}',
-            startTime: t['start']!,
-            endTime: t['end']!,
+            id: template['id']!,
+            startTime: template['start']!,
+            endTime: template['end']!,
             isAvailable: isSlotAvailable,
           ),
         );
@@ -201,7 +230,7 @@ class MockDateTimeRemoteDataSource implements DateTimeRemoteDataSource {
       dates.add(
         ServiceDateModel(
           date: date,
-          isAvailable: slots.any((s) => s.isAvailable),
+          isAvailable: slots.any((slot) => slot.isAvailable),
           slots: slots,
         ),
       );
@@ -213,34 +242,44 @@ class MockDateTimeRemoteDataSource implements DateTimeRemoteDataSource {
   @override
   Future<List<ServiceDateModel>> getAvailableDates({
     required String serviceId,
+    required String branchId,
     String? packageId,
   }) async {
+
     await Future.delayed(const Duration(milliseconds: 250));
-    final cacheKey = '${serviceId}_${packageId ?? ''}';
-    return _cache.putIfAbsent(cacheKey, () => _generateMockDates());
+
+    final cacheKey = '${branchId}_${serviceId}_${packageId ?? ''}';
+
+    return _cache.putIfAbsent(
+      cacheKey,
+          () => _generateMockDates(),
+    );
   }
 
   @override
   Future<List<TimeSlotModel>> getTimeSlots({
     required String serviceId,
     required DateTime date,
+    required String branchId,
     String? packageId,
-    String? branchId,
     String? categoryId,
   }) async {
     await Future.delayed(const Duration(milliseconds: 200));
+
     final dates = await getAvailableDates(
       serviceId: serviceId,
+      branchId: branchId,
       packageId: packageId,
     );
 
     try {
       final matchingDate = dates.firstWhere(
-        (d) =>
-            d.date.year == date.year &&
-            d.date.month == date.month &&
-            d.date.day == date.day,
+            (item) =>
+        item.date.year == date.year &&
+            item.date.month == date.month &&
+            item.date.day == date.day,
       );
+
       return matchingDate.slots;
     } catch (_) {
       return [];

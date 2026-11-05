@@ -8,13 +8,10 @@ import 'package:prop_crm/core/widgets/app_error_view.dart';
 import 'package:prop_crm/core/widgets/app_loading_indicator.dart';
 import 'package:prop_crm/core/widgets/app_network_image.dart';
 import 'package:provider/provider.dart';
-
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
 import 'package:prop_crm/features/services/data/models/service_products_response.dart';
 import 'package:prop_crm/features/branches/presentation/providers/branch_provider.dart';
 import 'package:prop_crm/features/branches/presentation/screens/branch_selection_screen.dart';
-import '../../../bookings/data/models/booking_cart_item.dart';
-import '../../../bookings/presentation/providers/booking_cart_provider.dart';
 import '../../data/models/service_model.dart';
 import '../providers/service_details_provider.dart';
 
@@ -1156,7 +1153,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                 Text(
                   selectedPackage == null
                       ? 'Starting from'
-                      : 'Selected package',
+                      : 'No Selected package',
                   style: AppTypography.labelSmall.copyWith(
                     color: AppColors.textTertiary,
                   ),
@@ -1185,17 +1182,15 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
               child: AppButton(
                 text: 'Book Appointment',
                 onPressed: () {
-                  final pkg = selectedPackage ??
-                      (service.packages.isNotEmpty
-                          ? service.packages.first
-                          : null);
+                  final pkg = provider.selectedPackage;
+
                   Navigator.of(context).pushNamed(
                     AppRoutes.dateTimeSelection,
                     arguments: {
                       'serviceId': service.id,
                       'serviceName': service.name,
-                      'packageId': pkg?.id ?? 'pkg_default',
-                      'packageName': pkg?.name ?? service.name,
+                      'packageId': pkg?.id,
+                      'packageName': pkg?.name,
                       'productId': provider.selectedProduct?.id,
                       'selectedProduct': provider.selectedProduct,
                     },

@@ -37,7 +37,7 @@ class BookingPricingResponseModel {
 class BookingPricingItemModel {
   final String serviceId;
   final String serviceName;
-  final String productId;
+  final String ?productId;
   final String productBrand;
   final double productPriceModifier;
   final String stylistId;

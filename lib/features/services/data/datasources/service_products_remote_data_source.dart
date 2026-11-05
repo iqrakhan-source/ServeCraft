@@ -37,11 +37,13 @@ class ServiceProductsRemoteDataSourceImpl
           );
         }
 
-        return ServiceProductsResponse.fromJson(
-          Map<String, dynamic>.from(json),
-        );
+        return ServiceProductsResponse.fromJson({
+          'success': true,
+          'data': Map<String, dynamic>.from(json),
+        });
       },
     );
+
 
     if (response.data == null) {
       throw const ServerException(
@@ -55,6 +57,9 @@ class ServiceProductsRemoteDataSourceImpl
             ? response.message
             : 'Failed to fetch products for service.',
       );
+      // HTTP 200 with a valid response is sufficient here.
+// The API uses count + data.products, not root-level success.
+      return response.data!;
     }
 
     return response.data!;

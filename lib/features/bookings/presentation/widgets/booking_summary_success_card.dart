@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -37,6 +38,7 @@ class BookingSummarySuccessCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appointment = booking.appointment;
+    final packageName = summary.package?.name ?? 'Standard Service';
 
     return AppCard(
       borderRadius: 16,
@@ -75,7 +77,7 @@ class BookingSummarySuccessCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      summary.package.name,
+                      packageName,
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,

@@ -11,7 +11,7 @@ import 'pricing_breakdown_model.dart';
 
 class BookingSummaryModel {
   final ServiceModel service;
-  final ServicePackageModel package;
+  final ServicePackageModel? package;
   final AddressModel address;
   final BranchModel? branch;
   final ServiceDateModel scheduledDate;
@@ -22,7 +22,7 @@ class BookingSummaryModel {
 
   const BookingSummaryModel({
     required this.service,
-    required this.package,
+    this.package,
     required this.address,
     this.branch,
     required this.scheduledDate,
@@ -32,19 +32,18 @@ class BookingSummaryModel {
     this.specialInstructions,
   });
 
-  /// Validates that all required booking details are complete.
-  /// A branch is mandatory for this booking flow.
+  // Package and address are optional.
+  // Service, branch, date, time slot and valid pricing are required.
   bool get isValid =>
-      service.id.isNotEmpty &&
-          package.id.isNotEmpty &&
+      service.id.trim().isNotEmpty &&
           branch != null &&
-          branch!.id.isNotEmpty &&
-          timeSlot.id.isNotEmpty &&
+          branch!.id.trim().isNotEmpty &&
+          timeSlot.id.trim().isNotEmpty &&
           scheduledDate.isAvailable &&
           timeSlot.isAvailable &&
           pricing.totalAmount > 0;
 
-  /// Example: Saturday, 26 September • 10:00 AM - 11:00 AM
+  // Formatted appointment schedule
   String get formattedSchedule =>
       '${scheduledDate.dayName}, ${scheduledDate.dayNumber} '
           '${scheduledDate.monthName} • ${timeSlot.formattedLabel}';
@@ -52,6 +51,7 @@ class BookingSummaryModel {
   BookingSummaryModel copyWith({
     ServiceModel? service,
     ServicePackageModel? package,
+    bool clearPackage = false,
     AddressModel? address,
     BranchModel? branch,
     bool clearBranch = false,
@@ -65,7 +65,7 @@ class BookingSummaryModel {
   }) {
     return BookingSummaryModel(
       service: service ?? this.service,
-      package: package ?? this.package,
+      package: clearPackage ? null : (package ?? this.package),
       address: address ?? this.address,
       branch: clearBranch ? null : (branch ?? this.branch),
       scheduledDate: scheduledDate ?? this.scheduledDate,
@@ -80,14 +80,20 @@ class BookingSummaryModel {
     );
   }
 
-  factory BookingSummaryModel.fromJson(Map<String, dynamic> json) {
+  factory BookingSummaryModel.fromJson(
+      Map<String, dynamic> json,
+      ) {
     return BookingSummaryModel(
       service: ServiceModel.fromJson(
         json['service'] as Map<String, dynamic>,
       ),
-      package: ServicePackageModel.fromJson(
+
+      package: json['package'] != null
+          ? ServicePackageModel.fromJson(
         json['package'] as Map<String, dynamic>,
-      ),
+      )
+          : null,
+
       address: json['address'] != null
           ? AddressModel.fromJson(
         json['address'] as Map<String, dynamic>,
@@ -102,40 +108,55 @@ class BookingSummaryModel {
         state: '',
         pincode: '',
       ),
+
       branch: json['branch'] != null
           ? BranchModel.fromJson(
         json['branch'] as Map<String, dynamic>,
       )
           : null,
+
       scheduledDate: ServiceDateModel.fromJson(
         json['scheduledDate'] as Map<String, dynamic>,
       ),
+
       timeSlot: TimeSlotModel.fromJson(
         json['timeSlot'] as Map<String, dynamic>,
       ),
+
       pricing: PricingBreakdown.fromJson(
         json['pricing'] as Map<String, dynamic>,
       ),
+
       appliedCoupon: json['appliedCoupon'] != null
           ? CouponModel.fromJson(
         json['appliedCoupon'] as Map<String, dynamic>,
       )
           : null,
-      specialInstructions: json['specialInstructions'] as String?,
+
+      specialInstructions:
+      json['specialInstructions'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'service': service.toJson(),
-      'package': package.toJson(),
+
+      if (package != null)
+        'package': package!.toJson(),
+
       'address': address.toJson(),
-      if (branch != null) 'branch': branch!.toJson(),
+
+      if (branch != null)
+        'branch': branch!.toJson(),
+
       'scheduledDate': scheduledDate.toJson(),
       'timeSlot': timeSlot.toJson(),
       'pricing': pricing.toJson(),
+
       if (appliedCoupon != null)
         'appliedCoupon': appliedCoupon!.toJson(),
+
       if (specialInstructions != null)
         'specialInstructions': specialInstructions,
     };

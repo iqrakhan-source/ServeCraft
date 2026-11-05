@@ -1,3 +1,4 @@
+
 import 'package:prop_crm/features/booking_summary/data/models/booking_summary_model.dart';
 import 'package:prop_crm/features/payment/data/models/payment_method_model.dart';
 
@@ -7,7 +8,7 @@ class CreateBookingRequestModel {
   final String timeSlot;
   final String paymentMethod;
   final String serviceId;
-  final String productId;
+  final String? productId;
   final String stylistId;
   final String? couponCode;
   final String? notes;
@@ -18,7 +19,7 @@ class CreateBookingRequestModel {
     required this.timeSlot,
     required this.paymentMethod,
     required this.serviceId,
-    required this.productId,
+    this.productId,
     this.stylistId = 'any',
     this.couponCode,
     this.notes,
@@ -28,7 +29,7 @@ class CreateBookingRequestModel {
     required BookingSummaryModel summary,
     required PaymentMethodModel paymentMethod,
     required String branchId,
-    required String productId,
+    String? productId,
     String stylistId = 'any',
     String? couponCode,
     String? notes,
@@ -58,6 +59,7 @@ class CreateBookingRequestModel {
     String? paymentMethod,
     String? serviceId,
     String? productId,
+    bool clearProductId = false,
     String? stylistId,
     String? couponCode,
     String? notes,
@@ -68,7 +70,7 @@ class CreateBookingRequestModel {
       timeSlot: timeSlot ?? this.timeSlot,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       serviceId: serviceId ?? this.serviceId,
-      productId: productId ?? this.productId,
+      productId: clearProductId ? null : productId ?? this.productId,
       stylistId: stylistId ?? this.stylistId,
       couponCode: couponCode ?? this.couponCode,
       notes: notes ?? this.notes,
@@ -81,13 +83,17 @@ class CreateBookingRequestModel {
         ? Map<String, dynamic>.from(items.first as Map)
         : <String, dynamic>{};
 
+    final rawProductId = item['productId'] as String?;
+
     return CreateBookingRequestModel(
       branchId: json['branchId'] as String? ?? '',
       date: json['date'] as String? ?? '',
       timeSlot: json['timeSlot'] as String? ?? '',
       paymentMethod: json['paymentMethod'] as String? ?? '',
       serviceId: item['serviceId'] as String? ?? '',
-      productId: item['productId'] as String? ?? '',
+      productId: rawProductId?.trim().isNotEmpty == true
+          ? rawProductId
+          : null,
       stylistId: item['stylistId'] as String? ?? 'any',
       couponCode: json['couponCode'] as String?,
       notes: json['notes'] as String?,
@@ -95,17 +101,20 @@ class CreateBookingRequestModel {
   }
 
   Map<String, dynamic> toJson() {
+    final item = <String, dynamic>{
+      'serviceId': serviceId,
+      'stylistId': stylistId,
+    };
+
+    if (productId != null && productId!.trim().isNotEmpty) {
+      item['productId'] = productId!.trim();
+    }
+
     return {
       'branchId': branchId,
       'date': date,
       'timeSlot': timeSlot,
-      'items': [
-        {
-          'serviceId': serviceId,
-          'productId': productId,
-          'stylistId': stylistId,
-        },
-      ],
+      'items': [item],
       'paymentMethod': paymentMethod,
       if (couponCode != null && couponCode!.trim().isNotEmpty)
         'couponCode': couponCode,
@@ -116,16 +125,16 @@ class CreateBookingRequestModel {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is CreateBookingRequestModel &&
-          branchId == other.branchId &&
-          date == other.date &&
-          timeSlot == other.timeSlot &&
-          paymentMethod == other.paymentMethod &&
-          serviceId == other.serviceId &&
-          productId == other.productId &&
-          stylistId == other.stylistId &&
-          couponCode == other.couponCode &&
-          notes == other.notes;
+          other is CreateBookingRequestModel &&
+              branchId == other.branchId &&
+              date == other.date &&
+              timeSlot == other.timeSlot &&
+              paymentMethod == other.paymentMethod &&
+              serviceId == other.serviceId &&
+              productId == other.productId &&
+              stylistId == other.stylistId &&
+              couponCode == other.couponCode &&
+              notes == other.notes;
 
   @override
   int get hashCode => Object.hash(

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
@@ -12,7 +13,7 @@ import 'package:prop_crm/features/services/data/models/service_model.dart';
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
 import 'package:prop_crm/features/services/presentation/providers/service_provider.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/storage/storage_service.dart';
+
 import '../providers/date_time_provider.dart';
 import '../widgets/date_selector_widget.dart';
 import '../widgets/time_slot_grid.dart';
@@ -30,7 +31,7 @@ class DateTimeSelectionScreen extends StatefulWidget {
     this.serviceName,
     this.packageId,
     this.packageName,
-    this.branchId
+    this.branchId,
   });
 
   @override
@@ -41,54 +42,70 @@ class DateTimeSelectionScreen extends StatefulWidget {
 class _DateTimeSelectionScreenState
     extends State<DateTimeSelectionScreen> {
   bool get _isPickerMode {
-    final args =
-    ModalRoute.of(context)?.settings.arguments
+    final args = ModalRoute.of(context)?.settings.arguments
     as Map<String, dynamic>?;
     return args?['isPickerMode'] as bool? ?? false;
   }
-  // StorageService? storageService;
-  //
-  // String get _storageKeyBranchId => 'selected_salon_branch_id';
-
-
-
 
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+
+      final args = ModalRoute.of(context)?.settings.arguments
+      as Map<String, dynamic>? ?? {};
 
       final branchProvider = context.read<BranchProvider>();
       final selectedBranch = branchProvider.selectedBranch;
 
-      final branchId = widget.branchId ?? selectedBranch?.id;
+      final branchId = selectedBranch?.id ??
+          widget.branchId ??
+          args['branchId'] as String?;
+
+      final serviceId =
+          widget.serviceId ?? args['serviceId'] as String?;
+
+      final serviceName =
+          widget.serviceName ?? args['serviceName'] as String?;
+
+      final packageId =
+          widget.packageId ?? args['packageId'] as String?;
+
+      final packageName =
+          widget.packageName ?? args['packageName'] as String?;
 
       debugPrint('========== DATE SCREEN INIT ==========');
+      debugPrint('Selected Branch ID: ${selectedBranch?.id}');
       debugPrint('Widget Branch ID: ${widget.branchId}');
-      debugPrint('Provider Branch ID: ${selectedBranch?.id}');
+      debugPrint('Route Branch ID: ${args['branchId']}');
       debugPrint('Final Branch ID: $branchId');
-      debugPrint('Widget Service ID: ${widget.serviceId}');
-      debugPrint('Widget Package ID: ${widget.packageId}');
+      debugPrint('Service ID: $serviceId');
+      debugPrint('Package ID: $packageId');
       debugPrint('======================================');
 
-      if (branchId == null || branchId.isEmpty) {
-        debugPrint('ERROR: Branch ID is missing from BranchProvider!');
+      if (branchId == null || branchId.trim().isEmpty) {
+        debugPrint('[DATE TIME] Branch ID is missing.');
+        return;
+      }
+
+      if (serviceId == null || serviceId.trim().isEmpty) {
+        debugPrint('[DATE TIME] Service ID is missing.');
         return;
       }
 
       final dateTimeProvider = context.read<DateTimeProvider>();
 
       dateTimeProvider.initContext(
-        serviceId: widget.serviceId,
-        serviceName: widget.serviceName,
-        packageId: widget.packageId,
-        packageName: widget.packageName,
+        serviceId: serviceId,
+        serviceName: serviceName,
+        packageId: packageId,
+        packageName: packageName,
         branchId: branchId,
       );
 
-      dateTimeProvider.loadAvailableDates();
+      await dateTimeProvider.loadAvailableDates(forceRefresh: true);
     });
   }
 
@@ -96,18 +113,15 @@ class _DateTimeSelectionScreenState
   Widget build(BuildContext context) {
     final dateTimeProvider = context.watch<DateTimeProvider>();
 
-    final displayServiceName =
-        widget.serviceName ??
-            dateTimeProvider.serviceName ??
-            'Home Service';
+    final displayServiceName = widget.serviceName ??
+        dateTimeProvider.serviceName ??
+        'Home Service';
 
-    final displayPackageName =
-        widget.packageName ??
-            dateTimeProvider.packageName ??
-            'Selected Package';
+    final displayPackageName = widget.packageName ??
+        dateTimeProvider.packageName ??
+        'No Selected Package';
 
     final pickerMode = _isPickerMode;
-
     final canContinue = dateTimeProvider.isSelectionComplete;
 
     return Scaffold(
@@ -295,42 +309,64 @@ class _DateTimeSelectionScreenState
                     return;
                   }
 
-                  final routeArgs =
-                  ModalRoute.of(context)?.settings.arguments
-                  as Map<String, dynamic>?;
+                  final routeArgs = ModalRoute.of(context)
+                      ?.settings.arguments
+                  as Map<String, dynamic>? ?? {};
 
-                  if (routeArgs != null &&
-                      !routeArgs.containsKey('packageId') &&
-                      Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop({
-                      'selectedDate':
-                      dateTimeProvider.selectedDate,
-                      'selectedTimeSlot':
-                      dateTimeProvider.selectedTimeSlot,
-                    });
+                  final branchProvider =
+                  context.read<BranchProvider>();
+                  final branch =
+                      branchProvider.selectedBranch;
+
+                  final finalBranchId =
+                      branch?.id ??
+                          widget.branchId ??
+                          routeArgs['branchId'] as String?;
+
+                  debugPrint(
+                    '[DATE TIME] Final Branch ID: $finalBranchId',
+                  );
+
+                  if (finalBranchId == null ||
+                      finalBranchId.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Please select a salon branch again.',
+                        ),
+                      ),
+                    );
                     return;
                   }
 
-                  final branch =
-                      context.read<BranchProvider>().selectedBranch;
-
                   final serviceProvider =
                   context.read<ServiceProvider>();
-                  final services = serviceProvider.services;
 
                   final serviceId =
                       widget.serviceId ??
                           dateTimeProvider.serviceId;
 
+                  if (serviceId == null || serviceId.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Please select a service again.',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
                   final matchingServices =
-                  services.where((s) => s.id == serviceId);
+                  serviceProvider.services
+                      .where((s) => s.id == serviceId);
 
                   if (matchingServices.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
                           'The selected service could not be found. '
-                              'Please go back and select the service again.',
+                              'Please select the service again.',
                         ),
                       ),
                     );
@@ -344,41 +380,22 @@ class _DateTimeSelectionScreenState
                       widget.packageId ??
                           dateTimeProvider.packageId;
 
-                  debugPrint('========== BOOKING DEBUG ==========');
-                  debugPrint('Service ID: ${service.id}');
-                  debugPrint('Service Name: ${service.name}');
-                  debugPrint('Widget Package ID: ${widget.packageId}');
-                  debugPrint('Provider Package ID: ${dateTimeProvider.packageId}');
-                  debugPrint('Final Package ID: $packageId');
-debugPrint('Total Packages: ${service.packages.length}');
-
-                  for (final package in service.packages) {
-                    debugPrint('Package ID: ${package.id}');
-                    debugPrint('Package Name: ${package.name}');
-                  }
-
-                  debugPrint('===================================');
-
                   final matchingPackages = service.packages
                       .where((p) => p.id == packageId);
 
                   final ServicePackageModel? selectedPackage =
                   matchingPackages.isNotEmpty
                       ? matchingPackages.first
-                      : (service.packages.isNotEmpty
-                      ? service.packages.first
-                      : null);
+                      : null;
 
-                  if (selectedPackage == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'No package is available for this service.',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
+                  debugPrint('========== BOOKING DEBUG ==========');
+                  debugPrint('Service ID: ${service.id}');
+                  debugPrint('Service Name: ${service.name}');
+                  debugPrint(
+                    'Package ID: ${selectedPackage?.id}',
+                  );
+                  debugPrint('Branch ID: $finalBranchId');
+                  debugPrint('===================================');
 
                   Navigator.of(context).pushNamed(
                     AppRoutes.bookingSummary,
@@ -386,10 +403,14 @@ debugPrint('Total Packages: ${service.packages.length}');
                       'service': service,
                       'package': selectedPackage,
                       'branch': branch,
+                      'branchId': finalBranchId,
                       'scheduledDate':
                       dateTimeProvider.selectedDate,
                       'timeSlot':
                       dateTimeProvider.selectedTimeSlot,
+                      'productId': routeArgs['productId'],
+                      'selectedProduct':
+                      routeArgs['selectedProduct'],
                     },
                   );
                 }
