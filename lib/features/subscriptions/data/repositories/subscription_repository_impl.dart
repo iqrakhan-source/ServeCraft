@@ -2,7 +2,7 @@ import '../datasources/subscription_remote_data_source.dart';
 import '../models/subscription_invoice_model.dart';
 import '../models/subscription_plan_model.dart';
 import '../models/subscription_purchase_response_model.dart';
-import 'subscription_repository.dart';
+import '../../domain/repositories/subscription_repository.dart';
 
 class SubscriptionRepositoryImpl implements SubscriptionRepository {
   final SubscriptionRemoteDataSource remoteDataSource;

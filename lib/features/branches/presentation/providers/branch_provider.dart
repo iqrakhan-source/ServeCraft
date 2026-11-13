@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../../core/base/view_state.dart';
+import '../../../../core/error/error_handler.dart';
 import '../../../../core/storage/storage_service.dart';
 import '../../data/models/branch_model.dart';
 import '../../data/models/chair_availability_model.dart';
@@ -67,8 +68,12 @@ class BranchProvider extends ChangeNotifier {
 
       _errorMessage = null;
     } catch (e) {
-      _branchesState = ViewState.error(e.toString());
-      _errorMessage = e.toString();
+      final appError = ErrorHandler.handleError(e);
+      _branchesState = ViewState.error(
+        appError.message,
+        statusCode: appError.statusCode,
+      );
+      _errorMessage = appError.message;
       _selectedBranch = null;
     }
 
@@ -129,7 +134,7 @@ class BranchProvider extends ChangeNotifier {
         duration: duration,
       );
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = ErrorHandler.handleError(e).message;
       notifyListeners();
       return null;
     }

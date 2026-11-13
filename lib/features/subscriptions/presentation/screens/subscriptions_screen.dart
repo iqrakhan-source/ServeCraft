@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:prop_crm/core/utilities/formatters.dart';
 import '../providers/subscription_provider.dart';
 import '../../data/models/subscription_plan_model.dart';
 
@@ -112,7 +113,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              '₹${plan.price.toStringAsFixed(0)}',
+              AppFormatters.formatCurrency(plan.price),
               style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),

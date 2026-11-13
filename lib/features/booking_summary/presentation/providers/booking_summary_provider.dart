@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/base/view_state.dart';
 import 'package:prop_crm/core/error/error_handler.dart';
 import 'package:prop_crm/core/networking/api_client.dart';
+import 'package:prop_crm/core/utilities/formatters.dart';
 import 'package:prop_crm/features/addresses/data/models/address_model.dart';
 import 'package:prop_crm/features/bookings/domain/repositories/booking_repository.dart';
 import 'package:prop_crm/features/branches/data/models/branch_model.dart';
@@ -304,7 +305,7 @@ class BookingSummaryProvider extends ChangeNotifier {
           code: trimmedCode,
           title: validationResult?.message ?? '$trimmedCode Applied',
           description:
-              'Backend verified promo discount of ₹${effectiveDiscount.toStringAsFixed(0)}',
+              'Backend verified promo discount of ${AppFormatters.formatCurrency(effectiveDiscount)}',
           flatDiscount: effectiveDiscount,
           expiryDate: DateTime.now().add(const Duration(days: 30)),
           isActive: true,

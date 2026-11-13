@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
+import 'package:prop_crm/core/utilities/formatters.dart';
 import 'package:prop_crm/core/widgets/app_error_view.dart';
 import 'package:prop_crm/core/widgets/app_loading_indicator.dart';
 import 'package:prop_crm/core/widgets/custom_app_bar.dart';
@@ -132,7 +133,7 @@ class _LoyaltyWalletScreenState extends State<LoyaltyWalletScreen> {
                           ),
                           const Spacer(),
                           Text(
-                            '₹${wallet?.rupeeValue.toStringAsFixed(0) ?? '0'}',
+                            AppFormatters.formatCurrency(wallet?.rupeeValue ?? 0),
                             style: AppTypography.titleLarge.copyWith(
                               color: const Color(0xFF4CAF50),
                               fontWeight: FontWeight.bold,

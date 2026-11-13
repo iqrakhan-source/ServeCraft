@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utilities/extensions.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading_indicator.dart';
@@ -176,13 +177,7 @@ class _BranchSelectionScreenState extends State<BranchSelectionScreen> {
                                 '=================================================',
                               );
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Selected ${branch.name}'),
-                                  backgroundColor: AppColors.primary,
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
+                              context.showSuccessSnackBar('Selected ${branch.name}');
 
                               if (widget.isSelectionMode) {
                                 Navigator.of(context).pop(branch);

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
-import '../../model/models/coupon_model.dart';
-import '../../model/models/validate_coupon_response_model.dart';
+import 'package:prop_crm/core/error/error_handler.dart';
+import 'package:prop_crm/core/utilities/formatters.dart';
+import '../../data/models/coupon_model.dart';
+import '../../data/models/validate_coupon_response_model.dart';
 import '../../domain/repositories/coupon_repository.dart';
 
 class OfferProvider extends ChangeNotifier {
@@ -33,7 +35,7 @@ class OfferProvider extends ChangeNotifier {
     try {
       _offers = await repository.getCoupons(branchId: branchId);
     } catch (e) {
-      _error = e.toString();
+      _error = ErrorHandler.handleError(e).message;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -63,7 +65,7 @@ class OfferProvider extends ChangeNotifier {
 
     if (bookingSubtotal < match.minBookingAmount) {
       _couponError =
-          'Coupon requires a minimum booking amount of ₹${match.minBookingAmount.toInt()}.';
+          'Coupon requires a minimum booking amount of ${AppFormatters.formatCurrency(match.minBookingAmount)}.';
       notifyListeners();
       return null;
     }
@@ -104,7 +106,7 @@ class OfferProvider extends ChangeNotifier {
 
       return result;
     } catch (e) {
-      _couponError = e.toString().replaceFirst('Exception: ', '');
+      _couponError = ErrorHandler.handleError(e).message;
       _appliedCoupon = null;
       _validationResult = null;
       return null;

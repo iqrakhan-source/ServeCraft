@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
+import 'package:prop_crm/core/utilities/extensions.dart';
 import 'package:prop_crm/core/utilities/formatters.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -126,12 +126,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       });
 
       if (photoUrl != null && photoUrl.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile photo updated successfully'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        context.showSuccessSnackBar('Profile photo updated successfully');
       }
     }
   }
@@ -139,30 +134,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _handleSave() async {
     final name = _nameController.text.trim();
     if (name.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Name must be at least 2 characters'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      context.showErrorSnackBar('Name must be at least 2 characters');
       return;
     }
 
     final phone = _phoneController.text.trim();
     if (phone.length != 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Phone number must be exactly 10 digits'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      context.showErrorSnackBar('Phone number must be exactly 10 digits');
       return;
     }
 
     final authProvider = context.read<AuthProvider>();
     final email = _emailController.text.trim();
     final dobString = _selectedDobDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDobDate!)
+        ? AppFormatters.formatBackendDate(_selectedDobDate!)
         : null;
 
     final success = await authProvider.completeProfile(
@@ -201,22 +186,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-          backgroundColor: AppColors.primary,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      context.showSuccessSnackBar('Profile updated successfully');
       Navigator.of(context).pop();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            authProvider.errorMessage ?? 'Failed to update profile',
-          ),
-          backgroundColor: AppColors.error,
-        ),
+      context.showErrorSnackBar(
+        authProvider.errorMessage ?? 'Failed to update profile',
       );
     }
   }

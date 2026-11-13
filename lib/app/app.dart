@@ -27,7 +27,7 @@ import '../features/services/presentation/providers/service_provider.dart';
 import '../features/branches/domain/repositories/branch_repository.dart';
 import '../features/branches/presentation/providers/branch_provider.dart';
 import '../features/offers/presentation/providers/offer_provider.dart';
-import '../features/subscriptions/data/repositories/subscription_repository.dart';
+import '../features/subscriptions/domain/repositories/subscription_repository.dart';
 import '../features/subscriptions/presentation/providers/subscription_provider.dart';
 import '../features/loyalty/domain/repositories/loyalty_repository.dart';
 import '../features/loyalty/presentation/providers/loyalty_provider.dart';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
+import 'package:prop_crm/core/utilities/extensions.dart';
 import 'package:prop_crm/core/widgets/app_card.dart';
 
 class BookingConfirmationCard extends StatelessWidget {
@@ -16,29 +17,7 @@ class BookingConfirmationCard extends StatelessWidget {
 
   void _copyToClipboard(BuildContext context) {
     Clipboard.setData(ClipboardData(text: bookingReference));
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(
-              Icons.check_circle_outline,
-              color: Colors.white,
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Booking ID copied to clipboard',
-              style: AppTypography.bodySmall.copyWith(color: Colors.white),
-            ),
-          ],
-        ),
-        backgroundColor: AppColors.textPrimary,
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
+    context.showSnackBar('Booking ID copied to clipboard');
   }
 
   @override

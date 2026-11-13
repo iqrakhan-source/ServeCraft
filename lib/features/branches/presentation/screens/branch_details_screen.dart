@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/route_names.dart';
+import '../../../../core/utilities/extensions.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -41,13 +42,7 @@ class BranchDetailsScreen extends StatelessWidget {
                 listen: false,
               );
               branchProvider.selectBranch(branch);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Selected ${branch.name}'),
-                  backgroundColor: AppColors.primary,
-                  duration: const Duration(seconds: 1),
-                ),
-              );
+              context.showSuccessSnackBar('Selected ${branch.name}');
               Navigator.of(context).pop(branch);
             },
           ),

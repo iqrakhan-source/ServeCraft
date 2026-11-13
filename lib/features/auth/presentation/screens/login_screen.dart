@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/route_names.dart';
+import '../../../../core/utilities/extensions.dart';
 import '../../../../core/utilities/validators.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -249,13 +250,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             (route) => false,
                           );
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                authProvider.errorMessage ??
-                                    'Login failed. Please check your credentials.',
-                              ),
-                            ),
+                          context.showErrorSnackBar(
+                            authProvider.errorMessage ??
+                                'Login failed. Please check your credentials.',
                           );
                         }
                       } catch (e, stackTrace) {
@@ -264,12 +261,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         if (!context.mounted) return;
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Unable to log in. Please try again.',
-                            ),
-                          ),
+                        context.showErrorSnackBar(
+                          'Unable to log in. Please try again.',
                         );
                       } finally {
                         if (mounted) {

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/base/view_state.dart';
+import 'package:prop_crm/core/error/error_handler.dart';
 import '../../data/models/stylist_model.dart';
 import '../../domain/repositories/stylist_repository.dart';
 
@@ -35,7 +36,11 @@ class StylistProvider extends ChangeNotifier {
 
       _stylistsState = ViewState.success(list);
     } catch (e) {
-      _stylistsState = ViewState.error(e.toString());
+      final appError = ErrorHandler.handleError(e);
+      _stylistsState = ViewState.error(
+        appError.message,
+        statusCode: appError.statusCode,
+      );
     }
 
     notifyListeners();

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/route_names.dart';
+import '../../../../core/utilities/extensions.dart';
 import '../../../../core/utilities/formatters.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_empty_state.dart';
@@ -165,9 +166,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     debugPrint('==========================================');
 
     if (branch == null || branch.id.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a salon branch first.')),
-      );
+      context.showErrorSnackBar('Please select a salon branch first.');
       return;
     }
 

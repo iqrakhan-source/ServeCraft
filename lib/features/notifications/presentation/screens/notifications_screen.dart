@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utilities/extensions.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading_indicator.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -38,13 +39,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               return TextButton(
                 onPressed: () {
                   provider.markAllAsRead();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('All notifications marked as read'),
-                      backgroundColor: AppColors.primary,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
+                  context.showSuccessSnackBar('All notifications marked as read');
                 },
                 child: Text(
                   'Mark all read',

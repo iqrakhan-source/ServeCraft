@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utilities/extensions.dart';
+import '../../../../core/utilities/formatters.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
-import '../../model/models/coupon_model.dart';
+import '../../data/models/coupon_model.dart';
 import '../providers/offer_provider.dart';
 
 class OffersScreen extends StatefulWidget {
@@ -171,14 +173,7 @@ class _OffersScreenState extends State<OffersScreen> {
                   InkWell(
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: coupon.code));
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Code ${coupon.code} copied!'),
-                          duration: const Duration(seconds: 1),
-                          backgroundColor: AppColors.primary,
-                        ),
-                      );
+                      context.showSnackBar('Code ${coupon.code} copied!');
                     },
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
@@ -218,7 +213,7 @@ class _OffersScreenState extends State<OffersScreen> {
 
                   // Minimum bill
                   Text(
-                    'Min bill: ₹${coupon.minBookingAmount.toInt()}',
+                    'Min bill: ${AppFormatters.formatCurrency(coupon.minBookingAmount)}',
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textTertiary,
                       fontWeight: FontWeight.w500,

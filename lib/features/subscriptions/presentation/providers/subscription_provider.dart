@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:prop_crm/core/error/error_handler.dart';
 import '../../data/models/subscription_invoice_model.dart';
 import '../../data/models/subscription_plan_model.dart';
 import '../../data/models/subscription_purchase_response_model.dart';
-import '../../data/repositories/subscription_repository.dart';
+import '../../domain/repositories/subscription_repository.dart';
 
 class SubscriptionProvider extends ChangeNotifier {
   final SubscriptionRepository repository;
@@ -32,7 +33,7 @@ class SubscriptionProvider extends ChangeNotifier {
     try {
       _plans = await repository.getSubscriptionPlans(branchId: branchId);
     } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
+      _error = ErrorHandler.handleError(e).message;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -47,7 +48,7 @@ class SubscriptionProvider extends ChangeNotifier {
     try {
       _invoices = await repository.getSubscriptionInvoices();
     } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
+      _error = ErrorHandler.handleError(e).message;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -74,7 +75,7 @@ class SubscriptionProvider extends ChangeNotifier {
       await loadInvoices();
       return result;
     } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
+      _error = ErrorHandler.handleError(e).message;
       return null;
     } finally {
       _isPurchasing = false;

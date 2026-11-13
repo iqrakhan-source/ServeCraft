@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
+import 'package:prop_crm/core/utilities/extensions.dart';
 import 'package:prop_crm/core/utilities/formatters.dart';
 import 'package:prop_crm/core/widgets/app_button.dart';
 import 'package:prop_crm/core/widgets/app_card.dart';
@@ -52,29 +53,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
   void _copyToClipboard(BuildContext context, String text) {
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(
-              Icons.check_circle_outline,
-              color: Colors.white,
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Booking ID copied to clipboard',
-              style: AppTypography.bodySmall.copyWith(color: Colors.white),
-            ),
-          ],
-        ),
-        backgroundColor: AppColors.textPrimary,
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
+    context.showSnackBar('Booking ID copied to clipboard');
   }
 
   Future<void> _handleCancelBooking(BookingModel booking) async {
@@ -83,29 +62,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       booking: booking,
     );
     if (success == true && mounted) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(
-                Icons.check_circle_outline,
-                color: Colors.white,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Booking cancelled successfully',
-                style: AppTypography.bodySmall.copyWith(color: Colors.white),
-              ),
-            ],
-          ),
-          backgroundColor: AppColors.textPrimary,
-          duration: const Duration(seconds: 3),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
+      context.showSuccessSnackBar('Booking cancelled successfully');
     }
   }
 
@@ -236,14 +193,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         );
 
         if (updated != null && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Appointment rescheduled to ${newDate.dayName}, ${newDate.dayNumber} ${newDate.monthName} at ${newSlot.formattedLabel}',
-              ),
-              backgroundColor: AppColors.success,
-              duration: const Duration(seconds: 4),
-            ),
+          context.showSuccessSnackBar(
+            'Appointment rescheduled to ${newDate.dayName}, ${newDate.dayNumber} ${newDate.monthName} at ${newSlot.formattedLabel}',
           );
         }
       }

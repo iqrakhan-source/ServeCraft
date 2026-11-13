@@ -485,12 +485,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     }
 
     if (_selectedDateOfBirth == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select your date of birth to continue.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      context.showErrorSnackBar('Please select your date of birth to continue.');
       return;
     }
 
@@ -498,7 +493,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       _isLoading = true;
     });
     final dobFormatted = _selectedDateOfBirth != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDateOfBirth!)
+        ? AppFormatters.formatBackendDate(_selectedDateOfBirth!)
         : null;
 
     String? photo = _selectedAvatarUrl ?? _webImagePath;
@@ -529,23 +524,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     });
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile completed successfully!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      context.showSuccessSnackBar('Profile completed successfully!');
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil(AppRoutes.mainNav, (route) => false);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            authProvider.errorMessage ?? 'Failed to update profile',
-          ),
-          backgroundColor: AppColors.error,
-        ),
+      context.showErrorSnackBar(
+        authProvider.errorMessage ?? 'Failed to update profile',
       );
     }
   }

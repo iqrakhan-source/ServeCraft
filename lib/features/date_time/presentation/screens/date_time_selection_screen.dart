@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
 import 'package:prop_crm/core/constants/route_names.dart';
+import 'package:prop_crm/core/utilities/extensions.dart';
 import 'package:prop_crm/core/widgets/app_button.dart';
 import 'package:prop_crm/core/widgets/app_card.dart';
 import 'package:prop_crm/core/widgets/app_error_view.dart';
@@ -390,12 +391,8 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
                         );
 
                         if (finalBranchId == null || finalBranchId.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Please select a salon branch again.',
-                              ),
-                            ),
+                          context.showErrorSnackBar(
+                            'Please select a salon branch again.',
                           );
                           return;
                         }
@@ -406,10 +403,8 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
                             widget.serviceId ?? dateTimeProvider.serviceId;
 
                         if (serviceId == null || serviceId.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please select a service again.'),
-                            ),
+                          context.showErrorSnackBar(
+                            'Please select a service again.',
                           );
                           return;
                         }
@@ -419,13 +414,9 @@ class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
                         );
 
                         if (matchingServices.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'The selected service could not be found. '
-                                'Please select the service again.',
-                              ),
-                            ),
+                          context.showErrorSnackBar(
+                            'The selected service could not be found. '
+                            'Please select the service again.',
                           );
                           return;
                         }
