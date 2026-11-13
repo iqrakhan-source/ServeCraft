@@ -18,7 +18,7 @@ class ServiceProductsResponse {
         ? Map<String, dynamic>.from(json['data'] as Map)
         : <String, dynamic>{};
 
-    final rawProducts = data['products'] as List? ?? [];
+    final rawProducts = (data['products'] ?? json['products']) as List? ?? [];
 
     return ServiceProductsResponse(
       success: json['success'] == true,

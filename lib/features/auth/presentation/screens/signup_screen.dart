@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -35,6 +36,35 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isLoading = false;
 
   String? _selectedGender;
+  DateTime? _selectedDateOfBirth;
+
+  Future<void> _selectDateOfBirth() async {
+    FocusScope.of(context).unfocus();
+    final now = DateTime.now();
+    final initialDate = _selectedDateOfBirth ?? DateTime(2000, 1, 1);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate.isAfter(now) ? now : initialDate,
+      firstDate: DateTime(1920),
+      lastDate: now,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() => _selectedDateOfBirth = picked);
+    }
+  }
 
   @override
   void dispose() {
@@ -67,6 +97,8 @@ class _SignupScreenState extends State<SignupScreen> {
       'phone: ${_phoneController.text.trim()}, gender: $_selectedGender',
     );
 
+    final dobFormatted = DateFormat('yyyy-MM-dd').format(_selectedDateOfBirth!);
+
     try {
       final request = RegisterCustomerRequest(
         name: _nameController.text.trim(),
@@ -75,6 +107,7 @@ class _SignupScreenState extends State<SignupScreen> {
         password: _passwordController.text,
         confirmPassword: _confirmPasswordController.text,
         gender: _selectedGender!,
+        dob: dobFormatted,
       );
 
       final success = await authProvider.registerCustomer(request);
@@ -322,6 +355,102 @@ class _SignupScreenState extends State<SignupScreen> {
                   value == null || value.isEmpty
                       ? 'Please select your gender'
                       : null,
+                ),
+
+                const SizedBox(height: 18),
+
+                // Date of Birth (Mandatory)
+                FormField<DateTime>(
+                  initialValue: _selectedDateOfBirth,
+                  validator: (_) {
+                    if (_selectedDateOfBirth == null) {
+                      return 'Please select your date of birth';
+                    }
+                    if (_selectedDateOfBirth!.isAfter(DateTime.now())) {
+                      return 'Date of birth cannot be in the future';
+                    }
+                    return null;
+                  },
+                  builder: (state) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Date of Birth',
+                          style: AppTypography.titleSmall.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        InkWell(
+                          onTap: isSubmitting
+                              ? null
+                              : () async {
+                                  await _selectDateOfBirth();
+                                  state.didChange(_selectedDateOfBirth);
+                                },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: state.hasError
+                                    ? AppColors.error
+                                    : AppColors.border,
+                                width: state.hasError ? 1.5 : 1.0,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.cake_outlined,
+                                  color: AppColors.textTertiary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _selectedDateOfBirth != null
+                                        ? DateFormat('dd MMM yyyy')
+                                            .format(_selectedDateOfBirth!)
+                                        : 'Select date of birth',
+                                    style: AppTypography.bodyLarge.copyWith(
+                                      color: _selectedDateOfBirth != null
+                                          ? AppColors.textPrimary
+                                          : AppColors.textTertiary,
+                                    ),
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.calendar_today_rounded,
+                                  size: 18,
+                                  color: AppColors.primary,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (state.hasError) ...[
+                          const SizedBox(height: 6),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Text(
+                              state.errorText!,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.error,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 18),

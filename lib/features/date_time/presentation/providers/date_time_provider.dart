@@ -22,6 +22,8 @@ class DateTimeProvider extends ChangeNotifier {
   String? _packageId;
   String? _packageName;
   String? _branchId;
+  int? _duration;
+  String? _stylistId;
 
   DateTimeProvider({
     required this.repository,
@@ -56,6 +58,9 @@ class DateTimeProvider extends ChangeNotifier {
           _selectedTimeSlot != null &&
           _selectedTimeSlot!.isAvailable;
 
+  int? get duration => _duration;
+  String? get stylistId => _stylistId;
+
   // Initialize booking context.
   void initContext({
     String? serviceId,
@@ -63,6 +68,8 @@ class DateTimeProvider extends ChangeNotifier {
     String? packageId,
     String? packageName,
     String? branchId,
+    int? duration,
+    String? stylistId,
   }) {
     final newServiceId = serviceId ?? _serviceId;
     final newBranchId = branchId ?? _branchId;
@@ -83,6 +90,8 @@ class DateTimeProvider extends ChangeNotifier {
     _packageName = packageName;
 
     _branchId = newBranchId;
+    _duration = duration ?? _duration;
+    _stylistId = stylistId ?? _stylistId;
 
     debugPrint('========== DATE TIME CONTEXT ==========');
     debugPrint('Service ID: $_serviceId');
@@ -240,6 +249,8 @@ class DateTimeProvider extends ChangeNotifier {
         date: date,
         packageId: _packageId,
         branchId: _branchId!,
+        duration: _duration,
+        stylistId: _stylistId,
       );
 
       debugPrint('Slots returned: ${slots.length}');

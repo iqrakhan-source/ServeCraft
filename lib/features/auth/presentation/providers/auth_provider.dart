@@ -103,6 +103,14 @@ class AuthProvider extends ChangeNotifier {
             request.email.isNotEmpty) {
           userData['email'] = request.email;
         }
+        if (userData['gender'] == null && request.gender.isNotEmpty) {
+          userData['gender'] = request.gender;
+        }
+        if (userData['dateOfBirth'] == null &&
+            userData['dob'] == null &&
+            request.dob.isNotEmpty) {
+          userData['dateOfBirth'] = request.dob;
+        }
         _currentUser = UserModel.fromJson(userData);
       }
 
@@ -336,12 +344,24 @@ class AuthProvider extends ChangeNotifier {
     String? dateOfBirth,
     String? profileImage,
   }) async {
-    if (isLoading) return false;
+    debugPrint('PROFILE UPDATE [Provider]: Method called');
+    debugPrint('PROFILE UPDATE [Provider]: Current status = $_status');
+    debugPrint('PROFILE UPDATE [Provider]: DOB = $dateOfBirth');
+
+    if (isLoading) {
+      debugPrint(
+        'PROFILE UPDATE [Provider]: BLOCKED because provider is already loading',
+      );
+      return false;
+    }
+
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
+      debugPrint('PROFILE UPDATE [Provider]: Calling repository.completeProfile');
+
       final updatedUser = await repository.completeProfile(
         name: name,
         email: email,
@@ -349,11 +369,20 @@ class AuthProvider extends ChangeNotifier {
         dateOfBirth: dateOfBirth,
         profileImage: profileImage,
       );
+
+      debugPrint('PROFILE UPDATE [Provider]: Repository call succeeded');
+      debugPrint(
+        'PROFILE UPDATE [Provider]: Returned DOB = ${updatedUser.dateOfBirth}',
+      );
+
       _currentUser = updatedUser;
       _status = AuthStatus.authenticated;
       notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('PROFILE UPDATE [Provider]: Failed = $e');
+      debugPrintStack(stackTrace: stackTrace);
+
       _errorMessage = ErrorHandler.handleError(e).message;
       _status = AuthStatus.error;
       notifyListeners();

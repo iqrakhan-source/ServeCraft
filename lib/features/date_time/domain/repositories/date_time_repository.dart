@@ -16,5 +16,7 @@ abstract class DateTimeRepository {
     String? packageId,
     required String branchId,
     String? categoryId,
+    int? duration,
+    String? stylistId,
   });
 }

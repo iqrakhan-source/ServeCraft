@@ -18,7 +18,6 @@ import '../models/register_customer_response.dart';
 import '../models/login_request.dart';
 import '../models/login_response.dart';
 
-
 abstract class AuthRemoteDataSource {
   Future<RegisterCustomerResponse> registerCustomer(
     RegisterCustomerRequest request,
@@ -46,36 +45,35 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final ApiClient apiService;
   final StorageService storageService;
 
-
-  AuthRemoteDataSourceImpl(
-      {required this.apiService, required this.storageService,
-      });
+  AuthRemoteDataSourceImpl({
+    required this.apiService,
+    required this.storageService,
+  });
 
   //get body => null;
 
   @override
   Future<RegisterCustomerResponse> registerCustomer(
-      RegisterCustomerRequest request,) async {
+    RegisterCustomerRequest request,
+  ) async {
+    debugPrint('🔥 REGISTER CUSTOMER METHOD CALLED');
     developer.log(
-      '🚀 [AuthRemoteDataSource] Dispatching customer registration to ${ApiConstants
-          .registerCustomer} '
-          '(name: ${request.name}, email: ${request.email}, phone: ${request
-          .phone}, gender: ${request.gender})',
+      '🚀 [AuthRemoteDataSource] Dispatching customer registration to ${ApiConstants.registerCustomer} '
+      '(name: ${request.name}, email: ${request.email}, phone: ${request.phone}, gender: ${request.gender})',
       name: 'AuthRemoteDataSource',
     );
 
     final response = await apiService.post<RegisterCustomerResponse>(
       ApiConstants.registerCustomer,
       data: request.toJson(),
-      fromJson: (json) =>
-          RegisterCustomerResponse.fromJson(
-            Map<String, dynamic>.from(json as Map),
-          ),
+      fromJson: (json) => RegisterCustomerResponse.fromJson(
+        Map<String, dynamic>.from(json as Map),
+      ),
     );
 
     developer.log(
-      '📥 [AuthRemoteDataSource] Registration response received '
-          '(success: ${response.success}, statusCode: ${response.statusCode})',
+      ' [AuthRemoteDataSource] Registration response received'
+      '(success: ${response.success}, statusCode: ${response.statusCode})',
       name: 'AuthRemoteDataSource',
     );
 
@@ -92,8 +90,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<PasswordResetResponse> forgotPassword(
-      ForgotPasswordRequest request,
-      ) async {
+    ForgotPasswordRequest request,
+  ) async {
     final response = await apiService.post<PasswordResetResponse>(
       ApiConstants.forgotPassword,
       data: request.toJson(),
@@ -124,10 +122,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
 
     if (response.success) {
-      return PasswordResetResponse(
-        success: true,
-        message: response.message,
-      );
+      return PasswordResetResponse(success: true, message: response.message);
     }
     if (response.data != null && response.data!.success) {
       final token = response.data!.resetToken;
@@ -153,11 +148,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
   }
 
-
   @override
   Future<PasswordResetResponse> resetPassword(
-      ResetPasswordRequest request,
-      ) async {
+    ResetPasswordRequest request,
+  ) async {
     final response = await apiService.post<PasswordResetResponse>(
       ApiConstants.resetPassword,
       data: request.toJson(),
@@ -175,10 +169,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     if (response.success) {
       await storageService.remove(StorageKeys.resetToken);
 
-      return PasswordResetResponse(
-        success: true,
-        message: response.message,
-      );
+      return PasswordResetResponse(success: true, message: response.message);
     }
 
     throw ServerException(
@@ -188,16 +179,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
   }
 
-
   @override
   Future<SendOtpResponse> sendSignupOtp(String email) async {
     final response = await apiService.post<SendOtpResponse>(
       ApiConstants.signupSendOtp,
       data: {'email': email},
-      fromJson: (json) =>
-          SendOtpResponse.fromJson(
-            json is Map<String, dynamic> ? json : <String, dynamic>{},
-          ),
+      fromJson: (json) => SendOtpResponse.fromJson(
+        json is Map<String, dynamic> ? json : <String, dynamic>{},
+      ),
     );
     if (response.data == null) {
       return SendOtpResponse(
@@ -284,7 +273,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> updateClinicalPreferences(
-      Map<String, dynamic> preferences,) async {
+    Map<String, dynamic> preferences,
+  ) async {
     final response = await apiService.patch<UserModel>(
       ApiConstants.clinicalPreferences,
       data: preferences,
@@ -356,9 +346,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       ApiConstants.login,
       data: request.toJson(),
       fromJson: (json) =>
-          LoginResponse.fromJson(
-            Map<String, dynamic>.from(json as Map),
-          ),
+          LoginResponse.fromJson(Map<String, dynamic>.from(json as Map)),
     );
 
     if (response.data == null) {
@@ -376,9 +364,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     return response.data!;
   }
-
-
 }
+
 /// TEMPORARY: Isolated mock data source for Phase 2 development prior to backend deployment.
 /// Simulates realistic network latency, validation, and supports testing both:
 /// 1. Existing user flow (phone ending with '99' -> isProfileComplete: true)
@@ -387,40 +374,40 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 //   UserModel? _mockCurrentUser;
 //
 //
-  @override
-  Future<LoginResponse> login(String identifier, String password) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    final value = identifier.trim();
-
-    if (value.isEmpty || password.isEmpty) {
-      throw const BadRequestException(
-        message: 'Phone number/email and password are required',
-      );
-    }
-
-    final isEmail = value.contains('@');
-
-    if (isEmail &&
-        (!value.contains('@') || !value.contains('.'))) {
-      throw const BadRequestException(
-        message: 'Please enter a valid email address',
-      );
-    }
-
-    if (!isEmail && !RegExp(r'^\d{10}$').hasMatch(value)) {
-      throw const BadRequestException(
-        message: 'Please enter a valid 10-digit phone number',
-      );
-    }
-
-    // Temporary mock: this does not verify real credentials.
-    // Return a LoginResponse here using your model's constructor.
-    throw UnimplementedError(
-      'LoginResponse construction still needs to be added',
-    );
-  }
-
+//   @override
+//   Future<LoginResponse> login(String identifier, String password) async {
+//     await Future.delayed(const Duration(milliseconds: 500));
+//
+//     final value = identifier.trim();
+//
+//     if (value.isEmpty || password.isEmpty) {
+//       throw const BadRequestException(
+//         message: 'Phone number/email and password are required',
+//       );
+//     }
+//
+//     final isEmail = value.contains('@');
+//
+//     if (isEmail &&
+//         (!value.contains('@') || !value.contains('.'))) {
+//       throw const BadRequestException(
+//         message: 'Please enter a valid email address',
+//       );
+//     }
+//
+//     if (!isEmail && !RegExp(r'^\d{10}$').hasMatch(value)) {
+//       throw const BadRequestException(
+//         message: 'Please enter a valid 10-digit phone number',
+//       );
+//     }
+//
+//     // Temporary mock: this does not verify real credentials.
+//     // Return a LoginResponse here using your model's constructor.
+//     throw UnimplementedError(
+//       'LoginResponse construction still needs to be added',
+//     );
+//   }
+//
 //   @override
 //   Future<RegisterCustomerResponse> registerCustomer(
 //     RegisterCustomerRequest request,

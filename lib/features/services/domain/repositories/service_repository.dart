@@ -6,6 +6,7 @@ import '../../data/models/service_products_response.dart';
 abstract class ServiceRepository {
   Future<List<ServiceModel>> getServices({
     String? categoryId,
+    String? branchId,
     String? query,
   });
 

@@ -1,4 +1,3 @@
-
 class RegisterCustomerRequest {
   final String name;
   final String email;
@@ -6,6 +5,7 @@ class RegisterCustomerRequest {
   final String password;
   final String confirmPassword;
   final String gender;
+  final String dob;
 
   const RegisterCustomerRequest({
     required this.name,
@@ -14,6 +14,7 @@ class RegisterCustomerRequest {
     required this.password,
     required this.confirmPassword,
     required this.gender,
+    required this.dob,
   });
 
   Map<String, dynamic> toJson() {
@@ -24,6 +25,7 @@ class RegisterCustomerRequest {
       'password': password,
       'confirmPassword': confirmPassword,
       'gender': gender,
+      'dob': dob,
     };
   }
 }

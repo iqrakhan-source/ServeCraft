@@ -19,17 +19,21 @@ class BookingPricingResponseModel {
   factory BookingPricingResponseModel.fromJson(
       Map<String, dynamic> json,
       ) {
+    final data = json['data'] is Map
+        ? Map<String, dynamic>.from(json['data'] as Map)
+        : json;
+
     return BookingPricingResponseModel(
-      items: (json['items'] as List<dynamic>? ?? [])
+      items: (data['items'] as List<dynamic>? ?? [])
           .whereType<Map<String, dynamic>>()
           .map(BookingPricingItemModel.fromJson)
           .toList(),
-      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0,
-      discount: (json['discount'] as num?)?.toDouble() ?? 0,
-      tax: (json['tax'] as num?)?.toDouble() ?? 0,
-      total: (json['total'] as num?)?.toDouble() ?? 0,
+      subtotal: (data['subtotal'] as num?)?.toDouble() ?? 0,
+      discount: (data['discount'] as num?)?.toDouble() ?? 0,
+      tax: (data['tax'] as num?)?.toDouble() ?? 0,
+      total: (data['total'] as num?)?.toDouble() ?? 0,
       totalDurationMinutes:
-      (json['totalDurationMinutes'] as num?)?.toInt() ?? 0,
+      (data['totalDurationMinutes'] as num?)?.toInt() ?? 0,
     );
   }
 }

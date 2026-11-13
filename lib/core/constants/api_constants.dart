@@ -1,5 +1,6 @@
+
 abstract class ApiConstants {
-  // Base URLs (overridden dynamically by AppConfig)
+  // Base URL (overridden dynamically by AppConfig)
   static const String defaultBaseUrl = 'http://157.20.51.180:5004/';
 
   // Timeouts
@@ -17,138 +18,286 @@ abstract class ApiConstants {
   static const String clientConsumer = 'consumer';
   static const String clientVersionHeader = 'X-Client-Version';
 
-  // Endpoints
-  // Customer Auth
-  static const String registerCustomer = '/api/customer/auth/register';
-  static const String forgotPassword =
-      '/api/customer/auth/forgot-password';
+  // ============================================================
+  // CUSTOMER AUTH
+  // ============================================================
 
-  static const String resetPassword =
-      '/api/customer/auth/reset-password';
-
+  static const String registerCustomer =
+      '/api/customer/auth/register';
 
   static const String register = registerCustomer;
-  static const String login = '/api/customer/auth/login';
-  static const String sendOtp = '/api/v1/customer/auth/send-otp';
-  static const String verifyOtp = '/api/v1/customer/auth/verify-otp';
-  static const String signupSendOtp = '/signup/send-otp';
-  static const String completeProfile = '/api/v1/customer/profile';
-  static const String refreshToken = '/auth/refresh-token';
-  static const String logout = '/api/customer/auth/logout';
 
-  // Customer Profile
-  static const String profile = '/api/customer/profile';
-  static const String updateProfile = '/api/customer/profile';
+  static const String login =
+      '/api/customer/auth/login';
+
+  static const String refreshToken =
+      '/api/customer/auth/refresh-token';
+
+  static const String logout =
+      '/api/customer/auth/logout';
+
+  static const String forgotPassword =
+      '/api/customer/auth/password/forgot';
+
+  static const String verifyPasswordCode =
+      '/api/customer/auth/password/verify-code';
+
+  static const String resetPassword =
+      '/api/customer/auth/password/reset';
+
+  // OTP Fallbacks
+  static const String sendOtp =
+      '/api/v1/customer/auth/send-otp';
+
+  static const String verifyOtp =
+      '/api/v1/customer/auth/verify-otp';
+
+  static const String signupSendOtp =
+      '/signup/send-otp';
+
+  // ============================================================
+  // CUSTOMER PROFILE
+  // ============================================================
+
+  static const String profile =
+      '/api/customer/profile';
+
+  static const String updateProfile =
+      '/api/customer/profile/complete';
+
+  static const String completeProfile =
+      '/api/customer/profile';
+
+  static const String profilePhoto =
+      '/api/customer/profile/photo';
+
+  static const String fcmToken =
+      '/api/customer/profile/fcm-token';
+
   static const String clinicalPreferences =
       '/api/customer/profile/clinical-preferences';
-  static const String updateClinicalPreferences = clinicalPreferences;
 
-  // Branches
-  static const String branches = '/api/customer/branches';
+  static const String updateClinicalPreferences =
+      clinicalPreferences;
 
-  // Addresses
-  static const String addresses = '/addresses';
-  static String addressById(String id) => '/addresses/$id';
-  static String setDefaultAddress(String id) => '/addresses/$id/default';
+  // ============================================================
+  // BRANCHES & AVAILABILITY
+  // ============================================================
 
-  // Home & Discovery
-  static const String home = '/home';
+  static const String branches =
+      '/api/customer/branches';
 
-  // Categories & Services
-  static const String categories = '/api/customer/categories';
-  static String categoryById(String id) => '/categories/$id';
-  static const String services = '/api/customer/services';
-  static String serviceById(String id) => '/services/$id';
-  static String packagesByServiceId(String serviceId) => '/services/$serviceId/packages';
-  static String serviceAvailability(String serviceId) => '/services/$serviceId/availability';
-  static String serviceSlotsByDate(String serviceId, String date) =>
-      '/services/$serviceId/availability?date=$date';
+  static String branchTiming(String id) =>
+      '/api/customer/branches/$id/timing';
 
-
-  // Products
-  static const String productsForService =
-      '/api/customer/bookings/products-for-service';
-  static String productsForServiceById(String serviceId) =>
-      '/api/customer/bookings/products-for-service/$serviceId';
-
-  // Pricing & Combo Calculations
-  static const String calculatePricing =
-      '/api/customer/bookings/calculate-pricing';
-
-  static const String calculateCombo = '/api/customer/calculate-combo';
-
-  // Booking & Slots
-  static const String createBooking = '/api/customer/bookings';
-
-  //static const String calculatePricing ='/api/customer/bookings/calculate-pricing';
+  static String availableChairs(String branchId) =>
+      '/api/customer/branches/$branchId/available-chairs';
 
   static String availableSlots(String branchId) =>
       '/api/customer/branches/$branchId/available-slots';
 
-// Appointments / Bookings
-  static const String appointments = '/api/customer/bookings';
+  static const String stylists =
+      '/api/customer/bookings/stylists';
 
+  // ============================================================
+  // ADDRESSES
+  // ============================================================
+
+  static const String addresses = '/addresses';
+
+  static String addressById(String id) =>
+      '/addresses/$id';
+
+  static String setDefaultAddress(String id) =>
+      '/addresses/$id/default';
+
+  // ============================================================
+  // HOME & DISCOVERY
+  // ============================================================
+
+  static const String home = '/home';
+
+  static const String dashboard =
+      '/api/customer/dashboard';
+
+  // ============================================================
+  // CATEGORIES & SERVICES
+  // ============================================================
+
+  static const String categories =
+      '/api/customer/categories';
+
+  static String categoryById(String id) =>
+      '/categories/$id';
+
+  static const String services =
+      '/api/customer/services';
+
+  static String serviceById(String id) =>
+      '/services/$id';
+
+  static String packagesByServiceId(String serviceId) =>
+      '/services/$serviceId/packages';
+
+  static String serviceAvailability(String serviceId) =>
+      '/services/$serviceId/availability';
+
+  static String serviceSlotsByDate(
+      String serviceId,
+      String date,
+      ) =>
+      '/services/$serviceId/availability?date=$date';
+
+  // ============================================================
+  // PRODUCTS FOR SERVICE
+  // Verified: GET /api/customer/bookings/products-for-service/:serviceId
+  // ============================================================
+
+  static const String productsForService =
+      '/api/customer/bookings/products-for-service';
+
+  static String productsForServiceById(String serviceId) =>
+      '/api/customer/bookings/products-for-service/$serviceId';
+
+  // ============================================================
+  // BOOKING PRICING
+  // Verified: POST /api/customer/bookings/calculate-pricing
+  // ============================================================
+
+  static const String calculatePricing =
+      '/api/customer/bookings/calculate-pricing';
+
+  static const String calculateCombo =
+      '/api/customer/calculate-combo';
+
+  // ============================================================
+  // CHAIR HOLD & BOOKINGS
+  // ============================================================
+
+  // Verified: POST /api/customer/bookings/hold-chair
+  static const String holdChair =
+      '/api/customer/bookings/hold-chair';
+
+  // Verified: POST /api/customer/bookings
+  static const String createBooking =
+      '/api/customer/bookings';
+
+  // Verified: GET /api/customer/bookings
+  static const String appointments =
+      '/api/customer/bookings';
+
+  static const String bookings = appointments;
+
+  // Booking details
   static String appointmentById(String id) =>
       '/api/customer/bookings/$id';
 
+  static String bookingById(String id) =>
+      appointmentById(id);
+
+  static String bookingDetails(String id) =>
+      appointmentById(id);
+
+  // Invoice (not verified in supplied screenshots)
+  static String bookingInvoice(String bookingId) =>
+      '/api/customer/bookings/$bookingId/invoice';
+
+  // Verified: GET /api/customer/bookings/:id/cancel-policy
+  static String bookingCancelPolicy(String id) =>
+      '/api/customer/bookings/$id/cancel-policy';
+
+  // Verified: POST /api/customer/bookings/:id/cancel
   static String cancelAppointment(String id) =>
       '/api/customer/bookings/$id/cancel';
 
+  static String cancelBooking(String id) =>
+      cancelAppointment(id);
+
+  // Reschedule (not verified in supplied screenshots)
   static String rescheduleAppointment(String id) =>
       '/api/customer/bookings/$id/reschedule';
-
-// Backwards-compatible aliases
-  static const String bookings = appointments;
-
-  static String bookingById(String id) => appointmentById(id);
-
-  static String bookingDetails(String id) => appointmentById(id);
-
-  static String cancelBooking(String id) => cancelAppointment(id);
 
   static String rescheduleBooking(String id) =>
       rescheduleAppointment(id);
 
-  static const String bookingSummary = '/checkout/summary';
+  // Review (not verified in supplied screenshots)
+  static String reviewBooking(String id) =>
+      '/api/customer/bookings/$id/review';
 
-  // Appointments (Customer Appointments)
-  // static const String appointments = '/api/v1/customer/appointments';
-  // static String appointmentById(String id) =>
-  //     '/api/v1/customer/appointments/$id';
-  // static String cancelAppointment(String id) =>
-  //     '/api/v1/customer/appointments/$id/cancel';
-  // static String rescheduleAppointment(String id) =>
-  //     '/api/v1/customer/appointments/$id/reschedule';
-  //
-  // // Backwards-compatible aliases for Bookings
-  // static const String bookings = appointments;
-  // static String bookingById(String id) => appointmentById(id);
-  // static String bookingDetails(String id) => appointmentById(id);
-  // static String cancelBooking(String id) => cancelAppointment(id);
-  // static String rescheduleBooking(String id) => rescheduleAppointment(id);
-  // static const String bookingSummary = '/checkout/summary';
+  // ============================================================
+  // PAYMENTS
+  // ============================================================
 
-  // Payments
-  static const String paymentMethods = '/payments/methods';
-  static const String processPayment = '/payments/process';
-  static const String createPayment = '/payments/create';
-  static String paymentById(String id) => '/payments/$id';
+  static const String paymentMethods =
+      '/api/customer/payments/methods';
 
-  // Reviews
+  static const String createPaymentOrder =
+      '/api/customer/payments/create-order';
+
+  static const String verifyPayment =
+      '/api/customer/payments/verify';
+
+  static const String processPayment =
+      '/payments/process';
+
+  static const String createPayment =
+      createPaymentOrder;
+
+  static String paymentById(String id) =>
+      '/payments/$id';
+
+  // ============================================================
+  // REVIEWS
+  // ============================================================
+
   static const String reviews = '/reviews';
-  static String reviewsByServiceId(String serviceId) => '/services/$serviceId/reviews';
 
-  // Offers
-  //static const String offers = '/offers';
-  //static const String applyCoupon = '/offers/apply';
+  static String reviewsByServiceId(String serviceId) =>
+      '/services/$serviceId/reviews';
 
-  // Coupons
-  static const String customerCoupons = '/api/customer/coupons';
-  static const String applyCustomerCoupon = '/api/customer/coupons/apply';
+  // ============================================================
+  // COUPONS
+  // ============================================================
+
+  static const String customerCoupons =
+      '/api/customer/coupons';
+
+  static const String validateCoupon =
+      '/api/customer/coupons/validate';
+
+  static const String applyCustomerCoupon =
+      validateCoupon;
+
+  // ============================================================
+  // MEMBERSHIPS
+  // ============================================================
+
+  static const String membershipPlans =
+      '/api/customer/memberships/plans';
+
+  static const String myMembership =
+      '/api/customer/memberships/my-membership';
+
+  static const String subscribeMembership =
+      '/api/customer/memberships/subscribe';
 
   static const String subscriptionPlans =
-      '/api/customer/subscriptions/plans';
+      membershipPlans;
 
+  // ============================================================
+  // WAITLIST
+  // ============================================================
+
+  static const String waitlist =
+      '/api/customer/waitlist';
+
+  // ============================================================
+  // NOTIFICATIONS
+  // ============================================================
+
+  static const String notifications =
+      '/api/customer/notifications';
+
+  static String readNotification(String id) =>
+      '/api/customer/notifications/$id/read';
 }
-
-

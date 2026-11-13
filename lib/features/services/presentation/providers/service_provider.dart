@@ -9,6 +9,7 @@ class ServiceProvider extends ChangeNotifier {
 
   ViewState<List<ServiceModel>> _servicesState = ViewState.initial();
   String? _currentCategoryId;
+  String? _currentBranchId;
   String _currentQuery = '';
 
   ServiceProvider({required this.repository});
@@ -16,6 +17,7 @@ class ServiceProvider extends ChangeNotifier {
   ViewState<List<ServiceModel>> get servicesState => _servicesState;
   List<ServiceModel> get services => _servicesState.data ?? [];
   String? get currentCategoryId => _currentCategoryId;
+  String? get currentBranchId => _currentBranchId;
   String get currentQuery => _currentQuery;
 
   bool get isLoading => _servicesState.isLoading;
@@ -25,10 +27,12 @@ class ServiceProvider extends ChangeNotifier {
 
   Future<void> fetchServices({
     String? categoryId,
+    String? branchId,
     String? query,
     bool forceRefresh = false,
   }) async {
     _currentCategoryId = categoryId;
+    if (branchId != null) _currentBranchId = branchId;
     if (query != null) _currentQuery = query;
 
     _servicesState = ViewState.loading();
@@ -37,6 +41,7 @@ class ServiceProvider extends ChangeNotifier {
     try {
       final result = await repository.getServices(
         categoryId: _currentCategoryId,
+        branchId: _currentBranchId,
         query: _currentQuery.isNotEmpty ? _currentQuery : null,
       );
 

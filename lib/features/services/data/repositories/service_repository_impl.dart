@@ -18,10 +18,12 @@ class ServiceRepositoryImpl implements ServiceRepository {
   @override
   Future<List<ServiceModel>> getServices({
     String? categoryId,
+    String? branchId,
     String? query,
   }) async {
     return remoteDataSource.getServices(
       categoryId: categoryId,
+      branchId: branchId,
       query: query,
     );
   }

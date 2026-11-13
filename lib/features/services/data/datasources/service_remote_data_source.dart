@@ -4,7 +4,11 @@ import '../models/service_model.dart';
 import '../models/service_package_model.dart';
 
 abstract class ServiceRemoteDataSource {
-  Future<List<ServiceModel>> getServices({String? categoryId, String? query});
+  Future<List<ServiceModel>> getServices({
+    String? categoryId,
+    String? branchId,
+    String? query,
+  });
   Future<ServiceModel> getServiceById(String id);
   Future<List<ServicePackageModel>> getPackagesByServiceId(String serviceId);
 }
@@ -18,11 +22,17 @@ class ServiceRemoteDataSourceImpl implements ServiceRemoteDataSource {
   @override
   Future<List<ServiceModel>> getServices({
     String? categoryId,
+    String? branchId,
     String? query,
   }) async {
     final queryParams = <String, dynamic>{};
     if (categoryId != null && categoryId.isNotEmpty) {
+      queryParams['category'] = categoryId;
       queryParams['categoryId'] = categoryId;
+    }
+    if (branchId != null && branchId.isNotEmpty) {
+      queryParams['branch'] = branchId;
+      queryParams['branchId'] = branchId;
     }
     if (query != null && query.isNotEmpty) {
       queryParams['q'] = query;
@@ -352,6 +362,7 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
   @override
   Future<List<ServiceModel>> getServices({
     String? categoryId,
+    String? branchId,
     String? query,
   }) async {
     await Future.delayed(const Duration(milliseconds: 200));

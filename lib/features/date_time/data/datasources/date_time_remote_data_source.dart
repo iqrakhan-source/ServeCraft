@@ -19,6 +19,8 @@ abstract class DateTimeRemoteDataSource {
     required String branchId,
     String? packageId,
     String? categoryId,
+    int? duration,
+    String? stylistId,
   });
 }
 
@@ -101,6 +103,8 @@ class DateTimeRemoteDataSourceImpl implements DateTimeRemoteDataSource {
     required String branchId,
     String? packageId,
     String? categoryId,
+    int? duration,
+    String? stylistId,
   }) async {
     if (branchId.trim().isEmpty) {
       throw ArgumentError(
@@ -118,14 +122,23 @@ class DateTimeRemoteDataSourceImpl implements DateTimeRemoteDataSource {
     debugPrint('CATEGORY ID: $categoryId');
     debugPrint('SELECTED DATE: $dateStr');
 
+    final queryParams = <String, dynamic>{
+      'date': dateStr,
+      if (duration != null) 'duration': duration,
+      if (stylistId != null && stylistId.isNotEmpty && stylistId != 'any')
+        'stylistId': stylistId,
+    };
+
     final response = await apiService.get<List<TimeSlotModel>>(
       ApiConstants.availableSlots(branchId),
-      queryParameters: {
-        'date': dateStr,
-      },
+      queryParameters: queryParams,
       fromJson: (json) {
         final slotsJson = json is Map
-            ? (json['availableSlots'] ?? json['slots'])
+            ? (json['availableSlots'] ??
+                json['slots'] ??
+                json['data']?['availableSlots'] ??
+                json['data']?['slots'] ??
+                json['data'])
             : json;
 
         if (slotsJson is! List) {
@@ -263,6 +276,8 @@ class MockDateTimeRemoteDataSource implements DateTimeRemoteDataSource {
     required String branchId,
     String? packageId,
     String? categoryId,
+    int? duration,
+    String? stylistId,
   }) async {
     await Future.delayed(const Duration(milliseconds: 200));
 

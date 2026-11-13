@@ -29,6 +29,8 @@ class DateTimeRepositoryImpl implements DateTimeRepository {
     String? packageId,
     required String branchId,
     String? categoryId,
+    int? duration,
+    String? stylistId,
   }) {
     return remoteDataSource.getTimeSlots(
       serviceId: serviceId,
@@ -36,6 +38,8 @@ class DateTimeRepositoryImpl implements DateTimeRepository {
       packageId: packageId,
       branchId: branchId,
       categoryId: categoryId,
+      duration: duration,
+      stylistId: stylistId,
     );
   }
 }

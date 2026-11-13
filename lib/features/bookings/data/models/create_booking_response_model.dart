@@ -11,7 +11,14 @@ class CreateBookingResponseModel {
   factory CreateBookingResponseModel.fromJson(
       Map<String, dynamic> json,
       ) {
-    final appointmentJson = json['appointment'];
+    final data = json['data'] is Map
+        ? Map<String, dynamic>.from(json['data'] as Map)
+        : json;
+
+    final appointmentJson = data['appointment'] ??
+        data['booking'] ??
+        data['appointmentData'] ??
+        (data['_id'] != null || data['id'] != null ? data : null);
 
     if (appointmentJson is! Map) {
       throw const FormatException(
@@ -19,7 +26,7 @@ class CreateBookingResponseModel {
       );
     }
 
-    final paymentOrderJson = json['paymentOrder'];
+    final paymentOrderJson = data['paymentOrder'] ?? json['paymentOrder'];
 
     return CreateBookingResponseModel(
       appointment: AppointmentModel.fromJson(
@@ -69,7 +76,7 @@ class AppointmentModel {
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
     return AppointmentModel(
-      id: json['_id']?.toString() ?? '',
+      id: (json['_id'] ?? json['id'])?.toString() ?? '',
       appointmentCode: json['appointmentCode']?.toString() ?? '',
       customerName: json['customerName']?.toString() ?? '',
       customerPhone: json['customerPhone']?.toString() ?? '',

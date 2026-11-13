@@ -6,6 +6,7 @@ class CreateBookingRequestModel {
   final String branchId;
   final String date;
   final String timeSlot;
+  final String? chairNumber;
   final String paymentMethod;
   final String serviceId;
   final String? productId;
@@ -17,6 +18,7 @@ class CreateBookingRequestModel {
     required this.branchId,
     required this.date,
     required this.timeSlot,
+    this.chairNumber,
     required this.paymentMethod,
     required this.serviceId,
     this.productId,
@@ -29,6 +31,7 @@ class CreateBookingRequestModel {
     required BookingSummaryModel summary,
     required PaymentMethodModel paymentMethod,
     required String branchId,
+    String? chairNumber,
     String? productId,
     String stylistId = 'any',
     String? couponCode,
@@ -43,6 +46,7 @@ class CreateBookingRequestModel {
       branchId: branchId,
       date: dateStr,
       timeSlot: summary.timeSlot.bookingTimeSlot,
+      chairNumber: chairNumber,
       paymentMethod: paymentMethod.title,
       serviceId: summary.service.id,
       productId: productId,
@@ -56,6 +60,7 @@ class CreateBookingRequestModel {
     String? branchId,
     String? date,
     String? timeSlot,
+    String? chairNumber,
     String? paymentMethod,
     String? serviceId,
     String? productId,
@@ -68,6 +73,7 @@ class CreateBookingRequestModel {
       branchId: branchId ?? this.branchId,
       date: date ?? this.date,
       timeSlot: timeSlot ?? this.timeSlot,
+      chairNumber: chairNumber ?? this.chairNumber,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       serviceId: serviceId ?? this.serviceId,
       productId: clearProductId ? null : productId ?? this.productId,
@@ -89,6 +95,7 @@ class CreateBookingRequestModel {
       branchId: json['branchId'] as String? ?? '',
       date: json['date'] as String? ?? '',
       timeSlot: json['timeSlot'] as String? ?? '',
+      chairNumber: json['chairNumber'] as String?,
       paymentMethod: json['paymentMethod'] as String? ?? '',
       serviceId: item['serviceId'] as String? ?? '',
       productId: rawProductId?.trim().isNotEmpty == true
@@ -114,6 +121,8 @@ class CreateBookingRequestModel {
       'branchId': branchId,
       'date': date,
       'timeSlot': timeSlot,
+      if (chairNumber != null && chairNumber!.trim().isNotEmpty)
+        'chairNumber': chairNumber!.trim(),
       'items': [item],
       'paymentMethod': paymentMethod,
       if (couponCode != null && couponCode!.trim().isNotEmpty)

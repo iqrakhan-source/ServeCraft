@@ -36,6 +36,7 @@ class AuthInterceptor extends Interceptor {
     final path = options.path;
     final isPublicAuthEndpoint = path.contains('/auth/register') ||
         path.contains('/auth/login') ||
+        path.contains('/auth/password') ||
         path.contains('/auth/forgot-password') ||
         path.contains('/auth/reset-password') ||
         path.contains('/auth/send-otp') ||

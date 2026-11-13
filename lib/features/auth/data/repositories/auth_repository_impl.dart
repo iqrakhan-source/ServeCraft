@@ -17,7 +17,7 @@ import '../../data/models/login_response.dart';
 import '../../data/models/forgot_password_request.dart';
 import '../../data/models/password_reset_response.dart';
 import '../../data/models/reset_password_request.dart';
-import '../models/login_response.dart';
+
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -155,10 +155,10 @@ class AuthRepositoryImpl implements AuthRepository {
     return await remoteDataSource.resetPassword(request);
   }
 
-  @override
-  Future<SendOtpResponse> sendSignupOtp(String email) async {
-    return await remoteDataSource.sendSignupOtp(email);
-  }
+  // @override
+  // Future<SendOtpResponse> sendSignupOtp(String email) async {
+  //   return await remoteDataSource.sendSignupOtp(email);
+  // }
 
   @override
   Future<SendOtpResponse> sendOtp(String phone) async {
@@ -186,6 +186,7 @@ class AuthRepositoryImpl implements AuthRepository {
     return response;
   }
 
+
   @override
   Future<UserModel> completeProfile({
     required String name,
@@ -194,6 +195,9 @@ class AuthRepositoryImpl implements AuthRepository {
     String? dateOfBirth,
     String? profileImage,
   }) async {
+    debugPrint('[PROFILE REPOSITORY] Method reached');
+    debugPrint('[PROFILE REPOSITORY] DOB: $dateOfBirth');
+
     final request = CompleteProfileRequest(
       name: name,
       email: email,
@@ -201,15 +205,25 @@ class AuthRepositoryImpl implements AuthRepository {
       dateOfBirth: dateOfBirth,
       profileImage: profileImage,
     );
+
     final updatedUser = await remoteDataSource.completeProfile(request);
 
-    // Update session storage
+    debugPrint('[PROFILE REPOSITORY] Remote data source returned');
+    debugPrint('[PROFILE REPOSITORY] Updated DOB: ${updatedUser.dateOfBirth}');
+    debugPrint(
+      '[PROFILE REPOSITORY] Profile complete: ${updatedUser.isProfileComplete}',
+    );
+
     await storageService.setBool(
-        StorageKeys.isProfileComplete, updatedUser.isProfileComplete);
+      StorageKeys.isProfileComplete,
+      updatedUser.isProfileComplete,
+    );
+
     await _saveUserToCache(updatedUser);
 
     return updatedUser;
   }
+
 
   @override
   Future<UserModel> updateProfile(Map<String, dynamic> data) async {

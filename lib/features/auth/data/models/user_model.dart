@@ -68,7 +68,7 @@ class UserModel {
       email: json['email'] as String? ?? '',
       profileImage: (json['profileImage'] ?? json['profilePhoto']) as String?,
       gender: json['gender'] as String?,
-      dateOfBirth: json['dateOfBirth'] as String?,
+      dateOfBirth: (json['dateOfBirth'] ?? json['dob']) as String?,
       isProfileComplete: isProfileComplete,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
@@ -88,6 +88,7 @@ class UserModel {
       'profileImage': profileImage,
       'gender': gender,
       'dateOfBirth': dateOfBirth,
+      'dob': dateOfBirth,
       'isProfileComplete': isProfileComplete,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),

@@ -1184,6 +1184,15 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                 onPressed: () {
                   final pkg = provider.selectedPackage;
 
+                  // Ensure a branch is selected before proceeding.
+                  final branchProvider = context.read<BranchProvider>();
+                  final selectedBranchId = branchProvider.selectedBranch?.id;
+                  if (selectedBranchId == null) {
+                    debugPrint('[SERVICE DETAILS] No branch selected, navigating to BranchSelectionScreen');
+                    Navigator.of(context).pushNamed(AppRoutes.branchSelection);
+                    return;
+                  }
+                  debugPrint('[SERVICE DETAILS] Navigating to DateTimeSelectionScreen with branchId: $selectedBranchId');
                   Navigator.of(context).pushNamed(
                     AppRoutes.dateTimeSelection,
                     arguments: {
@@ -1193,6 +1202,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       'packageName': pkg?.name,
                       'productId': provider.selectedProduct?.id,
                       'selectedProduct': provider.selectedProduct,
+                      'branchId': selectedBranchId,
                     },
                   );
                 },

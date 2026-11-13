@@ -449,7 +449,17 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     final authProvider = context.read<AuthProvider>();
     if (_isLoading || authProvider.isLoading) return;
 
-    if (!_formKey.currentState!.validate()) {
+    if (! _formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (_selectedDateOfBirth == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select your date of birth to continue.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
       return;
     }
 
@@ -459,6 +469,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     final dobFormatted = _selectedDateOfBirth != null
         ? DateFormat('yyyy-MM-dd').format(_selectedDateOfBirth!)
         : null;
+
     final photo = _selectedAvatarUrl ?? _webImagePath ?? _imageFile?.path;
 
     final success = await authProvider.completeProfile(
@@ -701,7 +712,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Date of Birth (Optional)',
+                      'Date of Birth *',
                       style: AppTypography.titleSmall.copyWith(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w600,

@@ -1,5 +1,4 @@
 
-import 'package:prop_crm/core/constants/api_constants.dart';
 import 'package:prop_crm/core/networking/api_client.dart';
 import 'package:prop_crm/features/addresses/data/models/address_model.dart';
 import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
@@ -38,27 +37,22 @@ class BookingSummaryRemoteDataSourceImpl
     double discount = 0.0,
     double taxRate = PricingBreakdown.defaultTaxRate,
   }) async {
-    final requestData = <String, dynamic>{
-      'serviceId': service.id,
-      'addressId': address.id,
-      'scheduledDate': date.dateKey,
-      'timeSlotId': timeSlot.id,
-      'discount': discount,
-    };
+    final bookingPrice = package?.price ?? service.startingPrice;
 
-    // Package is optional.
-    if (package != null) {
-      requestData['packageId'] = package.id;
-    }
-
-    final response = await apiService.post(
-      ApiConstants.bookingSummary,
-      data: requestData,
+    final pricing = PricingBreakdown.calculate(
+      packagePrice: bookingPrice,
+      discount: discount,
+      taxRate: taxRate,
     );
 
-    final data = response.data as Map<String, dynamic>;
-
-    return BookingSummaryModel.fromJson(data);
+    return BookingSummaryModel(
+      service: service,
+      package: package,
+      address: address,
+      scheduledDate: date,
+      timeSlot: timeSlot,
+      pricing: pricing,
+    );
   }
 }
 

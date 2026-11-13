@@ -259,7 +259,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         if (success) {
                           final nextRoute = authProvider.isProfileIncomplete
-                              ? AppRoutes.editProfile
+                              ? AppRoutes.completeProfile
                               : AppRoutes.mainNav;
 
                           debugPrint('[LOGIN UI] Navigating to: $nextRoute');
