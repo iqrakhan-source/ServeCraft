@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/constants/api_constants.dart';
 import 'package:prop_crm/core/networking/api_client.dart';
+import 'package:prop_crm/core/utilities/formatters.dart';
 
 import '../models/service_date_model.dart';
 import '../models/time_slot_model.dart';
@@ -32,13 +33,7 @@ class DateTimeRemoteDataSourceImpl implements DateTimeRemoteDataSource {
 
   DateTimeRemoteDataSourceImpl({required this.apiService});
 
-  String _formatDate(DateTime date) {
-    final year = date.year.toString().padLeft(4, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    final day = date.day.toString().padLeft(2, '0');
-
-    return '$year-$month-$day';
-  }
+  String _formatDate(DateTime date) => AppFormatters.formatBackendDate(date);
 
   List<TimeSlotModel> _parseSlots(dynamic json) {
     if (json == null) return [];

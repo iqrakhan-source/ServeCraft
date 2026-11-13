@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/route_names.dart';
+import '../../../../core/utilities/formatters.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_loading_indicator.dart';
@@ -61,16 +62,12 @@ class _StylistAndChairSelectionScreenState
     });
   }
 
-  String get _formattedDateString {
-    final d = widget.scheduledDate.date;
-    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-  }
+  String get _formattedDateString =>
+      AppFormatters.formatBackendDate(widget.scheduledDate.date);
 
-  int get _serviceDurationMinutes {
-    final durationStr = widget.package?.duration ?? widget.service.duration;
-    final match = RegExp(r'\d+').firstMatch(durationStr);
-    return match != null ? int.tryParse(match.group(0) ?? '') ?? 45 : 45;
-  }
+  int get _serviceDurationMinutes => AppFormatters.parseDurationMinutes(
+    widget.package?.duration ?? widget.service.duration,
+  );
 
   Future<void> _loadData() async {
     setState(() => _isLoadingChairs = true);
@@ -458,8 +455,7 @@ class _StylistAndChairSelectionScreenState
                       width: 48,
                       height: 48,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) =>
-                          _buildInitials(stylist.name),
+                      errorBuilder: (_, _, _) => _buildInitials(stylist.name),
                     ),
                   )
                 : _buildInitials(stylist.name),

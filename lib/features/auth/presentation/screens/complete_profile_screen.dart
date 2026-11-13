@@ -10,6 +10,7 @@ import 'package:prop_crm/core/constants/app_strings.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
 import 'package:prop_crm/core/constants/route_names.dart';
 import 'package:prop_crm/core/utilities/extensions.dart';
+import 'package:prop_crm/core/utilities/formatters.dart';
 import 'package:prop_crm/core/utilities/validators.dart';
 import 'package:prop_crm/core/widgets/app_button.dart';
 import 'package:prop_crm/core/widgets/app_text_field.dart';
@@ -101,23 +102,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       if (_selectedDateOfBirth == null &&
           user?.dateOfBirth != null &&
           user!.dateOfBirth!.isNotEmpty) {
-        final trimmed = user.dateOfBirth!.trim();
-        final parsed = DateTime.tryParse(trimmed);
+        final parsed = AppFormatters.parseDob(user.dateOfBirth);
         if (parsed != null) {
           setState(() {
             _selectedDateOfBirth = parsed;
-            _dobController.text = DateFormat('dd/MM/yyyy').format(parsed);
+            _dobController.text = AppFormatters.formatIndianDate(parsed);
           });
-        } else {
-          try {
-            final parsedSlash = DateFormat('dd/MM/yyyy').parseStrict(trimmed);
-            setState(() {
-              _selectedDateOfBirth = parsedSlash;
-              _dobController.text = DateFormat(
-                'dd/MM/yyyy',
-              ).format(parsedSlash);
-            });
-          } catch (_) {}
         }
       }
     });
@@ -156,7 +146,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     if (picked != null) {
       setState(() {
         _selectedDateOfBirth = picked;
-        _dobController.text = DateFormat('dd/MM/yyyy').format(picked);
+        _dobController.text = AppFormatters.formatIndianDate(picked);
       });
     }
   }
@@ -171,6 +161,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         maxHeight: 800,
         imageQuality: 85,
       );
+      if (!mounted) return;
       if (picked != null) {
         setState(() {
           _selectedAvatarUrl = null;

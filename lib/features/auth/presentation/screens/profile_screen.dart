@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -599,22 +598,6 @@ class ProfileScreen extends StatelessWidget {
 
   /// Formats Date of Birth into Indian display format (dd/MM/yyyy)
   String _formatDateOfBirth(String? dob) {
-    if (dob == null || dob.trim().isEmpty) {
-      return 'Not specified';
-    }
-    final trimmed = dob.trim();
-    final parsed = DateTime.tryParse(trimmed);
-    if (parsed != null) {
-      return DateFormat('dd/MM/yyyy').format(parsed);
-    }
-    try {
-      final parsedSlash = DateFormat('dd/MM/yyyy').parseStrict(trimmed);
-      return DateFormat('dd/MM/yyyy').format(parsedSlash);
-    } catch (_) {}
-    try {
-      final parsedDash = DateFormat('dd-MM-yyyy').parseStrict(trimmed);
-      return DateFormat('dd/MM/yyyy').format(parsedDash);
-    } catch (_) {}
-    return trimmed;
+    return AppFormatters.formatDob(dob, fallback: 'Not specified');
   }
 }

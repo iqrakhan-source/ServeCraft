@@ -1,7 +1,7 @@
-import 'package:prop_crm/features/offers/datasources/coupon_remote_data_source.dart';
-import 'package:prop_crm/features/offers/domain/repositories/coupon_repository.dart';
-import 'package:prop_crm/features/offers/model/models/coupon_model.dart';
-import 'package:prop_crm/features/offers/model/models/validate_coupon_response_model.dart';
+import '../../domain/repositories/coupon_repository.dart';
+import '../datasources/coupon_remote_data_source.dart';
+import '../models/coupon_model.dart';
+import '../models/validate_coupon_response_model.dart';
 
 class CouponRepositoryImpl implements CouponRepository {
   final CouponRemoteDataSource remoteDataSource;

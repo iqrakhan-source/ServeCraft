@@ -1,3 +1,4 @@
+import 'package:prop_crm/core/utilities/formatters.dart';
 import 'time_slot_model.dart';
 
 class ServiceDateModel {
@@ -60,12 +61,7 @@ class ServiceDateModel {
   }
 
   /// Key in YYYY-MM-DD format
-  String get dateKey {
-    final y = date.year.toString().padLeft(4, '0');
-    final m = date.month.toString().padLeft(2, '0');
-    final d = date.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
-  }
+  String get dateKey => AppFormatters.formatBackendDate(date);
 
   /// Total available slots for this date
   int get availableSlotsCount => slots.where((s) => s.isAvailable).length;

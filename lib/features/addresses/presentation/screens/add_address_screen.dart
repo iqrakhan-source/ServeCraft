@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
+import 'package:prop_crm/core/utilities/extensions.dart';
 import 'package:prop_crm/core/utilities/validators.dart';
 import 'package:prop_crm/core/widgets/app_button.dart';
 import 'package:prop_crm/core/widgets/custom_app_bar.dart';
@@ -122,25 +123,14 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
         : await addressProvider.createAddress(address);
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isEditing
-                ? 'Address updated successfully'
-                : 'Address saved successfully',
-          ),
-          backgroundColor: AppColors.textPrimary,
-          duration: const Duration(seconds: 2),
-        ),
+      context.showSuccessSnackBar(
+        isEditing
+            ? 'Address updated successfully'
+            : 'Address saved successfully',
       );
       Navigator.of(context).pop(address);
     } else if (mounted && addressProvider.actionError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(addressProvider.actionError!),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      context.showErrorSnackBar(addressProvider.actionError!);
     }
   }
 

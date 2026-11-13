@@ -1,3 +1,5 @@
+import 'package:prop_crm/core/utilities/formatters.dart';
+
 class TimeSlotModel {
   final String id;
   final String startTime;
@@ -75,14 +77,6 @@ class TimeSlotModel {
     );
   }
 
-  static String formatTime12Hour(String time24) {
-    final parts = time24.split(':');
-    if (parts.isEmpty) return time24;
-    final hour = int.tryParse(parts[0]) ?? 0;
-    final minute = parts.length > 1 ? parts[1].padLeft(2, '0') : '00';
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final hour12 = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
-    final hourStr = hour12.toString().padLeft(2, '0');
-    return '$hourStr:$minute $period';
-  }
+  static String formatTime12Hour(String time24) =>
+      AppFormatters.formatTime12Hour(time24);
 }

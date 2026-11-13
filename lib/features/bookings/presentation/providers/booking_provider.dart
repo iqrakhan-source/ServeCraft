@@ -284,14 +284,6 @@ class BookingProvider extends ChangeNotifier {
       return null;
     }
 
-    // if (selectedProduct?.id == null) {
-    //   _bookingState = ViewState.error(
-    //     'Please select a valid product.',
-    //   );
-    //   notifyListeners();
-    //   return null;
-    // }
-
     _bookingState = ViewState.loading();
     notifyListeners();
 

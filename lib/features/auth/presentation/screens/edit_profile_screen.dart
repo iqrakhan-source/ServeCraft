@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:prop_crm/core/utilities/formatters.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -53,19 +54,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     if (user?.dateOfBirth != null && user!.dateOfBirth!.isNotEmpty) {
-      final trimmed = user.dateOfBirth!.trim();
-      final parsed = DateTime.tryParse(trimmed);
-      if (parsed != null) {
-        _selectedDobDate = parsed;
-      } else {
-        try {
-          _selectedDobDate = DateFormat('dd/MM/yyyy').parseStrict(trimmed);
-        } catch (_) {
-          try {
-            _selectedDobDate = DateFormat('dd-MM-yyyy').parseStrict(trimmed);
-          } catch (_) {}
-        }
-      }
+      _selectedDobDate = AppFormatters.parseDob(user.dateOfBirth);
     }
   }
 
@@ -234,27 +223,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   String? _formatDisplayDob(String? dob) {
     if (dob == null || dob.trim().isEmpty) return null;
-    final trimmed = dob.trim();
-    final parsed = DateTime.tryParse(trimmed);
-    if (parsed != null) {
-      return DateFormat('dd/MM/yyyy').format(parsed);
-    }
-    try {
-      final parsedSlash = DateFormat('dd/MM/yyyy').parseStrict(trimmed);
-      return DateFormat('dd/MM/yyyy').format(parsedSlash);
-    } catch (_) {}
-    try {
-      final parsedDash = DateFormat('dd-MM-yyyy').parseStrict(trimmed);
-      return DateFormat('dd/MM/yyyy').format(parsedDash);
-    } catch (_) {}
-    return trimmed;
+    return AppFormatters.formatDob(dob);
   }
 
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
     final dobDisplay = _selectedDobDate != null
-        ? DateFormat('dd/MM/yyyy').format(_selectedDobDate!)
+        ? AppFormatters.formatIndianDate(_selectedDobDate!)
         : (_formatDisplayDob(user?.dateOfBirth) ?? 'Select Date of Birth');
 
     return Scaffold(

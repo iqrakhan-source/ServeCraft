@@ -74,14 +74,6 @@ abstract class AppRouter {
           builder: (_) => const ForgotPasswordScreen(),
         );
 
-      // case AppRoutes.forgotPasswordOtp: {
-      //   final email = settings.arguments as String?;
-      //   return MaterialPageRoute(
-      //     settings: settings,
-      //     builder: (_) => ForgotPasswordOtpScreen(email: email),
-      //   );
-      // }
-
       case AppRoutes.resetPassword:
         {
           final email = settings.arguments as String?;
@@ -93,29 +85,6 @@ abstract class AppRouter {
             ),
           );
         }
-
-      // case AppRoutes.otpVerification: {
-      //   final args = settings.arguments;
-      //   String? phone;
-      //   String? email;
-      //   if (args is Map<String, dynamic>) {
-      //     phone = args['phone'] as String?;
-      //     email = args['email'] as String?;
-      //   } else if (args is String) {
-      //     if (args.contains('@')) {
-      //       email = args;
-      //     } else {
-      //       phone = args;
-      //     }
-      //   }
-      //   return MaterialPageRoute(
-      //     settings: settings,
-      //     builder: (_) => OtpVerificationScreen(
-      //       phone: phone,
-      //       email: email,
-      //     ),
-      //   );
-      // }
 
       case AppRoutes.completeProfile:
         return MaterialPageRoute(

@@ -37,34 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  // Future<void> _handleLogin() async {
-  //   FocusScope.of(context).unfocus();
-  //
-  //   if (!_formKey.currentState!.validate()) {
-  //     return;
-  //   }
-  //
-  //   // UI-only prototype: simulate short interaction and navigate to Home / MainNav
-  //   setState(() {
-  //     _isLoading = true;
-  //   });
-  //
-  //   await Future.delayed(const Duration(milliseconds: 600));
-  //
-  //   if (!mounted) return;
-  //
-  //   setState(() {
-  //     _isLoading = false;
-  //   });
-  //
-  //
-  //
-  //   Navigator.of(context).pushNamedAndRemoveUntil(
-  //     AppRoutes.mainNav,
-  //     (route) => false,
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -360,41 +332,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
 
                   // Subtle dev tip banner for prototype preview
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceMuted,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(top: 2.0),
-                          child: Icon(
-                            Icons.info_outline_rounded,
-                            size: 16,
-                            color: AppColors.textTertiary,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'UI Prototype: Enter any valid email and 6+ character password to preview Home, or tap Create Account to preview Sign Up.',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),

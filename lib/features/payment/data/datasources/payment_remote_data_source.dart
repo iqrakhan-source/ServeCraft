@@ -11,18 +11,42 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
 
   PaymentRemoteDataSourceImpl({required this.apiService});
 
+  static const List<PaymentMethodModel> defaultPaymentMethods = [
+    PaymentMethodModel(
+      id: 'pm_online',
+      title: 'Online Payment',
+      subtitle:
+          'Pay now via UPI (GPay, PhonePe, Paytm), Credit/Debit Card or Net Banking',
+      type: PaymentMethodType.upi,
+      isAvailable: true,
+    ),
+    PaymentMethodModel(
+      id: 'pm_salon',
+      title: 'Pay at Salon',
+      subtitle:
+          'Pay at front desk reception after your appointment (Cash, Card, or UPI)',
+      type: PaymentMethodType.cod,
+      isAvailable: true,
+    ),
+  ];
+
   @override
   Future<List<PaymentMethodModel>> getPaymentMethods() async {
-    final response = await apiService.get(ApiConstants.paymentMethods);
-    final data = response.data;
-    if (data is List) {
-      return data
-          .map(
-            (item) => PaymentMethodModel.fromJson(item as Map<String, dynamic>),
-          )
-          .toList();
+    try {
+      final response = await apiService.get(ApiConstants.paymentMethods);
+      final data = response.data;
+      if (data is List && data.isNotEmpty) {
+        return data
+            .map(
+              (item) =>
+                  PaymentMethodModel.fromJson(item as Map<String, dynamic>),
+            )
+            .toList();
+      }
+    } catch (_) {
+      // Fallback to default payment methods when backend endpoint is not implemented
     }
-    return [];
+    return defaultPaymentMethods;
   }
 }
 

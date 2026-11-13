@@ -8,8 +8,8 @@ import 'package:prop_crm/features/branches/data/models/branch_model.dart';
 import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
 import 'package:prop_crm/features/date_time/data/models/time_slot_model.dart';
 import 'package:prop_crm/features/offers/domain/repositories/coupon_repository.dart';
-import 'package:prop_crm/features/offers/model/models/coupon_model.dart';
-import 'package:prop_crm/features/offers/model/models/validate_coupon_response_model.dart';
+import 'package:prop_crm/features/offers/data/models/coupon_model.dart';
+import 'package:prop_crm/features/offers/data/models/validate_coupon_response_model.dart';
 import 'package:prop_crm/features/services/data/models/service_model.dart';
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
 import '../../../services/data/models/service_products_response.dart';
@@ -284,7 +284,6 @@ class BookingSummaryProvider extends ChangeNotifier {
           items: items,
           couponCode: trimmedCode,
         );
-
 
         final effectiveDiscount = pricing.couponDiscount > 0
             ? pricing.couponDiscount

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
+import 'package:prop_crm/core/utilities/extensions.dart';
 import 'package:prop_crm/core/widgets/app_button.dart';
 import 'package:prop_crm/core/widgets/app_dialog.dart';
 import 'package:prop_crm/core/widgets/app_empty_state.dart';
@@ -62,13 +63,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
         address.id,
       );
       if (success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Address deleted successfully'),
-            duration: Duration(seconds: 2),
-            backgroundColor: AppColors.textPrimary,
-          ),
-        );
+        context.showSuccessSnackBar('Address deleted successfully');
       }
     }
   }

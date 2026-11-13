@@ -24,7 +24,7 @@ import 'features/bookings/data/datasources/booking_remote_data_source.dart';
 import 'features/bookings/data/repositories/booking_repository_impl.dart';
 import 'features/bookings/domain/repositories/booking_repository.dart';
 import 'features/offers/data/repositories/coupon_repository_impl.dart';
-import 'features/offers/datasources/coupon_remote_data_source.dart';
+import 'features/offers/data/datasources/coupon_remote_data_source.dart';
 import 'features/offers/domain/repositories/coupon_repository.dart';
 import 'features/payment/data/datasources/payment_remote_data_source.dart';
 import 'features/payment/data/repositories/payment_repository_impl.dart';
@@ -127,7 +127,7 @@ void main() async {
   );
 
   final AddressRemoteDataSource addressRemoteDataSource =
-      MockAddressRemoteDataSource();
+      AddressRemoteDataSourceImpl(apiService: apiClient);
   final AddressRepository addressRepository = AddressRepositoryImpl(
     remoteDataSource: addressRemoteDataSource,
   );
@@ -145,14 +145,14 @@ void main() async {
   );
 
   final BookingSummaryRemoteDataSource bookingSummaryRemoteDataSource =
-      MockBookingSummaryRemoteDataSource();
+      BookingSummaryRemoteDataSourceImpl(apiService: apiClient);
   final BookingSummaryRepository bookingSummaryRepository =
       BookingSummaryRepositoryImpl(
         remoteDataSource: bookingSummaryRemoteDataSource,
       );
 
   final PaymentRemoteDataSource paymentRemoteDataSource =
-      MockPaymentRemoteDataSource();
+      PaymentRemoteDataSourceImpl(apiService: apiClient);
   final PaymentRepository paymentRepository = PaymentRepositoryImpl(
     remoteDataSource: paymentRemoteDataSource,
   );
