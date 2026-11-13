@@ -85,4 +85,3 @@ class CouponRemoteDataSourceImpl implements CouponRemoteDataSource {
     return response.data!;
   }
 }
-

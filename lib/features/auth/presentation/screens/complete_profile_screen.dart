@@ -485,7 +485,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     }
 
     if (_selectedDateOfBirth == null) {
-      context.showErrorSnackBar('Please select your date of birth to continue.');
+      context.showErrorSnackBar(
+        'Please select your date of birth to continue.',
+      );
       return;
     }
 

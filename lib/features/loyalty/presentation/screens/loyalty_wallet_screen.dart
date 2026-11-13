@@ -133,7 +133,9 @@ class _LoyaltyWalletScreenState extends State<LoyaltyWalletScreen> {
                           ),
                           const Spacer(),
                           Text(
-                            AppFormatters.formatCurrency(wallet?.rupeeValue ?? 0),
+                            AppFormatters.formatCurrency(
+                              wallet?.rupeeValue ?? 0,
+                            ),
                             style: AppTypography.titleLarge.copyWith(
                               color: const Color(0xFF4CAF50),
                               fontWeight: FontWeight.bold,

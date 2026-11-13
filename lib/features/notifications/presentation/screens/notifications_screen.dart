@@ -39,7 +39,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               return TextButton(
                 onPressed: () {
                   provider.markAllAsRead();
-                  context.showSuccessSnackBar('All notifications marked as read');
+                  context.showSuccessSnackBar(
+                    'All notifications marked as read',
+                  );
                 },
                 child: Text(
                   'Mark all read',

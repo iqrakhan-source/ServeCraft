@@ -177,7 +177,9 @@ class _BranchSelectionScreenState extends State<BranchSelectionScreen> {
                                 '=================================================',
                               );
 
-                              context.showSuccessSnackBar('Selected ${branch.name}');
+                              context.showSuccessSnackBar(
+                                'Selected ${branch.name}',
+                              );
 
                               if (widget.isSelectionMode) {
                                 Navigator.of(context).pop(branch);

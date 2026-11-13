@@ -40,7 +40,10 @@ void main() {
     test('formatCurrency formats Indian rupee correctly', () {
       expect(AppFormatters.formatCurrency(499), '₹499');
       expect(AppFormatters.formatCurrency(1250), '₹1,250');
-      expect(AppFormatters.formatCurrency(1250, showDecimals: true), '₹1,250.00');
+      expect(
+        AppFormatters.formatCurrency(1250, showDecimals: true),
+        '₹1,250.00',
+      );
     });
 
     test('formatTime12Hour converts 24h string to 12h AM/PM', () {
