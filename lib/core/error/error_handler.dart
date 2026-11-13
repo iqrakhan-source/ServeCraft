@@ -35,7 +35,8 @@ abstract class ErrorHandler {
     }
 
     if (error is ValidationException) {
-      final firstFieldError = error.fieldErrors.values.isNotEmpty &&
+      final firstFieldError =
+          error.fieldErrors.values.isNotEmpty &&
               error.fieldErrors.values.first.isNotEmpty
           ? error.fieldErrors.values.first.first
           : error.message;
@@ -68,7 +69,8 @@ abstract class ErrorHandler {
     }
 
     return AppError(
-      message: error?.toString().isNotEmpty == true &&
+      message:
+          error?.toString().isNotEmpty == true &&
               !error.toString().startsWith('Instance of')
           ? error.toString()
           : AppStrings.commonError,

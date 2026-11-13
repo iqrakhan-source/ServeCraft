@@ -1,7 +1,8 @@
 abstract class AppValidators {
   static final RegExp _phoneRegex = RegExp(r'^[6-9]\d{9}$');
-  static final RegExp _emailRegex =
-      RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+  static final RegExp _emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
   static final RegExp _pincodeRegex = RegExp(r'^\d{6}$');
   static final RegExp _otpRegex = RegExp(r'^\d{6}$');
 
@@ -66,7 +67,10 @@ abstract class AppValidators {
   }
 
   /// Validates confirmation password against the original password
-  static String? validateConfirmPassword(String? value, String? originalPassword) {
+  static String? validateConfirmPassword(
+    String? value,
+    String? originalPassword,
+  ) {
     if (value == null || value.isEmpty) {
       return 'Please confirm your password';
     }
@@ -88,7 +92,10 @@ abstract class AppValidators {
   }
 
   /// Generic required field validator
-  static String? validateRequired(String? value, [String fieldName = 'This field']) {
+  static String? validateRequired(
+    String? value, [
+    String fieldName = 'This field',
+  ]) {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName is required';
     }

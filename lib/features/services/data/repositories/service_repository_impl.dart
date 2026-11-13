@@ -1,4 +1,3 @@
-
 import '../../domain/repositories/service_repository.dart';
 import '../datasources/service_remote_data_source.dart';
 import '../datasources/service_products_remote_data_source.dart';
@@ -19,11 +18,13 @@ class ServiceRepositoryImpl implements ServiceRepository {
   Future<List<ServiceModel>> getServices({
     String? categoryId,
     String? branchId,
+    String? gender,
     String? query,
   }) async {
     return remoteDataSource.getServices(
       categoryId: categoryId,
       branchId: branchId,
+      gender: gender,
       query: query,
     );
   }
@@ -35,21 +36,17 @@ class ServiceRepositoryImpl implements ServiceRepository {
 
   @override
   Future<List<ServicePackageModel>> getPackagesByServiceId(
-      String serviceId,
-      ) async {
+    String serviceId,
+  ) async {
     return remoteDataSource.getPackagesByServiceId(serviceId);
   }
 
   @override
-  Future<ServiceProductsResponse> getProductsForService(
-      String serviceId,
-      ) {
+  Future<ServiceProductsResponse> getProductsForService(String serviceId) {
     final dataSource = productsRemoteDataSource;
 
     if (dataSource == null) {
-      throw StateError(
-        'Service products data source has not been configured.',
-      );
+      throw StateError('Service products data source has not been configured.');
     }
 
     return dataSource.getProductsForService(serviceId);

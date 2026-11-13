@@ -4,18 +4,29 @@ enum PaymentMethodType {
   cod;
 
   static PaymentMethodType fromString(String value) {
-    switch (value.toLowerCase()) {
+    switch (value.toLowerCase().trim()) {
       case 'upi':
         return PaymentMethodType.upi;
       case 'card':
         return PaymentMethodType.card;
       case 'cod':
+      case 'cash':
       case 'cash_on_delivery':
+      case 'salon':
+      case 'pay_at_salon':
+      case 'payatsalon':
+      case 'pay at salon':
+      case 'offline':
         return PaymentMethodType.cod;
+      case 'online':
+        return PaymentMethodType.upi;
       default:
         return PaymentMethodType.upi;
     }
   }
+
+  bool get isPayAtSalon => this == PaymentMethodType.cod;
+  bool get isOnline => this != PaymentMethodType.cod;
 
   String toFormattedString() {
     switch (this) {
@@ -65,13 +76,58 @@ class PaymentMethodModel {
   }
 
   factory PaymentMethodModel.fromJson(Map<String, dynamic> json) {
+    final type = PaymentMethodType.fromString(
+      (json['type'] ?? json['method'] ?? json['title'] ?? 'upi').toString(),
+    );
+    final defaultTitle = type == PaymentMethodType.cod
+        ? 'Pay at Salon'
+        : (type == PaymentMethodType.card
+              ? 'Credit / Debit Card'
+              : 'Online Payment');
+    final defaultSubtitle = type == PaymentMethodType.cod
+        ? 'Pay at Reception Desk'
+        : 'Prepaid Online';
+
     return PaymentMethodModel(
-      id: json['id'] as String? ?? '',
-      title: json['title'] as String? ?? '',
-      subtitle: json['subtitle'] as String? ?? '',
-      type: PaymentMethodType.fromString(json['type'] as String? ?? 'upi'),
+      id:
+          (json['id'] ??
+                  json['_id'] ??
+                  (type == PaymentMethodType.cod ? 'pm_salon' : 'pm_online'))
+              .toString(),
+      title: (json['title'] ?? json['name'] ?? defaultTitle).toString(),
+      subtitle: (json['subtitle'] ?? defaultSubtitle).toString(),
+      type: type,
       isAvailable: json['isAvailable'] as bool? ?? true,
       iconName: json['iconName'] as String?,
+    );
+  }
+
+  factory PaymentMethodModel.fromDynamic(dynamic raw) {
+    if (raw is PaymentMethodModel) {
+      return raw;
+    }
+    if (raw is Map) {
+      return PaymentMethodModel.fromJson(Map<String, dynamic>.from(raw));
+    }
+    final str = raw?.toString().trim() ?? '';
+    final type = PaymentMethodType.fromString(str);
+    final title = type == PaymentMethodType.cod
+        ? 'Pay at Salon'
+        : (type == PaymentMethodType.card
+              ? 'Credit / Debit Card'
+              : (str.toLowerCase().contains('upi')
+                    ? 'UPI Payment'
+                    : 'Online Payment'));
+    final subtitle = type == PaymentMethodType.cod
+        ? 'Pay at Reception Desk'
+        : 'Prepaid Online';
+
+    return PaymentMethodModel(
+      id: type == PaymentMethodType.cod ? 'pm_salon' : 'pm_online',
+      title: title,
+      subtitle: subtitle,
+      type: type,
+      isAvailable: true,
     );
   }
 

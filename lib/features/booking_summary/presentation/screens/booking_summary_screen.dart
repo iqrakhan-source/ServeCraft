@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +14,7 @@ import '../../../addresses/data/models/address_model.dart';
 import '../../../branches/data/models/branch_model.dart';
 import '../../../branches/presentation/providers/branch_provider.dart';
 import '../../../branches/presentation/screens/branch_selection_screen.dart';
+import '../../../bookings/presentation/providers/booking_provider.dart';
 import '../../../date_time/data/models/service_date_model.dart';
 import '../../../date_time/data/models/time_slot_model.dart';
 import '../../../offers/presentation/providers/offer_provider.dart';
@@ -28,6 +28,7 @@ import '../widgets/summary_coupon_card.dart';
 import '../widgets/summary_price_details_card.dart';
 import '../widgets/summary_schedule_card.dart';
 import '../widgets/summary_service_card.dart';
+import '../widgets/summary_stylist_chair_card.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
   final ServiceModel? service;
@@ -38,6 +39,10 @@ class BookingSummaryScreen extends StatefulWidget {
   final TimeSlotModel? timeSlot;
   final BookingSummaryModel? initialSummary;
   final ConsumableProduct? selectedProduct;
+  final String? stylistId;
+  final String? stylistName;
+  final String? chairNumber;
+  final String? productId;
 
   const BookingSummaryScreen({
     super.key,
@@ -49,11 +54,14 @@ class BookingSummaryScreen extends StatefulWidget {
     this.timeSlot,
     this.initialSummary,
     this.selectedProduct,
+    this.stylistId,
+    this.stylistName,
+    this.chairNumber,
+    this.productId,
   });
 
   @override
-  State<BookingSummaryScreen> createState() =>
-      _BookingSummaryScreenState();
+  State<BookingSummaryScreen> createState() => _BookingSummaryScreenState();
 }
 
 class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
@@ -72,7 +80,8 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     if (widget.initialSummary != null) {
       final existingSummary = widget.initialSummary!;
 
-      final selectedBranch = existingSummary.branch ??
+      final selectedBranch =
+          existingSummary.branch ??
           widget.branch ??
           context.read<BranchProvider>().selectedBranch;
 
@@ -102,16 +111,14 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     debugPrint('Widget Branch ID: ${widget.branch?.id}');
     debugPrint(
       'Provider Branch ID: '
-          '${context.read<BranchProvider>().selectedBranch?.id}',
+      '${context.read<BranchProvider>().selectedBranch?.id}',
     );
     debugPrint('Final Branch ID: ${branch?.id}');
     debugPrint('Package ID: ${package?.id ?? "No package selected"}');
     debugPrint('=========================================');
 
     // Package is optional. Service, date and time are still required.
-    if (service != null &&
-        scheduledDate != null &&
-        timeSlot != null) {
+    if (service != null && scheduledDate != null && timeSlot != null) {
       provider.loadSummary(
         service: service,
         package: package,
@@ -119,15 +126,22 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
         branch: branch,
         date: scheduledDate,
         timeSlot: timeSlot,
+        stylistId: widget.stylistId,
+        stylistName: widget.stylistName,
+        chairNumber: widget.chairNumber,
+        productId: widget.productId,
       );
     }
+  }
+
+  void _handleEditStylistChair() {
+    Navigator.of(context).pop();
   }
 
   Future<void> _handleEditBranch() async {
     final updatedBranch = await Navigator.of(context).push<BranchModel>(
       MaterialPageRoute(
-        builder: (_) =>
-        const BranchSelectionScreen(isSelectionMode: true),
+        builder: (_) => const BranchSelectionScreen(isSelectionMode: true),
       ),
     );
 
@@ -136,27 +150,23 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     }
   }
 
-  Future<void> _handleEditSchedule(
-      BookingSummaryModel summary,
-      ) async {
-    final branch = summary.branch ??
-        context.read<BranchProvider>().selectedBranch;
+  Future<void> _handleEditSchedule(BookingSummaryModel summary) async {
+    final branch =
+        summary.branch ?? context.read<BranchProvider>().selectedBranch;
 
     debugPrint('========== EDIT SCHEDULE DEBUG ==========');
     debugPrint('Summary Branch: ${summary.branch?.name}');
     debugPrint('Summary Branch ID: ${summary.branch?.id}');
     debugPrint(
       'Provider Branch: '
-          '${context.read<BranchProvider>().selectedBranch?.id}',
+      '${context.read<BranchProvider>().selectedBranch?.id}',
     );
     debugPrint('Final Branch ID: ${branch?.id}');
     debugPrint('==========================================');
 
     if (branch == null || branch.id.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a salon branch first.'),
-        ),
+        const SnackBar(content: Text('Please select a salon branch first.')),
       );
       return;
     }
@@ -167,6 +177,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
       'serviceId': summary.service.id,
       'serviceName': summary.service.name,
       'branchId': branch.id,
+      'duration': summary.service.durationInMinutes,
     };
 
     if (summary.package != null) {
@@ -174,31 +185,24 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
       routeArguments['packageName'] = summary.package!.name;
     }
 
-    final updatedSchedule = await Navigator.of(context).pushNamed(
-      AppRoutes.dateTimeSelection,
-      arguments: routeArguments,
-    );
+    final updatedSchedule = await Navigator.of(
+      context,
+    ).pushNamed(AppRoutes.dateTimeSelection, arguments: routeArguments);
 
     if (updatedSchedule is Map<String, dynamic> && mounted) {
       final date = updatedSchedule['selectedDate'] as ServiceDateModel?;
-      final slot =
-      updatedSchedule['selectedTimeSlot'] as TimeSlotModel?;
+      final slot = updatedSchedule['selectedTimeSlot'] as TimeSlotModel?;
 
       if (date != null && slot != null) {
-        context
-            .read<BookingSummaryProvider>()
-            .updateSchedule(date, slot);
+        context.read<BookingSummaryProvider>().updateSchedule(date, slot);
       }
     }
   }
 
   void _handleProceedToPayment(BookingSummaryModel summary) {
-    Navigator.of(context).pushNamed(
-      AppRoutes.payment,
-      arguments: {
-        'bookingSummary': summary,
-      },
-    );
+    Navigator.of(
+      context,
+    ).pushNamed(AppRoutes.payment, arguments: {'bookingSummary': summary});
   }
 
   @override
@@ -207,22 +211,19 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(
-        title: 'Review Booking',
-      ),
+      appBar: const CustomAppBar(title: 'Review Booking'),
       body: Builder(
         builder: (context) {
           // Loading State
           if (summaryProvider.isLoading) {
-            return const Center(
-              child: AppLoadingIndicator(),
-            );
+            return const Center(child: AppLoadingIndicator());
           }
 
           // Error State
           if (summaryProvider.hasError) {
             return AppErrorView(
-              message: summaryProvider.errorMessage ??
+              message:
+                  summaryProvider.errorMessage ??
                   "Couldn't load appointment summary",
               onRetry: _initializeSummary,
             );
@@ -235,12 +236,11 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
             return AppEmptyState(
               title: 'Booking Details Incomplete',
               subtitle:
-              'Some required booking information is missing. '
+                  'Some required booking information is missing. '
                   'Please complete all previous steps before reviewing '
                   'the summary.',
               actionText: 'Go Back',
-              onActionPressed: () =>
-                  Navigator.of(context).maybePop(),
+              onActionPressed: () => Navigator.of(context).maybePop(),
             );
           }
 
@@ -268,6 +268,14 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                 ),
                 const SizedBox(height: 16),
 
+                // Stylist & Chair Station Card
+                SummaryStylistChairCard(
+                  stylistName: summary.stylistName,
+                  chairNumber: summary.chairNumber,
+                  onEdit: _handleEditStylistChair,
+                ),
+                const SizedBox(height: 16),
+
                 // Salon Branch Location Card
                 if (summary.branch != null)
                   SummaryBranchCard(
@@ -277,8 +285,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                 else
                   AppEmptyState(
                     title: 'Salon branch not selected',
-                    subtitle:
-                    'Please select a salon branch before continuing.',
+                    subtitle: 'Please select a salon branch before continuing.',
                     actionText: 'Select Branch',
                     onActionPressed: _handleEditBranch,
                   ),
@@ -287,41 +294,26 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                 // Coupon Card
                 SummaryCouponCard(
                   appliedCoupon: summary.appliedCoupon,
-                  onApplyCoupon: (code) {
-                    try {
-                      final offerProv =
-                      Provider.of<OfferProvider>(
-                        context,
-                        listen: false,
-                      );
-
-                      // Use service starting price when package is absent.
-                      final bookingPrice = summary.package?.price ??
-                          summary.service.startingPrice;
-
-                      final coupon = offerProv.validateCoupon(
-                        code,
-                        bookingPrice,
-                      );
-
-                      if (coupon != null) {
-                        summaryProvider.applyCoupon(coupon);
-                      }
-                    } catch (e) {
-                      debugPrint('Coupon validation error: $e');
-                    }
+                  branchId: summary.branch?.id,
+                  isLoading: summaryProvider.isApplyingCoupon,
+                  onApplyCoupon: (code) async {
+                    await summaryProvider.applyCouponCode(
+                      code,
+                      bookingRepo: context.read<BookingProvider>().repository,
+                      couponRepo: context.read<OfferProvider>().repository,
+                    );
                   },
-                  onRemoveCoupon: () {
-                    summaryProvider.removeCoupon();
+                  onRemoveCoupon: () async {
+                    await summaryProvider.removeCoupon(
+                      bookingRepo: context.read<BookingProvider>().repository,
+                    );
                   },
                   errorMessage: summaryProvider.couponError,
                 ),
                 const SizedBox(height: 16),
 
                 // Pricing Breakdown Card
-                SummaryPriceDetailsCard(
-                  pricing: summary.pricing,
-                ),
+                SummaryPriceDetailsCard(pricing: summary.pricing),
                 const SizedBox(height: 24),
               ],
             ),
@@ -332,76 +324,69 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
       // Sticky Bottom CTA Bar
       bottomNavigationBar: summaryProvider.isValid
           ? Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 14,
-        ),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(
-            top: BorderSide(
-              color: AppColors.border,
-              width: 1.0,
-            ),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadowMedium,
-              offset: Offset(0, -4),
-              blurRadius: 10,
-            ),
-          ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: Row(
-            children: [
-              // Price Summary
-              Expanded(
-                flex: 4,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                border: Border(
+                  top: BorderSide(color: AppColors.border, width: 1.0),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.shadowMedium,
+                    offset: Offset(0, -4),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Row(
                   children: [
-                    Text(
-                      'Total Amount',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textTertiary,
+                    // Price Summary
+                    Expanded(
+                      flex: 4,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Total Amount',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                          Text(
+                            AppFormatters.formatCurrency(
+                              summaryProvider.summary!.pricing.totalAmount,
+                            ),
+                            style: AppTypography.priceLarge.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      AppFormatters.formatCurrency(
-                        summaryProvider.summary!.pricing.totalAmount,
-                      ),
-                      style: AppTypography.priceLarge.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
+
+                    // Proceed CTA
+                    Expanded(
+                      flex: 6,
+                      child: AppButton(
+                        text: 'Continue to Payment',
+                        onPressed: () {
+                          final currentSummary = summaryProvider.summary;
+
+                          if (currentSummary != null) {
+                            _handleProceedToPayment(currentSummary);
+                          }
+                        },
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // Proceed CTA
-              Expanded(
-                flex: 6,
-                child: AppButton(
-                  text: 'Continue to Payment',
-                  onPressed: () {
-                    final currentSummary =
-                        summaryProvider.summary;
-
-                    if (currentSummary != null) {
-                      _handleProceedToPayment(currentSummary);
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      )
+            )
           : null,
     );
   }

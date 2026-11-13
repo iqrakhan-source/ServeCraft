@@ -54,7 +54,7 @@ class ServiceDateModel {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
     return months[date.month - 1];
   }
@@ -84,24 +84,23 @@ class ServiceDateModel {
     );
   }
 
-
   factory ServiceDateModel.fromJson(Map<String, dynamic> json) {
     final rawSlots = json['availableSlots'] ?? json['slots'];
 
     final parsedSlots = rawSlots is List
         ? rawSlots
-        .whereType<Map>()
-        .map(
-          (item) => TimeSlotModel.fromJson(
-        Map<String, dynamic>.from(item),
-      ),
-    )
-        .toList()
+              .whereType<Map>()
+              .map(
+                (item) =>
+                    TimeSlotModel.fromJson(Map<String, dynamic>.from(item)),
+              )
+              .toList()
         : <TimeSlotModel>[];
 
     return ServiceDateModel(
       date: DateTime.parse(json['date'] as String),
-      isAvailable: json['isAvailable'] as bool? ??
+      isAvailable:
+          json['isAvailable'] as bool? ??
           parsedSlots.any((slot) => slot.isAvailable),
       unavailableReason: json['unavailableReason'] as String?,
       slots: parsedSlots,

@@ -9,7 +9,10 @@ extension ContextExtensions on BuildContext {
   double get screenWidth => mediaQuery.size.width;
   double get screenHeight => mediaQuery.size.height;
 
-  void showSnackBar(String message, {Duration duration = const Duration(seconds: 3)}) {
+  void showSnackBar(
+    String message, {
+    Duration duration = const Duration(seconds: 3),
+  }) {
     ScaffoldMessenger.of(this).removeCurrentSnackBar();
     ScaffoldMessenger.of(this).showSnackBar(
       SnackBar(
@@ -27,9 +30,15 @@ extension ContextExtensions on BuildContext {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
             const SizedBox(width: 10),
-            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+            Expanded(
+              child: Text(message, style: const TextStyle(color: Colors.white)),
+            ),
           ],
         ),
         backgroundColor: AppColors.success,
@@ -45,9 +54,15 @@ extension ContextExtensions on BuildContext {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
             const SizedBox(width: 10),
-            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+            Expanded(
+              child: Text(message, style: const TextStyle(color: Colors.white)),
+            ),
           ],
         ),
         backgroundColor: AppColors.error,
@@ -82,6 +97,8 @@ extension DateTimeExtensions on DateTime {
 
   bool get isTomorrow {
     final tomorrow = DateTime.now().add(const Duration(days: 1));
-    return year == tomorrow.year && month == tomorrow.month && day == tomorrow.day;
+    return year == tomorrow.year &&
+        month == tomorrow.month &&
+        day == tomorrow.day;
   }
 }

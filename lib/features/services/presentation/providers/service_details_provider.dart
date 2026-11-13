@@ -10,14 +10,10 @@ import '../../domain/repositories/service_repository.dart';
 class ServiceDetailsProvider extends ChangeNotifier {
   final ServiceRepository repository;
 
-  ServiceDetailsProvider({
-    required this.repository,
-  });
-
+  ServiceDetailsProvider({required this.repository});
 
   ViewState<ServiceModel> _serviceState = ViewState.initial();
-  ViewState<ServiceProductsResponse> _productsState =
-  ViewState.initial();
+  ViewState<ServiceProductsResponse> _productsState = ViewState.initial();
 
   ServicePackageModel? _selectedPackage;
   ConsumableProduct? _selectedProduct;
@@ -38,7 +34,8 @@ class ServiceDetailsProvider extends ChangeNotifier {
   ConsumableProduct? get selectedProduct => _selectedProduct;
 
   double get totalPrice {
-    final base = _selectedPackage?.price ?? _serviceState.data?.startingPrice ?? 0.0;
+    final base =
+        _selectedPackage?.price ?? _serviceState.data?.startingPrice ?? 0.0;
     final add = _selectedProduct?.addedPrice ?? 0.0;
     return base + add;
   }
@@ -54,14 +51,11 @@ class ServiceDetailsProvider extends ChangeNotifier {
   String? get errorMessage => _serviceState.errorMessage;
 
   // Products API state
-  ViewState<ServiceProductsResponse> get productsState =>
-      _productsState;
+  ViewState<ServiceProductsResponse> get productsState => _productsState;
 
-  ServiceProductsResponse? get productsResponse =>
-      _productsState.data;
+  ServiceProductsResponse? get productsResponse => _productsState.data;
 
-  List<ConsumableProduct> get products =>
-      _productsState.data?.products ?? [];
+  List<ConsumableProduct> get products => _productsState.data?.products ?? [];
 
   bool get isProductsLoading => _productsState.isLoading;
   bool get hasProductsError => _productsState.isError;
@@ -76,7 +70,7 @@ class ServiceDetailsProvider extends ChangeNotifier {
       final fetchedService = await repository.getServiceById(serviceId);
       _serviceState = ViewState.success(fetchedService);
 
-        if (fetchedService.packages.isNotEmpty) {
+      if (fetchedService.packages.isNotEmpty) {
         _selectedPackage = fetchedService.packages.first;
       }
     } catch (e) {
@@ -110,8 +104,8 @@ class ServiceDetailsProvider extends ChangeNotifier {
       for (final product in response.products) {
         debugPrint(
           '[SERVICE PRODUCTS] Product: ${product.name}, '
-              'addedPrice: ${product.addedPrice}, '
-              'addedDuration: ${product.addedDuration}',
+          'addedPrice: ${product.addedPrice}, '
+          'addedDuration: ${product.addedDuration}',
         );
       }
 

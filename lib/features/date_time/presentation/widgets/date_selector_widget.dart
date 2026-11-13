@@ -38,18 +38,19 @@ class DateSelectorWidget extends StatelessWidget {
               opacity: isAvailable ? 1.0 : 0.45,
               child: Container(
                 width: 68,
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? const Color(0xFFEEF2FF)
                       : (isAvailable
-                          ? AppColors.surface
-                          : AppColors.surfaceMuted),
+                            ? AppColors.surface
+                            : AppColors.surfaceMuted),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.border,
+                    color: isSelected ? AppColors.primary : AppColors.border,
                     width: isSelected ? 2.0 : 1.0,
                   ),
                   boxShadow: isSelected
@@ -78,10 +79,11 @@ class DateSelectorWidget extends StatelessWidget {
                         color: isSelected
                             ? AppColors.primary
                             : (isAvailable
-                                ? AppColors.textSecondary
-                                : AppColors.textTertiary),
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  ? AppColors.textSecondary
+                                  : AppColors.textTertiary),
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         fontSize: 11,
                       ),
                       maxLines: 1,
@@ -96,8 +98,8 @@ class DateSelectorWidget extends StatelessWidget {
                         color: isSelected
                             ? AppColors.primary
                             : (isAvailable
-                                ? AppColors.textPrimary
-                                : AppColors.textTertiary),
+                                  ? AppColors.textPrimary
+                                  : AppColors.textTertiary),
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
                       ),
@@ -111,10 +113,11 @@ class DateSelectorWidget extends StatelessWidget {
                         color: isSelected
                             ? AppColors.primary
                             : (isAvailable
-                                ? AppColors.textSecondary
-                                : AppColors.error),
-                        fontWeight:
-                            isAvailable ? FontWeight.w500 : FontWeight.w600,
+                                  ? AppColors.textSecondary
+                                  : AppColors.error),
+                        fontWeight: isAvailable
+                            ? FontWeight.w500
+                            : FontWeight.w600,
                         fontSize: 10,
                       ),
                     ),

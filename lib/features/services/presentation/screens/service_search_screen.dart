@@ -130,22 +130,21 @@ class _ServiceSearchScreenState extends State<ServiceSearchScreen> {
 
   List<Map<String, dynamic>> get _filteredServices {
     return _mockServices.where((service) {
-      final matchesQuery = _query.isEmpty ||
-          service['name']
-              .toString()
-              .toLowerCase()
-              .contains(_query.toLowerCase()) ||
-          service['category']
-              .toString()
-              .toLowerCase()
-              .contains(_query.toLowerCase()) ||
-          service['description']
-              .toString()
-              .toLowerCase()
-              .contains(_query.toLowerCase());
+      final matchesQuery =
+          _query.isEmpty ||
+          service['name'].toString().toLowerCase().contains(
+            _query.toLowerCase(),
+          ) ||
+          service['category'].toString().toLowerCase().contains(
+            _query.toLowerCase(),
+          ) ||
+          service['description'].toString().toLowerCase().contains(
+            _query.toLowerCase(),
+          );
 
       final matchesCategory =
-          _selectedCategory == 'All' || service['category'] == _selectedCategory;
+          _selectedCategory == 'All' ||
+          service['category'] == _selectedCategory;
 
       return matchesQuery && matchesCategory;
     }).toList();
@@ -161,7 +160,10 @@ class _ServiceSearchScreenState extends State<ServiceSearchScreen> {
         backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         titleSpacing: 0,
@@ -185,8 +187,11 @@ class _ServiceSearchScreenState extends State<ServiceSearchScreen> {
               ),
               suffixIcon: _query.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.close_rounded,
-                          size: 18, color: AppColors.textSecondary),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        size: 18,
+                        color: AppColors.textSecondary,
+                      ),
                       onPressed: () {
                         _searchController.clear();
                         setState(() => _query = '');
@@ -195,8 +200,10 @@ class _ServiceSearchScreenState extends State<ServiceSearchScreen> {
                   : null,
               filled: true,
               fillColor: AppColors.surfaceMuted,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 0,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
@@ -233,13 +240,19 @@ class _ServiceSearchScreenState extends State<ServiceSearchScreen> {
                     selectedColor: AppColors.primary,
                     backgroundColor: AppColors.surfaceMuted,
                     labelStyle: AppTypography.labelSmall.copyWith(
-                      color: isSelected ? Colors.white : AppColors.textSecondary,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white
+                          : AppColors.textSecondary,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
-                        color: isSelected ? AppColors.primary : AppColors.border,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.border,
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -333,7 +346,9 @@ class _ServiceSearchScreenState extends State<ServiceSearchScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primaryLight,
                           borderRadius: BorderRadius.circular(6),
@@ -375,7 +390,8 @@ class _ServiceSearchScreenState extends State<ServiceSearchScreen> {
                             children: [
                               Text(
                                 AppFormatters.formatCurrency(
-                                    service['price'] as double),
+                                  service['price'] as double,
+                                ),
                                 style: AppTypography.priceMedium.copyWith(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 15,
@@ -383,8 +399,11 @@ class _ServiceSearchScreenState extends State<ServiceSearchScreen> {
                               ),
                               Row(
                                 children: [
-                                  const Icon(Icons.access_time_rounded,
-                                      size: 11, color: AppColors.textTertiary),
+                                  const Icon(
+                                    Icons.access_time_rounded,
+                                    size: 11,
+                                    color: AppColors.textTertiary,
+                                  ),
                                   const SizedBox(width: 3),
                                   Text(
                                     service['duration'] as String,

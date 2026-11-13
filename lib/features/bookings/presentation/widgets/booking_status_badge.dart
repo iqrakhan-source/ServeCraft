@@ -6,10 +6,7 @@ import '../../data/models/booking_model.dart';
 class BookingStatusBadge extends StatelessWidget {
   final BookingStatus status;
 
-  const BookingStatusBadge({
-    super.key,
-    required this.status,
-  });
+  const BookingStatusBadge({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {

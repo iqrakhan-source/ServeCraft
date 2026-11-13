@@ -7,6 +7,7 @@ abstract class ServiceRemoteDataSource {
   Future<List<ServiceModel>> getServices({
     String? categoryId,
     String? branchId,
+    String? gender,
     String? query,
   });
   Future<ServiceModel> getServiceById(String id);
@@ -23,16 +24,18 @@ class ServiceRemoteDataSourceImpl implements ServiceRemoteDataSource {
   Future<List<ServiceModel>> getServices({
     String? categoryId,
     String? branchId,
+    String? gender,
     String? query,
   }) async {
     final queryParams = <String, dynamic>{};
     if (categoryId != null && categoryId.isNotEmpty) {
       queryParams['category'] = categoryId;
-      queryParams['categoryId'] = categoryId;
     }
     if (branchId != null && branchId.isNotEmpty) {
       queryParams['branch'] = branchId;
-      queryParams['branchId'] = branchId;
+    }
+    if (gender != null && gender.isNotEmpty) {
+      queryParams['gender'] = gender;
     }
     if (query != null && query.isNotEmpty) {
       queryParams['q'] = query;
@@ -42,12 +45,24 @@ class ServiceRemoteDataSourceImpl implements ServiceRemoteDataSource {
       ApiConstants.services,
       queryParameters: queryParams.isNotEmpty ? queryParams : null,
       fromJson: (json) {
+        final List<dynamic> items;
         if (json is List) {
-          return json
-              .map((item) => ServiceModel.fromJson(item as Map<String, dynamic>))
-              .toList();
+          items = json;
+        } else if (json is Map) {
+          final data = json['services'] ?? json['data'];
+          if (data is List) {
+            items = data;
+          } else {
+            return <ServiceModel>[];
+          }
+        } else {
+          return <ServiceModel>[];
         }
-        return [];
+
+        return items
+            .whereType<Map<String, dynamic>>()
+            .map((item) => ServiceModel.fromJson(item))
+            .toList();
       },
     );
     return response.data ?? [];
@@ -67,14 +82,17 @@ class ServiceRemoteDataSourceImpl implements ServiceRemoteDataSource {
 
   @override
   Future<List<ServicePackageModel>> getPackagesByServiceId(
-      String serviceId) async {
+    String serviceId,
+  ) async {
     final response = await apiService.get<List<ServicePackageModel>>(
       ApiConstants.packagesByServiceId(serviceId),
       fromJson: (json) {
         if (json is List) {
           return json
-              .map((item) =>
-                  ServicePackageModel.fromJson(item as Map<String, dynamic>))
+              .map(
+                (item) =>
+                    ServicePackageModel.fromJson(item as Map<String, dynamic>),
+              )
               .toList();
         }
         return [];
@@ -94,7 +112,8 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
       name: "Executive Haircut & Styling",
       description:
           'Precision scissor or clipper haircut customized to your face profile, followed by an invigorating hair wash, scalp massage, and blow-dry styling.',
-      image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600',
+      image:
+          'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600',
       rating: 4.9,
       reviewCount: 380,
       startingPrice: 499.0,
@@ -120,7 +139,8 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
           id: 'pkg_haircut_luxe',
           serviceId: 'srv_exec_haircut',
           name: 'Executive Cut & Scalp Therapy',
-          description: 'Haircut, wash, 15-min therapeutic head massage & premium styling',
+          description:
+              'Haircut, wash, 15-min therapeutic head massage & premium styling',
           price: 799.0,
           duration: '45 mins',
           features: ['Cut', 'Head Massage', 'Wash', 'Styling'],
@@ -176,7 +196,8 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
       name: 'Hydra Medi-Facial & Glow Therapy',
       description:
           'Advanced multi-step facial utilizing suction vortex technology to extract impurities, deeply hydrate, and infuse potent hyaluronic serums.',
-      image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600',
+      image:
+          'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600',
       rating: 4.95,
       reviewCount: 290,
       startingPrice: 1799.0,
@@ -202,10 +223,16 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
           id: 'pkg_hydra_gold',
           serviceId: 'srv_hydra_facial',
           name: 'Gold Glow Medi-Facial',
-          description: 'Full vortex exfoliation, gold serum infusion & peel-off rubber mask',
+          description:
+              'Full vortex exfoliation, gold serum infusion & peel-off rubber mask',
           price: 2499.0,
           duration: '60 mins',
-          features: ['Hydro-dermabrasion', 'Gold Serum', 'Rubber Mask', 'LED Light'],
+          features: [
+            'Hydro-dermabrasion',
+            'Gold Serum',
+            'Rubber Mask',
+            'LED Light',
+          ],
         ),
       ],
     ),
@@ -217,7 +244,8 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
       name: 'Moroccan Argan Hair Spa',
       description:
           'Deep nourishing hair repair therapy enriched with 100% pure Moroccan Argan Oil to tame frizz, repair heat damage, and restore silky shine.',
-      image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600',
+      image:
+          'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600',
       rating: 4.82,
       reviewCount: 215,
       startingPrice: 1299.0,
@@ -243,10 +271,16 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
           id: 'pkg_spa_moroccan',
           serviceId: 'srv_moroccan_spa',
           name: 'Intense Argan Reconstruction',
-          description: 'Moroccan oil treatment, 25-min acupressure massage & leave-in gloss',
+          description:
+              'Moroccan oil treatment, 25-min acupressure massage & leave-in gloss',
           price: 1899.0,
           duration: '60 mins',
-          features: ['Argan Oil', 'Acupressure Massage', 'Ozone Steam', 'Gloss Blowout'],
+          features: [
+            'Argan Oil',
+            'Acupressure Massage',
+            'Ozone Steam',
+            'Gloss Blowout',
+          ],
         ),
       ],
     ),
@@ -258,7 +292,8 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
       name: 'Luxury Gel Manicure & Pedicure Combo',
       description:
           'Complete pampering for hands and feet: sea salt soak, exfoliating scrub, cuticle grooming, moisturizing massage, and chip-free gel polish.',
-      image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600',
+      image:
+          'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600',
       rating: 4.79,
       reviewCount: 168,
       startingPrice: 1499.0,
@@ -284,7 +319,8 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
           id: 'pkg_gel_combo',
           serviceId: 'srv_gel_mani_pedi',
           name: 'Deluxe Gel Spa Combo',
-          description: 'Paraffin wax hydration, scrub, reflexology massage & UV gel polish',
+          description:
+              'Paraffin wax hydration, scrub, reflexology massage & UV gel polish',
           price: 1699.0,
           duration: '75 mins',
           features: ['Paraffin Wax', 'Reflexology', 'UV Gel Polish'],
@@ -299,7 +335,8 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
       name: 'Royal Beard Spa & Hot Towel Shave',
       description:
           'Classic straight razor shaving with hot eucalyptus towels, pre-shave essential oils, precision beard sculpting, and aftershave balm.',
-      image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600',
+      image:
+          'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600',
       rating: 4.86,
       reviewCount: 340,
       startingPrice: 399.0,
@@ -325,10 +362,16 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
           id: 'pkg_royal_shave',
           serviceId: 'srv_beard_spa',
           name: 'Royal Hot Towel Experience',
-          description: 'Double hot towel, cutthroat razor shave, face massage & cologne finish',
+          description:
+              'Double hot towel, cutthroat razor shave, face massage & cologne finish',
           price: 599.0,
           duration: '35 mins',
-          features: ['Double Hot Towel', 'Razor Shave', 'Face Massage', 'Cologne'],
+          features: [
+            'Double Hot Towel',
+            'Razor Shave',
+            'Face Massage',
+            'Cologne',
+          ],
         ),
       ],
     ),
@@ -340,7 +383,8 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
       name: 'Full Home Deep Cleaning',
       description:
           'Thorough cleaning of floors, windows, kitchen, bathrooms, and high-touch areas with hospital-grade sanitizers.',
-      image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600',
+      image:
+          'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600',
       rating: 4.85,
       reviewCount: 420,
       startingPrice: 1499.0,
@@ -350,7 +394,8 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
           id: 'pkg_clean_basic',
           serviceId: 'srv_deep_clean',
           name: 'Basic (1 BHK)',
-          description: 'Dry vacuuming, floor mopping, kitchen wiping & bathroom clean',
+          description:
+              'Dry vacuuming, floor mopping, kitchen wiping & bathroom clean',
           price: 1499.0,
           duration: '3 hrs',
           features: ['Vacuuming', 'Mopping', 'Bathroom Cleaning'],
@@ -363,6 +408,7 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
   Future<List<ServiceModel>> getServices({
     String? categoryId,
     String? branchId,
+    String? gender,
     String? query,
   }) async {
     await Future.delayed(const Duration(milliseconds: 200));
@@ -375,9 +421,11 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
     if (query != null && query.isNotEmpty) {
       final q = query.toLowerCase();
       results = results
-          .where((s) =>
-              s.name.toLowerCase().contains(q) ||
-              s.description.toLowerCase().contains(q))
+          .where(
+            (s) =>
+                s.name.toLowerCase().contains(q) ||
+                s.description.toLowerCase().contains(q),
+          )
           .toList();
     }
 
@@ -396,7 +444,8 @@ class MockServiceRemoteDataSource implements ServiceRemoteDataSource {
 
   @override
   Future<List<ServicePackageModel>> getPackagesByServiceId(
-      String serviceId) async {
+    String serviceId,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 100));
     final service = await getServiceById(serviceId);
     return service.packages;

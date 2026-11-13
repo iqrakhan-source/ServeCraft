@@ -31,9 +31,10 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _animController, curve: Curves.easeOutBack),
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeIn));
 
     _animController.forward();
     _checkSessionAndNavigate();
@@ -65,7 +66,8 @@ class _SplashScreenState extends State<SplashScreen>
     }
 
     debugPrint(
-        'STARTUP_AUTH [SplashScreen]: Navigation decision -> AuthStatus: $status, Selected Route: $targetRoute');
+      'STARTUP_AUTH [SplashScreen]: Navigation decision -> AuthStatus: $status, Selected Route: $targetRoute',
+    );
 
     Navigator.of(context).pushReplacementNamed(targetRoute);
   }
@@ -99,10 +101,7 @@ class _SplashScreenState extends State<SplashScreen>
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF8B5A42),
-                              Color(0xFF1C1917),
-                            ],
+                            colors: [Color(0xFF8B5A42), Color(0xFF1C1917)],
                           ),
                           borderRadius: BorderRadius.circular(28),
                           boxShadow: [
@@ -127,7 +126,9 @@ class _SplashScreenState extends State<SplashScreen>
                               child: Icon(
                                 Icons.auto_awesome_rounded,
                                 size: 16,
-                                color: AppColors.secondary.withValues(alpha: 0.9),
+                                color: AppColors.secondary.withValues(
+                                  alpha: 0.9,
+                                ),
                               ),
                             ),
                           ],

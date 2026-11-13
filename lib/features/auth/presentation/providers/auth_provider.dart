@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/error/error_handler.dart';
+import '../../data/models/aesthetic_preferences_request.dart';
+import '../../data/models/change_password_request.dart';
 import '../../data/models/forgot_password_request.dart';
 import '../../data/models/reset_password_request.dart';
 import '../../data/models/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../data/models/register_customer_request.dart';
-
 
 enum AuthStatus {
   initial,
@@ -26,7 +27,7 @@ class AuthProvider extends ChangeNotifier {
   String? _currentEmail;
   String? _errorMessage;
   int _resendCountdown = 0;
-  bool _isResending = false;
+  final bool _isResending = false;
   Timer? _countdownTimer;
 
   AuthProvider({required this.repository});
@@ -61,7 +62,7 @@ class AuthProvider extends ChangeNotifier {
       } else {
         _currentUser = user;
         _currentPhone = user.phone;
-        // Determine whether profile completion is needed based on backend user data
+        _currentEmail = user.email;
         if (!user.isProfileComplete) {
           _status = AuthStatus.profileIncomplete;
         } else {
@@ -75,18 +76,16 @@ class AuthProvider extends ChangeNotifier {
     }
 
     debugPrint(
-        'STARTUP_AUTH [AuthProvider]: checkSession resolved status: $_status, user.isProfileComplete: ${_currentUser?.isProfileComplete}');
+      'STARTUP_AUTH [AuthProvider]: status: $_status, isProfileComplete: ${_currentUser?.isProfileComplete}',
+    );
     notifyListeners();
     return _status;
   }
 
-  /// Register a customer using email and password.
-  Future<bool> registerCustomer(
-      RegisterCustomerRequest request,
-      ) async {
+  /// Register a customer
+  Future<bool> registerCustomer(RegisterCustomerRequest request) async {
     if (isLoading) return false;
 
-    debugPrint('REGISTER [AuthProvider]: Initiating registration for ${request.email}');
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
@@ -96,42 +95,32 @@ class AuthProvider extends ChangeNotifier {
 
       _currentEmail = request.email;
       _currentPhone = request.phone;
-      if (response.user.isNotEmpty) {
-        final userData = Map<String, dynamic>.from(response.user);
-        if ((userData['email'] == null ||
-                userData['email'].toString().isEmpty) &&
-            request.email.isNotEmpty) {
-          userData['email'] = request.email;
-        }
-        if (userData['gender'] == null && request.gender.isNotEmpty) {
-          userData['gender'] = request.gender;
-        }
-        if (userData['dateOfBirth'] == null &&
-            userData['dob'] == null &&
-            request.dob.isNotEmpty) {
-          userData['dateOfBirth'] = request.dob;
-        }
-        _currentUser = UserModel.fromJson(userData);
+
+      if (response.userModel != null) {
+        _currentUser = response.userModel;
+      } else if (response.user.isNotEmpty) {
+        _currentUser = UserModel.fromJson(response.user);
       }
 
-      // Registration succeeded. The user still needs to
-      // complete their profile in the next screen.
-      _status = AuthStatus.profileIncomplete;
-      debugPrint('REGISTER [AuthProvider]: Registration succeeded for ${request.email}');
+      if (response.isProfileComplete ||
+          (_currentUser?.isProfileComplete ?? false)) {
+        _status = AuthStatus.authenticated;
+      } else {
+        _status = AuthStatus.profileIncomplete;
+      }
 
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = ErrorHandler.handleError(e).message;
       _status = AuthStatus.error;
-      debugPrint('REGISTER [AuthProvider]: Registration failed. Error: $_errorMessage');
       notifyListeners();
       return false;
     }
   }
 
-
-  Future<bool> login(String email, String password) async {
+  /// Customer Login (Email or Phone)
+  Future<bool> login(String identifier, String password) async {
     if (isLoading) return false;
 
     _status = AuthStatus.loading;
@@ -139,37 +128,31 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      debugPrint('LOGIN [AuthProvider]: Login started');
-
-      final response = await repository.login(email, password);
+      final response = await repository.login(identifier, password);
 
       _currentUser = response.user;
-      _currentEmail = email;
+      _currentEmail = response.user.email.isNotEmpty
+          ? response.user.email
+          : identifier;
       _currentPhone = response.user.phone;
 
-      if (response.user.isProfileComplete) {
+      if (response.isProfileComplete && response.user.isProfileComplete) {
         _status = AuthStatus.authenticated;
       } else {
         _status = AuthStatus.profileIncomplete;
       }
 
-      debugPrint('LOGIN [AuthProvider]: Login API succeeded');
-      debugPrint('[LOGIN REPOSITORY] success: ${response.success}');
-      debugPrint('[LOGIN REPOSITORY] message: ${response.message}');
-      debugPrint('[LOGIN REPOSITORY] user email: ${response.user.email}');
-      debugPrint('[LOGIN REPOSITORY] access token exists: ${response.accessToken.isNotEmpty}');
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = ErrorHandler.handleError(e).message;
       _status = AuthStatus.error;
-
-      debugPrint('LOGIN [AuthProvider]: Login failed: $_errorMessage');
       notifyListeners();
       return false;
     }
   }
 
+  /// Request Password Reset
   Future<bool> forgotPassword(String email) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
@@ -199,6 +182,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Reset Password with Token
   Future<bool> resetPassword({
     required String resetToken,
     required String newPassword,
@@ -207,13 +191,9 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-
     try {
       final response = await repository.resetPassword(
-        ResetPasswordRequest(
-          resetToken: resetToken,
-          newPassword: newPassword,
-        ),
+        ResetPasswordRequest(resetToken: resetToken, newPassword: newPassword),
       );
 
       if (!response.success) {
@@ -235,152 +215,70 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Request Signup OTP for email address (POST /signup/send-otp)
-  // Future<bool> sendSignupOtp(String email) async {
-  //   _status = AuthStatus.loading;
-  //   _errorMessage = null;
-  //   notifyListeners();
-  //
-  //   try {
-  //     final response = await repository.sendSignupOtp(email);
-  //     _currentEmail = email;
-  //     _status = AuthStatus.initial;
-  //     startResendCountdown(response.expiresInSeconds);
-  //     notifyListeners();
-  //     return true;
-  //   } catch (e) {
-  //     _errorMessage = ErrorHandler.handleError(e).message;
-  //     _status = AuthStatus.error;
-  //     notifyListeners();
-  //     return false;
-  //   }
-  // }
-  //
-  // /// Request OTP for mobile number
-  // Future<bool> sendOtp(String phone) async {
-  //   _status = AuthStatus.loading;
-  //   _errorMessage = null;
-  //   notifyListeners();
-  //
-  //   try {
-  //     final response = await repository.sendOtp(phone);
-  //     _currentPhone = phone;
-  //     _status = AuthStatus.initial;
-  //     startResendCountdown(response.expiresInSeconds);
-  //     notifyListeners();
-  //     return true;
-  //   } catch (e) {
-  //     _errorMessage = ErrorHandler.handleError(e).message;
-  //     _status = AuthStatus.error;
-  //     notifyListeners();
-  //     return false;
-  //   }
-  // }
-  //
-  // /// Resend OTP using existing phone number or email
-  // Future<bool> resendOtp() async {
-  //   if ((_currentPhone == null && _currentEmail == null) || !canResendOtp) return false;
-  //
-  //   _isResending = true;
-  //   _errorMessage = null;
-  //   notifyListeners();
-  //
-  //   try {
-  //     final response = _currentEmail != null
-  //         ? await repository.sendSignupOtp(_currentEmail!)
-  //         : await repository.sendOtp(_currentPhone!);
-  //     startResendCountdown(response.expiresInSeconds);
-  //     _isResending = false;
-  //     notifyListeners();
-  //     return true;
-  //   } catch (e) {
-  //     _errorMessage = ErrorHandler.handleError(e).message;
-  //     _isResending = false;
-  //     notifyListeners();
-  //     return false;
-  //   }
-  // }
-  //
-  // /// Verify 6-digit OTP code
-  // Future<bool> verifyOtp(String otp) async {
-  //   if (_currentPhone == null) {
-  //     _errorMessage = 'Phone number missing. Please restart login.';
-  //     _status = AuthStatus.error;
-  //     notifyListeners();
-  //     return false;
-  //   }
-  //
-  //   _status = AuthStatus.loading;
-  //   _errorMessage = null;
-  //   notifyListeners();
-  //
-  //   try {
-  //     final response = await repository.verifyOtp(_currentPhone!, otp);
-  //     _currentUser = response.user;
-  //     cancelResendCountdown();
-  //
-  //     // Determine next screen based on backend response:
-  //     if (!response.user.isProfileComplete) {
-  //       _status = AuthStatus.profileIncomplete;
-  //     } else {
-  //       _status = AuthStatus.authenticated;
-  //     }
-  //
-  //     notifyListeners();
-  //     return true;
-  //   } catch (e) {
-  //     _errorMessage = ErrorHandler.handleError(e).message;
-  //     _status = AuthStatus.error;
-  //     notifyListeners();
-  //     return false;
-  //   }
-  // }
+  /// Change Password (Auth required)
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
 
-  /// Submit profile completion for users
+    try {
+      final success = await repository.changePassword(
+        ChangePasswordRequest(
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        ),
+      );
+
+      if (success) {
+        _status = AuthStatus.authenticated;
+        notifyListeners();
+        return true;
+      }
+      throw Exception('Failed to update password');
+    } catch (e) {
+      _errorMessage = ErrorHandler.handleError(e).message;
+      _status = AuthStatus.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Submit profile completion
   Future<bool> completeProfile({
     required String name,
+    String? phone,
     String? email,
     String? gender,
     String? dateOfBirth,
     String? profileImage,
   }) async {
-    debugPrint('PROFILE UPDATE [Provider]: Method called');
-    debugPrint('PROFILE UPDATE [Provider]: Current status = $_status');
-    debugPrint('PROFILE UPDATE [Provider]: DOB = $dateOfBirth');
-
-    if (isLoading) {
-      debugPrint(
-        'PROFILE UPDATE [Provider]: BLOCKED because provider is already loading',
-      );
-      return false;
-    }
+    if (isLoading) return false;
 
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      debugPrint('PROFILE UPDATE [Provider]: Calling repository.completeProfile');
-
       final updatedUser = await repository.completeProfile(
         name: name,
+        phone: phone,
         email: email,
         gender: gender,
         dateOfBirth: dateOfBirth,
         profileImage: profileImage,
       );
 
-      debugPrint('PROFILE UPDATE [Provider]: Repository call succeeded');
-      debugPrint(
-        'PROFILE UPDATE [Provider]: Returned DOB = ${updatedUser.dateOfBirth}',
-      );
-
       _currentUser = updatedUser;
-      _status = AuthStatus.authenticated;
+      _status = updatedUser.isProfileComplete
+          ? AuthStatus.authenticated
+          : AuthStatus.profileIncomplete;
       notifyListeners();
       return true;
     } catch (e, stackTrace) {
-      debugPrint('PROFILE UPDATE [Provider]: Failed = $e');
+      debugPrint('PROFILE UPDATE [Provider] Failed: $e');
       debugPrintStack(stackTrace: stackTrace);
 
       _errorMessage = ErrorHandler.handleError(e).message;
@@ -390,7 +288,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Update profile using PATCH /api/v1/customer/profile
+  /// Update profile data
   Future<bool> updateProfile(Map<String, dynamic> data) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
@@ -399,7 +297,9 @@ class AuthProvider extends ChangeNotifier {
     try {
       final updatedUser = await repository.updateProfile(data);
       _currentUser = updatedUser;
-      _status = AuthStatus.authenticated;
+      _status = updatedUser.isProfileComplete
+          ? AuthStatus.authenticated
+          : AuthStatus.profileIncomplete;
       notifyListeners();
       return true;
     } catch (e) {
@@ -410,20 +310,44 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Update clinical preferences using PATCH /api/v1/customer/profile/clinical-preferences
-  Future<bool> updateClinicalPreferences(
-      Map<String, dynamic> preferences) async {
+  /// Upload avatar/photo
+  Future<String?> uploadProfilePhoto(dynamic fileOrPath) async {
+    try {
+      final url = await repository.uploadProfilePhoto(fileOrPath);
+      if (_currentUser != null && url.isNotEmpty) {
+        _currentUser = _currentUser!.copyWith(profileImage: url);
+        notifyListeners();
+      }
+      return url;
+    } catch (e) {
+      _errorMessage = ErrorHandler.handleError(e).message;
+      notifyListeners();
+      return null;
+    }
+  }
+
+  /// Register mobile device FCM Token
+  Future<bool> registerFcmToken(String fcmToken) async {
+    try {
+      return await repository.registerFcmToken(fcmToken);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Update aesthetic preferences (stylist consultation)
+  Future<bool> updateAestheticPreferences(
+    AestheticPreferencesRequest preferences,
+  ) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final updatedUser =
-          await repository.updateClinicalPreferences(preferences);
-      _currentUser = updatedUser;
+      final success = await repository.updateAestheticPreferences(preferences);
       _status = AuthStatus.authenticated;
       notifyListeners();
-      return true;
+      return success;
     } catch (e) {
       _errorMessage = ErrorHandler.handleError(e).message;
       _status = AuthStatus.error;
@@ -432,7 +356,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Clear session & logout
+  /// Logout
   Future<void> logout() async {
     await repository.logout();
     _currentUser = null;

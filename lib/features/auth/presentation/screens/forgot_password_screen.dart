@@ -17,18 +17,13 @@ import '../providers/auth_provider.dart';
 class ForgotPasswordScreen extends StatefulWidget {
   final String? email;
 
-  const ForgotPasswordScreen({
-    super.key,
-    this.email,
-  });
+  const ForgotPasswordScreen({super.key, this.email});
 
   @override
-  State<ForgotPasswordScreen> createState() =>
-      _ForgotPasswordScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState
-    extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _emailController;
 
@@ -37,9 +32,7 @@ class _ForgotPasswordScreenState
   @override
   void initState() {
     super.initState();
-    _emailController = TextEditingController(
-      text: widget.email ?? '',
-    );
+    _emailController = TextEditingController(text: widget.email ?? '');
   }
 
   @override
@@ -47,8 +40,6 @@ class _ForgotPasswordScreenState
     _emailController.dispose();
     super.dispose();
   }
-
-
 
   Future<void> _handleForgotPassword() async {
     FocusScope.of(context).unfocus();
@@ -67,20 +58,18 @@ class _ForgotPasswordScreenState
       if (!mounted) return;
 
       if (success) {
-        final token = context.read<StorageService>().getString(
-          StorageKeys.resetToken,
-        );
+        final token =
+            context.read<StorageService>().getString(StorageKeys.resetToken) ??
+            '';
 
-        if (token == null || token.isEmpty) {
-          context.showErrorSnackBar(
-            'Reset token was not saved. Please try again.',
-          );
-          return;
-        }
+        context.showSuccessSnackBar(
+          'Password reset instructions sent to your email.',
+        );
 
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) => ResetPasswordScreen(
+              email: _emailController.text.trim(),
               resetToken: token,
             ),
           ),
@@ -104,7 +93,6 @@ class _ForgotPasswordScreenState
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,10 +103,7 @@ class _ForgotPasswordScreenState
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 16,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Form(
             key: _formKey,
             child: Column(
@@ -132,10 +117,7 @@ class _ForgotPasswordScreenState
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primaryDark,
-                      ],
+                      colors: [AppColors.primary, AppColors.primaryDark],
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -156,7 +138,7 @@ class _ForgotPasswordScreenState
                 const SizedBox(height: 8),
                 Text(
                   'Enter your registered email address to '
-                      'request password reset instructions.',
+                  'request password reset instructions.',
                   style: AppTypography.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                     height: 1.4,
@@ -198,11 +180,6 @@ class _ForgotPasswordScreenState
     );
   }
 }
-
-
-
-
-
 
 // import 'dart:async';
 // import 'package:flutter/material.dart';

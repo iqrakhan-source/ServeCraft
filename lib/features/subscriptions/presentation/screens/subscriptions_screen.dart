@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -26,16 +25,11 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Membership Plans'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Membership Plans'), centerTitle: true),
       body: Consumer<SubscriptionProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.plans.isEmpty) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (provider.error != null && provider.plans.isEmpty) {
@@ -47,14 +41,10 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   children: [
                     const Icon(Icons.error_outline, size: 42),
                     const SizedBox(height: 12),
-                    Text(
-                      provider.error!,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(provider.error!, textAlign: TextAlign.center),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () =>
-                          provider.retry(),
+                      onPressed: () => provider.retry(),
                       child: const Text('Try Again'),
                     ),
                   ],
@@ -96,9 +86,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -118,19 +106,14 @@ class _SubscriptionPlanCard extends StatelessWidget {
                 ),
                 Text(
                   plan.tier,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Text(
               '₹${plan.price.toStringAsFixed(0)}',
-              style: const TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             Text('Valid for ${plan.validityDays} days'),
@@ -146,9 +129,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
-              ...plan.benefits.map(
-                    (benefit) => _BulletText(text: benefit),
-              ),
+              ...plan.benefits.map((benefit) => _BulletText(text: benefit)),
             ],
             if (plan.perks.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -157,9 +138,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
-              ...plan.perks.map(
-                    (perk) => _BulletText(text: perk),
-              ),
+              ...plan.perks.map((perk) => _BulletText(text: perk)),
             ],
             if (!plan.isGlobal && plan.branchName != null) ...[
               const SizedBox(height: 12),

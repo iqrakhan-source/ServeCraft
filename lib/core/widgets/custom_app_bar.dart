@@ -86,10 +86,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       bottom: showBottomBorder
           ? PreferredSize(
               preferredSize: const Size.fromHeight(1.0),
-              child: Container(
-                color: AppColors.border,
-                height: 1.0,
-              ),
+              child: Container(color: AppColors.border, height: 1.0),
             )
           : null,
     );

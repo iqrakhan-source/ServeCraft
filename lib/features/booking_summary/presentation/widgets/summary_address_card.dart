@@ -8,11 +8,7 @@ class SummaryAddressCard extends StatelessWidget {
   final AddressModel address;
   final VoidCallback? onEdit;
 
-  const SummaryAddressCard({
-    super.key,
-    required this.address,
-    this.onEdit,
-  });
+  const SummaryAddressCard({super.key, required this.address, this.onEdit});
 
   IconData _getLabelIcon(String label) {
     switch (label.toLowerCase()) {

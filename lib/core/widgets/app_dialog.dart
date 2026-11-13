@@ -21,22 +21,31 @@ abstract class AppDialog {
         title: Text(title, style: AppTypography.titleMedium),
         content: Text(
           message,
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
         ),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        actionsPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
               cancelText,
-              style: AppTypography.buttonMedium.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.buttonMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           AppButton(
             text: confirmText,
             isFullWidth: false,
             height: 40,
-            variant: isDestructive ? AppButtonVariant.danger : AppButtonVariant.primary,
+            variant: isDestructive
+                ? AppButtonVariant.danger
+                : AppButtonVariant.primary,
             onPressed: () => Navigator.of(ctx).pop(true),
           ),
         ],
@@ -58,9 +67,14 @@ abstract class AppDialog {
         title: Text(title, style: AppTypography.titleMedium),
         content: Text(
           message,
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
         ),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        actionsPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         actions: [
           AppButton(
             text: buttonText,

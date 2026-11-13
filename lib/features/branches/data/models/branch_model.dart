@@ -1,20 +1,28 @@
 class BranchModel {
   final String id;
   final String name;
+  final String code;
+  final String city;
   final String address;
   final String phone;
   final String? imageUrl;
   final double rating;
   final int reviewCount;
-  final List<int> workingDays; // 1 = Monday, 7 = Sunday (DateTime.monday ... DateTime.sunday)
+  final List<int> workingDays; // 1 = Monday, 7 = Sunday
   final String openingTime; // '09:00'
   final String closingTime; // '21:00'
-  final bool isActive; // Rule: Deactivated branches cannot receive new bookings
+  final int totalChairs;
+  final double? distanceKm;
+  final double? latitude;
+  final double? longitude;
+  final bool isActive;
   final List<String> amenities;
 
   const BranchModel({
     required this.id,
     required this.name,
+    this.code = '',
+    this.city = '',
     required this.address,
     required this.phone,
     this.imageUrl,
@@ -23,19 +31,22 @@ class BranchModel {
     this.workingDays = const [1, 2, 3, 4, 5, 6, 7],
     this.openingTime = '09:00',
     this.closingTime = '21:00',
+    this.totalChairs = 10,
+    this.distanceKm,
+    this.latitude,
+    this.longitude,
     this.isActive = true,
     this.amenities = const ['AC', 'Free Wi-Fi', 'Beverages', 'Valet Parking'],
   });
 
-  /// Check if the branch is open on a given weekday (1..7)
   bool isOpenOn(int weekday) => workingDays.contains(weekday);
-
-  /// Formatted working hours (e.g. 09:00 AM - 09:00 PM)
   String get formattedHours => '$openingTime - $closingTime';
 
   BranchModel copyWith({
     String? id,
     String? name,
+    String? code,
+    String? city,
     String? address,
     String? phone,
     String? imageUrl,
@@ -44,12 +55,18 @@ class BranchModel {
     List<int>? workingDays,
     String? openingTime,
     String? closingTime,
+    int? totalChairs,
+    double? distanceKm,
+    double? latitude,
+    double? longitude,
     bool? isActive,
     List<String>? amenities,
   }) {
     return BranchModel(
       id: id ?? this.id,
       name: name ?? this.name,
+      code: code ?? this.code,
+      city: city ?? this.city,
       address: address ?? this.address,
       phone: phone ?? this.phone,
       imageUrl: imageUrl ?? this.imageUrl,
@@ -58,11 +75,14 @@ class BranchModel {
       workingDays: workingDays ?? this.workingDays,
       openingTime: openingTime ?? this.openingTime,
       closingTime: closingTime ?? this.closingTime,
+      totalChairs: totalChairs ?? this.totalChairs,
+      distanceKm: distanceKm ?? this.distanceKm,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       isActive: isActive ?? this.isActive,
       amenities: amenities ?? this.amenities,
     );
   }
-
 
   factory BranchModel.fromJson(Map<String, dynamic> json) {
     const weekdayMap = {
@@ -76,21 +96,36 @@ class BranchModel {
     };
 
     final rawWorkingDays = json['workingDays'] as List<dynamic>?;
-
     final workingDays = rawWorkingDays == null
         ? const [1, 2, 3, 4, 5, 6, 7]
-        : rawWorkingDays.map((day) {
-      if (day is int) return day;
-      return weekdayMap[day.toString()] ?? 0;
-    }).where((day) => day >= 1 && day <= 7).toList();
+        : rawWorkingDays
+              .map((day) {
+                if (day is int) return day;
+                return weekdayMap[day.toString()] ?? 0;
+              })
+              .where((day) => day >= 1 && day <= 7)
+              .toList();
+
+    double? lat;
+    double? lng;
+    final location = json['location'];
+    if (location is Map) {
+      final coordinates = location['coordinates'];
+      if (coordinates is List && coordinates.length >= 2) {
+        lng = (coordinates[0] as num?)?.toDouble();
+        lat = (coordinates[1] as num?)?.toDouble();
+      }
+    }
+
+    final rawDist = json['distanceKm'] ?? json['distance'];
+    final double? distanceKm = (rawDist as num?)?.toDouble();
 
     return BranchModel(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       name: json['name'] as String? ?? '',
-      address: [
-        json['address'],
-        json['city'],
-      ]
+      code: json['code'] as String? ?? '',
+      city: json['city'] as String? ?? '',
+      address: [json['address'], json['city']]
           .whereType<String>()
           .where((value) => value.trim().isNotEmpty)
           .toSet()
@@ -102,19 +137,26 @@ class BranchModel {
       workingDays: workingDays,
       openingTime: json['openingTime'] as String? ?? '09:00',
       closingTime: json['closingTime'] as String? ?? '21:00',
+      totalChairs: (json['totalChairs'] as num?)?.toInt() ?? 10,
+      distanceKm: distanceKm,
+      latitude: lat,
+      longitude: lng,
       isActive: json['isActive'] as bool? ?? true,
-      amenities: (json['amenities'] as List<dynamic>?)
-          ?.map((item) => item.toString())
-          .toList() ??
+      amenities:
+          (json['amenities'] as List<dynamic>?)
+              ?.map((item) => item.toString())
+              .toList() ??
           const ['AC', 'Free Wi-Fi', 'Beverages'],
     );
   }
 
-
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      '_id': id,
       'name': name,
+      'code': code,
+      'city': city,
       'address': address,
       'phone': phone,
       'imageUrl': imageUrl,
@@ -123,6 +165,13 @@ class BranchModel {
       'workingDays': workingDays,
       'openingTime': openingTime,
       'closingTime': closingTime,
+      'totalChairs': totalChairs,
+      if (distanceKm != null) 'distanceKm': distanceKm,
+      if (latitude != null && longitude != null)
+        'location': {
+          'type': 'Point',
+          'coordinates': [longitude, latitude],
+        },
       'isActive': isActive,
       'amenities': amenities,
     };

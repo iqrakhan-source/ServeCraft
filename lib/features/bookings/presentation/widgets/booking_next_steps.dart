@@ -21,11 +21,7 @@ class BookingNextSteps extends StatelessWidget {
             color: AppColors.primaryLight,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: AppColors.primary,
-          ),
+          child: Icon(icon, size: 18, color: AppColors.primary),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -66,11 +62,7 @@ class BookingNextSteps extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.spa_rounded,
-                size: 18,
-                color: AppColors.primary,
-              ),
+              const Icon(Icons.spa_rounded, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(
                 "Salon Visit Guidelines",

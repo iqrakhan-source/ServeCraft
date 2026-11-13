@@ -45,16 +45,24 @@ class AppButton extends StatelessWidget {
 
     switch (variant) {
       case AppButtonVariant.primary:
-        backgroundColor = isDisabled ? AppColors.primaryMuted : AppColors.primary;
+        backgroundColor = isDisabled
+            ? AppColors.primaryMuted
+            : AppColors.primary;
         foregroundColor = AppColors.textInverse;
         break;
       case AppButtonVariant.secondary:
-        backgroundColor = isDisabled ? AppColors.surfaceMuted : AppColors.primaryLight;
-        foregroundColor = isDisabled ? AppColors.textTertiary : AppColors.primary;
+        backgroundColor = isDisabled
+            ? AppColors.surfaceMuted
+            : AppColors.primaryLight;
+        foregroundColor = isDisabled
+            ? AppColors.textTertiary
+            : AppColors.primary;
         break;
       case AppButtonVariant.outline:
         backgroundColor = Colors.transparent;
-        foregroundColor = isDisabled ? AppColors.textTertiary : AppColors.primary;
+        foregroundColor = isDisabled
+            ? AppColors.textTertiary
+            : AppColors.primary;
         borderSide = BorderSide(
           color: isDisabled ? AppColors.border : AppColors.primary,
           width: 1.5,
@@ -62,7 +70,9 @@ class AppButton extends StatelessWidget {
         break;
       case AppButtonVariant.text:
         backgroundColor = Colors.transparent;
-        foregroundColor = isDisabled ? AppColors.textTertiary : AppColors.primary;
+        foregroundColor = isDisabled
+            ? AppColors.textTertiary
+            : AppColors.primary;
         break;
       case AppButtonVariant.danger:
         backgroundColor = isDisabled ? AppColors.errorLight : AppColors.error;
@@ -92,10 +102,7 @@ class AppButton extends StatelessWidget {
             ),
           )
         else ...[
-          if (icon != null) ...[
-            icon!,
-            const SizedBox(width: 8),
-          ],
+          if (icon != null) ...[icon!, const SizedBox(width: 8)],
           Flexible(
             child: Text(
               text,

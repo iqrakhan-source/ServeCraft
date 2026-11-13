@@ -13,10 +13,7 @@ import 'branch_details_screen.dart';
 class BranchSelectionScreen extends StatefulWidget {
   final bool isSelectionMode;
 
-  const BranchSelectionScreen({
-    super.key,
-    this.isSelectionMode = true,
-  });
+  const BranchSelectionScreen({super.key, this.isSelectionMode = true});
 
   @override
   State<BranchSelectionScreen> createState() => _BranchSelectionScreenState();
@@ -37,7 +34,9 @@ class _BranchSelectionScreenState extends State<BranchSelectionScreen> {
     final branchProvider = context.watch<BranchProvider>();
     final selectedBranch = branchProvider.selectedBranch;
 
-    final allBranches = branchProvider.branches.where((b) => b.isActive).toList();
+    final allBranches = branchProvider.branches
+        .where((b) => b.isActive)
+        .toList();
     final filteredBranches = allBranches.where((b) {
       if (_searchQuery.isEmpty) return true;
       final q = _searchQuery.toLowerCase();
@@ -128,7 +127,8 @@ class _BranchSelectionScreenState extends State<BranchSelectionScreen> {
 
                 if (branchProvider.branchesState.isError) {
                   return AppErrorView(
-                    message: branchProvider.errorMessage ??
+                    message:
+                        branchProvider.errorMessage ??
                         'Failed to load salon branches',
                     onRetry: () => branchProvider.loadBranches(),
                   );
@@ -157,18 +157,24 @@ class _BranchSelectionScreenState extends State<BranchSelectionScreen> {
                           branch: branch,
                           isSelected: isSelected,
                           onTap: () async {
-                            final success = await branchProvider.selectBranch(branch);
+                            final success = await branchProvider.selectBranch(
+                              branch,
+                            );
 
-                            if (!mounted) return;
+                            if (!context.mounted) return;
 
                             if (success) {
-                              debugPrint('========== BRANCH SELECTION CONFIRMED ==========');
+                              debugPrint(
+                                '========== BRANCH SELECTION CONFIRMED ==========',
+                              );
                               debugPrint('Branch Name: ${branch.name}');
                               debugPrint('Branch ID: ${branch.id}');
                               debugPrint(
                                 'Provider Branch ID: ${branchProvider.selectedBranch?.id}',
                               );
-                              debugPrint('=================================================');
+                              debugPrint(
+                                '=================================================',
+                              );
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -198,8 +204,11 @@ class _BranchSelectionScreenState extends State<BranchSelectionScreen> {
                                   ),
                                 );
                               },
-                              icon: const Icon(Icons.info_outline_rounded,
-                                  size: 15, color: AppColors.primary),
+                              icon: const Icon(
+                                Icons.info_outline_rounded,
+                                size: 15,
+                                color: AppColors.primary,
+                              ),
                               label: Text(
                                 'View Branch Details',
                                 style: AppTypography.labelSmall.copyWith(

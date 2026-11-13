@@ -8,11 +8,7 @@ class SummaryBranchCard extends StatelessWidget {
   final BranchModel branch;
   final VoidCallback? onEdit;
 
-  const SummaryBranchCard({
-    super.key,
-    required this.branch,
-    this.onEdit,
-  });
+  const SummaryBranchCard({super.key, required this.branch, this.onEdit});
 
   @override
   Widget build(BuildContext context) {

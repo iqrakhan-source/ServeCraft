@@ -70,8 +70,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       if (!mounted) return;
       final auth = context.read<AuthProvider>();
       final user = auth.currentUser;
-      final phone = (user?.phone.isNotEmpty == true) ? user!.phone : (auth.currentPhone ?? '');
-      final email = (user?.email.isNotEmpty == true) ? user!.email : (auth.currentEmail ?? '');
+      final phone = (user?.phone.isNotEmpty == true)
+          ? user!.phone
+          : (auth.currentPhone ?? '');
+      final email = (user?.email.isNotEmpty == true)
+          ? user!.email
+          : (auth.currentEmail ?? '');
       final name = user?.name ?? '';
 
       if (_nameController.text.isEmpty && name.isNotEmpty) {
@@ -93,6 +97,28 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         setState(() {
           _selectedGender = match;
         });
+      }
+      if (_selectedDateOfBirth == null &&
+          user?.dateOfBirth != null &&
+          user!.dateOfBirth!.isNotEmpty) {
+        final trimmed = user.dateOfBirth!.trim();
+        final parsed = DateTime.tryParse(trimmed);
+        if (parsed != null) {
+          setState(() {
+            _selectedDateOfBirth = parsed;
+            _dobController.text = DateFormat('dd/MM/yyyy').format(parsed);
+          });
+        } else {
+          try {
+            final parsedSlash = DateFormat('dd/MM/yyyy').parseStrict(trimmed);
+            setState(() {
+              _selectedDateOfBirth = parsedSlash;
+              _dobController.text = DateFormat(
+                'dd/MM/yyyy',
+              ).format(parsedSlash);
+            });
+          } catch (_) {}
+        }
       }
     });
   }
@@ -130,7 +156,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     if (picked != null) {
       setState(() {
         _selectedDateOfBirth = picked;
-        _dobController.text = DateFormat('dd MMM yyyy').format(picked);
+        _dobController.text = DateFormat('dd/MM/yyyy').format(picked);
       });
     }
   }
@@ -190,7 +216,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        final hasPhoto = _imageFile != null ||
+        final hasPhoto =
+            _imageFile != null ||
             _webImagePath != null ||
             _selectedAvatarUrl != null;
         return SafeArea(
@@ -213,14 +240,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Profile Photo',
-                  style: AppTypography.titleLarge
-                      .copyWith(fontWeight: FontWeight.w700),
+                  style: AppTypography.titleLarge.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Choose how you want to add your profile picture (Optional)',
-                  style: AppTypography.bodySmall
-                      .copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 ListTile(
@@ -230,12 +259,17 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       color: AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.photo_camera_rounded,
-                        color: AppColors.primary, size: 20),
+                    child: const Icon(
+                      Icons.photo_camera_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                   ),
                   title: Text('Take Photo', style: AppTypography.titleSmall),
-                  subtitle: Text('Capture with device camera',
-                      style: AppTypography.bodySmall),
+                  subtitle: Text(
+                    'Capture with device camera',
+                    style: AppTypography.bodySmall,
+                  ),
                   contentPadding: EdgeInsets.zero,
                   onTap: () => _pickImage(ImageSource.camera),
                 ),
@@ -246,13 +280,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       color: AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.photo_library_rounded,
-                        color: AppColors.primary, size: 20),
+                    child: const Icon(
+                      Icons.photo_library_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                   ),
-                  title: Text('Choose from Gallery',
-                      style: AppTypography.titleSmall),
-                  subtitle: Text('Select from photo library',
-                      style: AppTypography.bodySmall),
+                  title: Text(
+                    'Choose from Gallery',
+                    style: AppTypography.titleSmall,
+                  ),
+                  subtitle: Text(
+                    'Select from photo library',
+                    style: AppTypography.bodySmall,
+                  ),
                   contentPadding: EdgeInsets.zero,
                   onTap: () => _pickImage(ImageSource.gallery),
                 ),
@@ -289,10 +330,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             ),
                           ),
                           child: ClipOval(
-                            child: Image.network(
-                              url,
-                              fit: BoxFit.cover,
-                            ),
+                            child: Image.network(url, fit: BoxFit.cover),
                           ),
                         ),
                       );
@@ -308,13 +346,17 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         color: AppColors.errorLight,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.delete_outline_rounded,
-                          color: AppColors.error, size: 20),
+                      child: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: AppColors.error,
+                        size: 20,
+                      ),
                     ),
                     title: Text(
                       'Remove Current Photo',
-                      style: AppTypography.titleSmall
-                          .copyWith(color: AppColors.error),
+                      style: AppTypography.titleSmall.copyWith(
+                        color: AppColors.error,
+                      ),
                     ),
                     contentPadding: EdgeInsets.zero,
                     onTap: _removePhoto,
@@ -366,7 +408,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       );
     }
 
-    final hasPhoto = _imageFile != null ||
+    final hasPhoto =
+        _imageFile != null ||
         _webImagePath != null ||
         _selectedAvatarUrl != null;
 
@@ -405,10 +448,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.surface,
-                        width: 2,
-                      ),
+                      border: Border.all(color: AppColors.surface, width: 2),
                       boxShadow: [
                         BoxShadow(
                           color: AppColors.primary.withValues(alpha: 0.3),
@@ -449,7 +489,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     final authProvider = context.read<AuthProvider>();
     if (_isLoading || authProvider.isLoading) return;
 
-    if (! _formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
@@ -470,10 +510,19 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         ? DateFormat('yyyy-MM-dd').format(_selectedDateOfBirth!)
         : null;
 
-    final photo = _selectedAvatarUrl ?? _webImagePath ?? _imageFile?.path;
+    String? photo = _selectedAvatarUrl ?? _webImagePath;
+    if (_imageFile != null && !kIsWeb) {
+      final uploadedUrl = await authProvider.uploadProfilePhoto(_imageFile!);
+      if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
+        photo = uploadedUrl;
+      }
+    }
 
     final success = await authProvider.completeProfile(
       name: _nameController.text.trim(),
+      phone: _phoneController.text.trim().isNotEmpty
+          ? _phoneController.text.trim()
+          : null,
       email: _emailController.text.trim().isNotEmpty
           ? _emailController.text.trim()
           : null,
@@ -495,14 +544,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           backgroundColor: AppColors.success,
         ),
       );
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.mainNav,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.mainNav, (route) => false);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Failed to update profile'),
+          content: Text(
+            authProvider.errorMessage ?? 'Failed to update profile',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -522,7 +572,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Sign Out', style: TextStyle(color: AppColors.error)),
+            child: const Text(
+              'Sign Out',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -531,10 +584,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     if (confirm == true && mounted) {
       await context.read<AuthProvider>().logout();
       if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.login,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
     }
   }
 
@@ -548,7 +600,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         showBottomBorder: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout_rounded, color: AppColors.textSecondary),
+            icon: const Icon(
+              Icons.logout_rounded,
+              color: AppColors.textSecondary,
+            ),
             tooltip: 'Sign Out',
             onPressed: _handleLogout,
           ),
@@ -611,9 +666,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   ),
                   keyboardType: TextInputType.phone,
                   maxLength: 10,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (val) {
                     if (val != null && val.trim().isNotEmpty) {
                       return AppValidators.validatePhone(val);
@@ -743,8 +796,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             Expanded(
                               child: Text(
                                 _selectedDateOfBirth != null
-                                    ? DateFormat('dd MMM yyyy')
-                                        .format(_selectedDateOfBirth!)
+                                    ? DateFormat(
+                                        'dd/MM/yyyy',
+                                      ).format(_selectedDateOfBirth!)
                                     : 'Select date of birth',
                                 style: AppTypography.bodyLarge.copyWith(
                                   color: _selectedDateOfBirth != null

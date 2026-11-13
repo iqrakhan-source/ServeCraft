@@ -5,7 +5,7 @@ class SharedPrefsStorageService implements StorageService {
   SharedPreferences? _preferences;
 
   SharedPrefsStorageService([SharedPreferences? preferences])
-      : _preferences = preferences;
+    : _preferences = preferences;
 
   @override
   Future<void> init() async {
@@ -15,7 +15,8 @@ class SharedPrefsStorageService implements StorageService {
   SharedPreferences get _prefs {
     if (_preferences == null) {
       throw StateError(
-          'SharedPrefsStorageService has not been initialized. Call init() before accessing storage.');
+        'SharedPrefsStorageService has not been initialized. Call init() before accessing storage.',
+      );
     }
     return _preferences!;
   }

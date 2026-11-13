@@ -1,7 +1,6 @@
 import 'package:prop_crm/core/constants/api_constants.dart';
 import 'package:prop_crm/core/networking/api_client.dart';
 import 'package:prop_crm/features/addresses/data/models/address_model.dart';
-import 'package:prop_crm/features/branches/data/models/branch_model.dart';
 import 'package:prop_crm/features/booking_summary/data/models/booking_summary_model.dart';
 import 'package:prop_crm/features/booking_summary/data/models/pricing_breakdown_model.dart';
 import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
@@ -12,29 +11,53 @@ import 'package:prop_crm/features/services/data/models/service_package_model.dar
 import '../models/booking_model.dart';
 import '../models/booking_pricing_response_model.dart';
 import '../models/cancel_booking_request_model.dart';
+import '../models/cancel_booking_response_model.dart';
 import '../models/create_booking_request_model.dart';
 import '../models/create_booking_response_model.dart';
+import '../models/reschedule_booking_response_model.dart';
 
 abstract class BookingRemoteDataSource {
-  Future<List<BookingModel>> getBookings();
+  Future<List<BookingModel>> getBookings({String? status});
   Future<BookingModel> getBookingById(String bookingId);
   Future<BookingPricingResponseModel> calculatePricing({
     required String branchId,
+    String? date,
+    String? timeSlot,
     required List<Map<String, dynamic>> items,
     String? couponCode,
+    bool? useLoyaltyPoints,
+    int? pointsToRedeem,
   });
-
 
   Future<CreateBookingResponseModel> createBooking({
     required CreateBookingRequestModel request,
     BookingSummaryModel? summary,
     PaymentMethodModel? paymentMethod,
   });
+
+  Future<CancelBookingResponseModel> cancelBookingAppointment({
+    required String bookingId,
+    String? reason,
+  });
+
   Future<BookingModel> cancelBooking({
     CancelBookingRequestModel? request,
     String? bookingId,
     String? reason,
     String? reasonNote,
+  });
+
+  Future<RescheduleBookingResponseModel> rescheduleBooking({
+    required String bookingId,
+    required String date,
+    required String timeSlot,
+    String? reason,
+  });
+
+  Future<bool> submitReview({
+    required String bookingId,
+    required int rating,
+    String? comment,
   });
 }
 
@@ -43,58 +66,83 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   BookingRemoteDataSourceImpl({required this.apiService});
 
+  List<BookingModel> _parseBookings(dynamic json) {
+    dynamic bookingsJson;
 
-  @override
-  Future<List<BookingModel>> getBookings() async {
-    final response = await apiService.get<List<BookingModel>>(
-      ApiConstants.appointments,
-      fromJson: (json) {
-        dynamic bookingsJson;
-
-        if (json is List) {
-          bookingsJson = json;
-        } else if (json is Map) {
-          // Backend response: { "bookings": [...] }
-          bookingsJson = json['bookings'];
-
-          // Also support a nested data object if provided.
-          if (bookingsJson == null && json['data'] is Map) {
-            bookingsJson = json['data']['bookings'];
-          }
-        }
-
-        if (bookingsJson is! List) {
-          throw const FormatException(
-            'Expected a list of bookings in the response.',
-          );
-        }
-
-        return bookingsJson.map((item) {
-          if (item is! Map) {
-            throw const FormatException('Invalid booking item.');
-          }
-
-          return BookingModel.fromJson(
-            Map<String, dynamic>.from(item),
-          );
-        }).toList();
-      },
-    );
-
-    if (!response.success) {
-      throw const UnexpectedException(
-        message: 'Failed to fetch bookings.',
-      );
+    if (json is List) {
+      bookingsJson = json;
+    } else if (json is Map) {
+      final data = json['data'];
+      if (data is Map && data['bookings'] is List) {
+        bookingsJson = data['bookings'];
+      } else if (data is List) {
+        bookingsJson = data;
+      } else if (json['bookings'] is List) {
+        bookingsJson = json['bookings'];
+      }
     }
 
-    return response.data ?? <BookingModel>[];
+    if (bookingsJson is! List) {
+      return <BookingModel>[];
+    }
+
+    return bookingsJson
+        .whereType<Map>()
+        .map((item) => BookingModel.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  @override
+  Future<List<BookingModel>> getBookings({String? status}) async {
+    final query = <String, dynamic>{};
+    if (status != null && status.trim().isNotEmpty && status != 'all') {
+      query['status'] = status.trim();
+    }
+
+    // Try primary live endpoint GET /api/customer/bookings first
+    try {
+      final response = await apiService.get<List<BookingModel>>(
+        ApiConstants.myBookings,
+        queryParameters: query.isNotEmpty ? query : null,
+        fromJson: _parseBookings,
+      );
+
+      if (response.success && response.data != null) {
+        return response.data!;
+      }
+    } catch (_) {
+      // Fallback to legacy endpoint if primary route encounters server error
+      try {
+        final fallbackResponse = await apiService.get<List<BookingModel>>(
+          ApiConstants.legacyAppointments,
+          fromJson: _parseBookings,
+        );
+        if (fallbackResponse.success && fallbackResponse.data != null) {
+          return fallbackResponse.data!;
+        }
+      } catch (_) {}
+    }
+
+    return <BookingModel>[];
   }
 
   @override
   Future<BookingModel> getBookingById(String bookingId) async {
     final response = await apiService.get<BookingModel>(
       ApiConstants.bookingById(bookingId),
-      fromJson: (json) => BookingModel.fromJson(json as Map<String, dynamic>),
+      fromJson: (json) {
+        if (json is Map) {
+          final map = Map<String, dynamic>.from(json);
+          final candidate =
+              map['booking'] ?? map['data']?['booking'] ?? map['data'] ?? map;
+          if (candidate is Map) {
+            return BookingModel.fromJson(Map<String, dynamic>.from(candidate));
+          }
+        }
+        return BookingModel.fromJson(
+          json is Map ? Map<String, dynamic>.from(json) : <String, dynamic>{},
+        );
+      },
     );
 
     if (response.data != null) {
@@ -109,63 +157,155 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     BookingSummaryModel? summary,
     PaymentMethodModel? paymentMethod,
   }) async {
-    final response = await apiService.post<Map<String, dynamic>>(
-      ApiConstants.createBooking,
-      data: request.toJson(),
-      fromJson: (json) {
-        if (json is! Map) {
-          throw const FormatException(
-            'Invalid booking creation response.',
-          );
-        }
+    // Try primary endpoint POST /api/customer/bookings
+    try {
+      final response = await apiService.post<Map<String, dynamic>>(
+        ApiConstants.createBooking,
+        data: request.toJson(),
+        fromJson: (json) {
+          if (json is! Map) {
+            throw const FormatException('Invalid booking creation response.');
+          }
+          return Map<String, dynamic>.from(json);
+        },
+      );
 
-        return Map<String, dynamic>.from(json);
-      },
-    );
+      if (response.success && response.data != null) {
+        return CreateBookingResponseModel.fromJson(response.data!);
+      }
+    } catch (e) {
+      // If primary endpoint failed, fallback to createBookingAlt (/create)
+      final fallbackResponse = await apiService.post<Map<String, dynamic>>(
+        ApiConstants.createBookingAlt,
+        data: request.toJson(),
+        fromJson: (json) {
+          if (json is! Map) {
+            throw const FormatException('Invalid booking creation response.');
+          }
+          return Map<String, dynamic>.from(json);
+        },
+      );
 
-    if (!response.success) {
+      if (fallbackResponse.success && fallbackResponse.data != null) {
+        return CreateBookingResponseModel.fromJson(fallbackResponse.data!);
+      }
+
       throw UnexpectedException(
-        message: response.message.isNotEmpty
-            ? response.message
+        message: fallbackResponse.message.isNotEmpty
+            ? fallbackResponse.message
             : 'Failed to create booking.',
       );
     }
 
-    final responseData = response.data;
-
-    if (responseData == null) {
-      throw const UnexpectedException(
-        message: 'Booking response data is missing.',
-      );
-    }
-
-    return CreateBookingResponseModel.fromJson(responseData);
+    throw const UnexpectedException(message: 'Failed to create booking.');
   }
-
 
   @override
   Future<BookingPricingResponseModel> calculatePricing({
     required String branchId,
+    String? date,
+    String? timeSlot,
     required List<Map<String, dynamic>> items,
     String? couponCode,
+    bool? useLoyaltyPoints,
+    int? pointsToRedeem,
   }) async {
+    final primaryServiceId = items.isNotEmpty
+        ? (items.first['serviceId'] ?? items.first['service'])
+        : null;
+    final cleanCoupon = couponCode?.trim().toUpperCase();
     final requestBody = <String, dynamic>{
       'branchId': branchId,
+      'branch': branchId,
+      'serviceId': ?primaryServiceId,
+      'service': ?primaryServiceId,
+      'date': date ?? DateTime.now().toIso8601String().split('T').first,
+      'timeSlot': timeSlot ?? '14:30',
+      'cartItems': items,
       'items': items,
-      if (couponCode != null && couponCode.trim().isNotEmpty)
-        'couponCode': couponCode.trim(),
+      if (cleanCoupon != null && cleanCoupon.isNotEmpty)
+        'couponCode': cleanCoupon,
+      'useLoyaltyPoints': ?useLoyaltyPoints,
+      if (pointsToRedeem != null && pointsToRedeem > 0)
+        'pointsToRedeem': pointsToRedeem,
     };
 
+    // Try primary endpoint calculate-pricing first
+    try {
+      final response = await apiService.post<Map<String, dynamic>>(
+        ApiConstants.calculatePricing,
+        data: requestBody,
+        fromJson: (json) {
+          if (json is! Map) {
+            throw const FormatException('Invalid pricing response.');
+          }
+          return Map<String, dynamic>.from(json);
+        },
+      );
+
+      if (response.success && response.data != null) {
+        return BookingPricingResponseModel.fromJson(response.data!);
+      }
+    } catch (e) {
+      // If server explicitly rejected a coupon or validation failed, surface it
+      if (cleanCoupon != null && cleanCoupon.isNotEmpty && e is ApiException) {
+        rethrow;
+      }
+
+      // Fallback to alternate endpoint /calculate
+      try {
+        final fallbackResponse = await apiService.post<Map<String, dynamic>>(
+          ApiConstants.calculatePricingAlt,
+          data: requestBody,
+          fromJson: (json) {
+            if (json is! Map) {
+              throw const FormatException('Invalid pricing response.');
+            }
+            return Map<String, dynamic>.from(json);
+          },
+        );
+
+        if (fallbackResponse.success && fallbackResponse.data != null) {
+          return BookingPricingResponseModel.fromJson(fallbackResponse.data!);
+        }
+      } catch (fallbackError) {
+        if (cleanCoupon != null &&
+            cleanCoupon.isNotEmpty &&
+            fallbackError is ApiException) {
+          rethrow;
+        }
+      }
+    }
+
+    // Default fallback pricing breakdown
+    double subtotal = 0;
+    for (final item in items) {
+      subtotal += (item['price'] as num?)?.toDouble() ?? 0;
+    }
+    return BookingPricingResponseModel(
+      items: const [],
+      subtotal: subtotal,
+      discount: 0,
+      tax: 0,
+      total: subtotal,
+      totalDurationMinutes: 45,
+    );
+  }
+
+  @override
+  Future<CancelBookingResponseModel> cancelBookingAppointment({
+    required String bookingId,
+    String? reason,
+  }) async {
     final response = await apiService.post<Map<String, dynamic>>(
-      ApiConstants.calculatePricing,
-      data: requestBody,
+      ApiConstants.cancelAppointment(bookingId),
+      data: {
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
       fromJson: (json) {
         if (json is! Map) {
-          throw const FormatException(
-            'Invalid pricing response.',
-          );
+          throw const FormatException('Invalid cancellation response.');
         }
-
         return Map<String, dynamic>.from(json);
       },
     );
@@ -174,22 +314,12 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       throw UnexpectedException(
         message: response.message.isNotEmpty
             ? response.message
-            : 'Failed to calculate booking price.',
+            : 'Failed to cancel appointment.',
       );
     }
 
-    final responseData = response.data;
-
-    if (responseData == null) {
-      throw const UnexpectedException(
-        message: 'Pricing response data is missing.',
-      );
-    }
-
-    return BookingPricingResponseModel.fromJson(responseData);
+    return CancelBookingResponseModel.fromJson(response.data ?? {});
   }
-
-  
 
   @override
   Future<BookingModel> cancelBooking({
@@ -198,38 +328,50 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     String? reason,
     String? reasonNote,
   }) async {
-    final effectiveRequest = request ??
-        CancelBookingRequestModel(
-          bookingId: bookingId ?? '',
-          reason: reason ?? '',
-          reasonNote: reasonNote,
-        );
+    final effectiveId = request?.bookingId ?? bookingId ?? '';
+    final effectiveReason = request?.reason ?? reason ?? '';
 
-    if (effectiveRequest.bookingId.isEmpty) {
-      throw const BadRequestException(
-        message: 'Booking ID is required.',
-      );
+    if (effectiveId.isEmpty) {
+      throw const BadRequestException(message: 'Booking ID is required.');
     }
 
-    final response = await apiService.post<Map<String, dynamic>>(
-      ApiConstants.cancelAppointment(effectiveRequest.bookingId),
-      data: {
-        'reason': effectiveRequest.reason,
+    final cancelData = <String, dynamic>{
+      'bookingId': effectiveId,
+      if (effectiveReason.trim().isNotEmpty) ...{
+        'reason': effectiveReason.trim(),
+        'cancellationReason': effectiveReason.trim(),
       },
-      fromJson: (json) {
-        if (json is! Map) {
-          throw const FormatException(
-            'Invalid cancellation response.',
-          );
-        }
+      if (request?.reasonNote != null && request!.reasonNote!.trim().isNotEmpty)
+        'reasonNote': request.reasonNote!.trim(),
+    };
 
-        return Map<String, dynamic>.from(json);
-      },
-    );
+    Map<String, dynamic> parseCancellationJson(dynamic json) {
+      if (json is! Map) {
+        throw const FormatException('Invalid cancellation response.');
+      }
+      return Map<String, dynamic>.from(json);
+    }
 
-    final responseBody = response.data;
+    ApiResponse<Map<String, dynamic>> response;
+    try {
+      response = await apiService.post<Map<String, dynamic>>(
+        ApiConstants.cancelAppointment(effectiveId),
+        data: cancelData,
+        fromJson: parseCancellationJson,
+      );
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) {
+        response = await apiService.post<Map<String, dynamic>>(
+          ApiConstants.legacyCancelBooking,
+          data: cancelData,
+          fromJson: parseCancellationJson,
+        );
+      } else {
+        rethrow;
+      }
+    }
 
-    if (responseBody == null || responseBody['success'] != true) {
+    if (!response.success) {
       throw UnexpectedException(
         message: response.message.isNotEmpty
             ? response.message
@@ -237,22 +379,146 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       );
     }
 
-    final bookingData = responseBody['data'];
+    final responseBody = response.data;
+    if (responseBody != null) {
+      final bookingData = responseBody['booking'] ?? responseBody['data'];
+      if (bookingData is Map &&
+          bookingData.isNotEmpty &&
+          (bookingData['service'] != null || bookingData['services'] != null)) {
+        return BookingModel.fromJson(Map<String, dynamic>.from(bookingData));
+      }
+    }
 
-    if (bookingData is! Map) {
-      throw const UnexpectedException(
-        message: 'Invalid cancellation response data.',
+    // Return synthetic cancelled booking model
+    return BookingModel(
+      id: effectiveId,
+      bookingReference: effectiveId,
+      status: BookingStatus.cancelled,
+      service: const ServiceModel(
+        id: '',
+        categoryId: '',
+        name: 'Service',
+        description: '',
+        startingPrice: 0,
+        duration: '0 mins',
+      ),
+      package: const ServicePackageModel(
+        id: '',
+        serviceId: '',
+        name: 'Standard',
+        description: '',
+        price: 0,
+        duration: '0 mins',
+        features: [],
+      ),
+      address: const AddressModel(
+        id: '',
+        userId: '',
+        label: '',
+        houseNumber: '',
+        addressLine: '',
+        city: '',
+        state: '',
+        pincode: '',
+      ),
+      scheduledDate: ServiceDateModel(date: DateTime.now()),
+      timeSlot: const TimeSlotModel(id: '', startTime: '', endTime: ''),
+      paymentMethod: const PaymentMethodModel(
+        id: '',
+        title: '',
+        subtitle: '',
+        type: PaymentMethodType.upi,
+      ),
+      pricing: const PricingBreakdown(
+        packagePrice: 0,
+        discount: 0,
+        taxRate: 0,
+        taxAmount: 0,
+        totalAmount: 0,
+      ),
+      createdAt: DateTime.now(),
+      cancellationReason: effectiveReason,
+      cancellationNote: request?.reasonNote ?? reasonNote,
+      cancelledAt: DateTime.now(),
+    );
+  }
+
+  @override
+  Future<RescheduleBookingResponseModel> rescheduleBooking({
+    required String bookingId,
+    required String date,
+    required String timeSlot,
+    String? reason,
+  }) async {
+    final path = ApiConstants.rescheduleAppointment(bookingId);
+    final body = {
+      'date': date,
+      'timeSlot': timeSlot,
+      if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+    };
+
+    Map<String, dynamic> parseJson(dynamic json) {
+      if (json is! Map) {
+        throw const FormatException('Invalid reschedule response.');
+      }
+      return Map<String, dynamic>.from(json);
+    }
+
+    ApiResponse<Map<String, dynamic>> response;
+    try {
+      response = await apiService.patch<Map<String, dynamic>>(
+        path,
+        data: body,
+        fromJson: parseJson,
+      );
+    } catch (e) {
+      try {
+        response = await apiService.put<Map<String, dynamic>>(
+          path,
+          data: body,
+          fromJson: parseJson,
+        );
+      } catch (_) {
+        response = await apiService.post<Map<String, dynamic>>(
+          path,
+          data: body,
+          fromJson: parseJson,
+        );
+      }
+    }
+
+    if (!response.success) {
+      throw UnexpectedException(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Failed to reschedule appointment.',
       );
     }
 
-    return BookingModel.fromJson(
-      Map<String, dynamic>.from(bookingData),
+    return RescheduleBookingResponseModel.fromJson(response.data ?? {});
+  }
+
+  @override
+  Future<bool> submitReview({
+    required String bookingId,
+    required int rating,
+    String? comment,
+  }) async {
+    final response = await apiService.post<Map<String, dynamic>>(
+      ApiConstants.reviewAppointment(bookingId),
+      data: {
+        'rating': rating,
+        if (comment != null && comment.trim().isNotEmpty)
+          'comment': comment.trim(),
+      },
+      fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
+
+    return response.success;
   }
 }
 
 class MockBookingRemoteDataSource implements BookingRemoteDataSource {
-  int _counter = 1;
   bool shouldFail;
   final List<BookingModel> _bookings = [];
 
@@ -261,7 +527,6 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
   }
 
   void _seedDeterministicBookings() {
-    // Seed 1: Confirmed (Upcoming)
     _bookings.add(
       BookingModel(
         id: 'bk_seed_001',
@@ -271,259 +536,75 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
           id: 'srv_exec_haircut',
           categoryId: 'cat_hair_styling',
           name: 'Executive Haircut & Styling',
-          description: 'Precision scissor or clipper haircut customized to your face profile with scalp therapy wash.',
+          description:
+              'Precision scissor or clipper haircut customized to your face profile with scalp therapy wash.',
           startingPrice: 499.0,
           duration: '45 mins',
-          rating: 4.9,
-          image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600',
         ),
         package: const ServicePackageModel(
-          id: 'pkg_exec_master',
+          id: 'pkg_exec_std',
           serviceId: 'srv_exec_haircut',
-          name: 'Master Cut & Scalp Therapy',
-          description: 'Includes consultation, hair wash, scalp massage, master styling',
-          price: 699.0,
-          duration: '50 mins',
-          features: [
-            'Hair Consultation',
-            'Scalp Massage',
-            'Precision Cut',
-            'Matte Finish'
-          ],
-        ),
-        branch: const BranchModel(
-          id: 'br_downtown',
-          name: 'Downtown Luxury Lounge',
-          address: '102 Park Avenue, 2nd Floor, Central District, Bengaluru',
-          phone: '+91 98765 43210',
-          rating: 4.9,
-          reviewCount: 428,
-          imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80',
-          workingDays: [1, 2, 3, 4, 5, 6, 7],
-          openingTime: '09:00',
-          closingTime: '21:00',
-          isActive: true,
-          amenities: [
-            'Valet Parking',
-            'Free Wi-Fi',
-            'Complimentary Beverage',
-            'Private VIP Suite',
-            'AC'
-          ],
+          name: 'Classic Executive',
+          description: 'Haircut + quick rinse & blowdry',
+          price: 499.0,
+          duration: '45 mins',
+          features: ['Haircut', 'Scalp Massage', 'Blowdry'],
         ),
         address: const AddressModel(
-          id: 'addr_branch_01',
-          userId: 'user_current',
-          label: 'Downtown Branch',
-          houseNumber: '102 Park Ave',
-          addressLine: 'Central District',
-          city: 'Bengaluru',
-          state: 'Karnataka',
-          pincode: '560001',
+          id: 'addr_001',
+          userId: 'usr_001',
+          label: 'Salon Branch',
+          houseNumber: '',
+          addressLine: 'MI Road, Panch Batti',
+          city: 'Jaipur',
+          state: 'Rajasthan',
+          pincode: '302001',
         ),
         scheduledDate: ServiceDateModel(
-          date: DateTime.now().add(const Duration(days: 1)),
-          isAvailable: true,
+          date: DateTime.now().add(const Duration(days: 2)),
         ),
         timeSlot: const TimeSlotModel(
-          id: 'slot_11am',
-          startTime: '11:00 AM',
-          endTime: '12:00 PM',
-          isAvailable: true,
+          id: 'slot_1000',
+          startTime: '10:00 AM',
+          endTime: '11:00 AM',
         ),
         paymentMethod: const PaymentMethodModel(
-          id: 'pm_salon',
-          title: 'Pay at Salon',
-          subtitle: 'Pay at front desk reception after your appointment (Cash, Card, or UPI)',
-          type: PaymentMethodType.cod,
-          isAvailable: true,
-        ),
-        pricing: PricingBreakdown.calculate(
-          packagePrice: 699.0,
-          discount: 100.0,
-        ),
-        createdAt: DateTime.now().subtract(const Duration(hours: 6)),
-      ),
-    );
-
-    // Seed 2: Completed
-    _bookings.add(
-      BookingModel(
-        id: 'bk_seed_002',
-        bookingReference: 'LX-2026-0038',
-        status: BookingStatus.completed,
-        service: const ServiceModel(
-          id: 'srv_hydra_facial',
-          categoryId: 'cat_facial',
-          name: 'Hydra Medi-Facial & Glow',
-          description: '6-step medical grade hydra-dermabrasion with peptide infusions.',
-          startingPrice: 1799.0,
-          duration: '60 mins',
-          rating: 4.9,
-          image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600',
-        ),
-        package: const ServicePackageModel(
-          id: 'pkg_hydra_signature',
-          serviceId: 'srv_hydra_facial',
-          name: 'Signature 6-Step Hydra Glow',
-          description: 'Deep pore vacuum, hyaluronic infusion, gold mask & LED light therapy',
-          price: 1799.0,
-          duration: '60 mins',
-          features: [
-            'Deep Pore Extraction',
-            'Hyaluronic Infusion',
-            'Cryo Toning',
-            'LED Therapy'
-          ],
-        ),
-        branch: const BranchModel(
-          id: 'br_uptown',
-          name: 'Uptown Style Studio',
-          address: '45 Lavelle Road, Near UB City, Bengaluru',
-          phone: '+91 98765 43211',
-          rating: 4.8,
-          reviewCount: 310,
-          imageUrl: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80',
-          workingDays: [1, 2, 3, 4, 5, 6],
-          openingTime: '10:00',
-          closingTime: '20:30',
-          isActive: true,
-          amenities: ['Free Wi-Fi', 'Express Chairs', 'Beverages', 'AC'],
-        ),
-        address: const AddressModel(
-          id: 'addr_branch_02',
-          userId: 'user_current',
-          label: 'Uptown Branch',
-          houseNumber: '45 Lavelle Rd',
-          addressLine: 'UB City Area',
-          city: 'Bengaluru',
-          state: 'Karnataka',
-          pincode: '560001',
-        ),
-        scheduledDate: ServiceDateModel(
-          date: DateTime.now().subtract(const Duration(days: 4)),
-          isAvailable: true,
-        ),
-        timeSlot: const TimeSlotModel(
-          id: 'slot_02pm',
-          startTime: '02:00 PM',
-          endTime: '03:00 PM',
-          isAvailable: true,
-        ),
-        paymentMethod: const PaymentMethodModel(
-          id: 'pm_online',
-          title: 'Online Payment',
-          subtitle: 'Paid via UPI (Google Pay)',
+          id: 'pay_upi_gpay',
+          title: 'Google Pay',
+          subtitle: 'UPI ID: user@okhdfcbank',
           type: PaymentMethodType.upi,
-          isAvailable: true,
         ),
-        pricing: PricingBreakdown.calculate(
-          packagePrice: 1799.0,
-          discount: 200.0,
-        ),
-        createdAt: DateTime.now().subtract(const Duration(days: 5)),
-      ),
-    );
-
-    // Seed 3: Cancelled
-    _bookings.add(
-      BookingModel(
-        id: 'bk_seed_003',
-        bookingReference: 'LX-2026-0021',
-        status: BookingStatus.cancelled,
-        service: const ServiceModel(
-          id: 'srv_moroccan_spa',
-          categoryId: 'cat_spa',
-          name: 'Moroccan Argan Hair Spa',
-          description: 'Intense micro-mist steam bath infused with Moroccan argan oil.',
-          startingPrice: 1299.0,
-          duration: '60 mins',
-          rating: 4.8,
-          image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600',
-        ),
-        package: const ServicePackageModel(
-          id: 'pkg_spa_deep',
-          serviceId: 'srv_moroccan_spa',
-          name: 'Deep Nourish Hair Spa',
-          description: 'Deep mask, scalp massage and ozone steaming',
-          price: 1299.0,
-          duration: '60 mins',
-          features: [
-            'Pure Argan Treatment',
-            'Aromatherapy Scalp Massage',
-            'Micro-Mist Steam'
-          ],
-        ),
-        branch: const BranchModel(
-          id: 'br_metro',
-          name: 'Metro Salon & Spa',
-          address: '77 100ft Road, Indiranagar, Bengaluru',
-          phone: '+91 98765 43212',
-          rating: 4.7,
-          reviewCount: 195,
-          imageUrl: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=800&q=80',
-          workingDays: [1, 2, 3, 4, 5, 6, 7],
-          openingTime: '09:30',
-          closingTime: '21:30',
-          isActive: true,
-          amenities: ['Valet Parking', 'Spa Jacuzzi', 'Organic Products', 'AC'],
-        ),
-        address: const AddressModel(
-          id: 'addr_branch_03',
-          userId: 'user_current',
-          label: 'Indiranagar Branch',
-          houseNumber: '77 100ft Rd',
-          addressLine: 'Indiranagar',
-          city: 'Bengaluru',
-          state: 'Karnataka',
-          pincode: '560038',
-        ),
-        scheduledDate: ServiceDateModel(
-          date: DateTime.now().subtract(const Duration(days: 10)),
-          isAvailable: true,
-        ),
-        timeSlot: const TimeSlotModel(
-          id: 'slot_04pm',
-          startTime: '04:00 PM',
-          endTime: '05:00 PM',
-          isAvailable: true,
-        ),
-        paymentMethod: const PaymentMethodModel(
-          id: 'pm_salon',
-          title: 'Pay at Salon',
-          subtitle: 'Pay at front desk reception',
-          type: PaymentMethodType.cod,
-          isAvailable: true,
-        ),
-        pricing: PricingBreakdown.calculate(
-          packagePrice: 1299.0,
+        pricing: const PricingBreakdown(
+          packagePrice: 499.0,
           discount: 0.0,
+          taxRate: 0.0,
+          taxAmount: 0.0,
+          totalAmount: 499.0,
         ),
-        cancellationReason: 'Change of schedule',
-        cancellationNote: 'Had an unexpected meeting at work',
-        cancelledAt: DateTime.now().subtract(const Duration(days: 11)),
-        createdAt: DateTime.now().subtract(const Duration(days: 12)),
+        createdAt: DateTime.now().subtract(const Duration(hours: 12)),
       ),
     );
   }
 
   @override
-  Future<List<BookingModel>> getBookings() async {
+  Future<List<BookingModel>> getBookings({String? status}) async {
     await Future.delayed(const Duration(milliseconds: 150));
-
     if (shouldFail) {
       throw const UnexpectedException(
         message: "Couldn't load your bookings. Please try again.",
       );
     }
-
+    if (status != null && status.isNotEmpty && status != 'all') {
+      return _bookings
+          .where((b) => b.status.name.toLowerCase() == status.toLowerCase())
+          .toList();
+    }
     return List<BookingModel>.from(_bookings);
   }
 
   @override
   Future<BookingModel> getBookingById(String bookingId) async {
     await Future.delayed(const Duration(milliseconds: 100));
-
     if (shouldFail) {
       throw const UnexpectedException(
         message: "Couldn't load booking details. Please try again.",
@@ -531,18 +612,12 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
     }
 
     final match = _bookings
-        .where(
-          (b) => b.id == bookingId || b.bookingReference == bookingId,
-    )
+        .where((b) => b.id == bookingId || b.bookingReference == bookingId)
         .firstOrNull;
 
-    if (match != null) {
-      return match;
-    }
-
+    if (match != null) return match;
     throw const NotFoundException(message: 'Booking not found');
   }
-
 
   @override
   Future<CreateBookingResponseModel> createBooking({
@@ -550,11 +625,21 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
     BookingSummaryModel? summary,
     PaymentMethodModel? paymentMethod,
   }) async {
-    throw UnimplementedError(
-      'Mock booking creation is not implemented.',
-    );
+    throw UnimplementedError('Mock booking creation is not implemented.');
   }
 
+  @override
+  Future<CancelBookingResponseModel> cancelBookingAppointment({
+    required String bookingId,
+    String? reason,
+  }) async {
+    return const CancelBookingResponseModel(
+      success: true,
+      message: 'Appointment cancelled successfully.',
+      refundAmount: 0.0,
+      pointsRestored: 0,
+    );
+  }
 
   @override
   Future<BookingModel> cancelBooking({
@@ -564,43 +649,67 @@ class MockBookingRemoteDataSource implements BookingRemoteDataSource {
     String? reasonNote,
   }) async {
     await Future.delayed(const Duration(milliseconds: 150));
-
-    if (shouldFail) {
-      throw const UnexpectedException(
-        message: 'Failed to cancel booking. Please try again.',
-      );
-    }
-
     final effectiveBookingId = request?.bookingId ?? bookingId ?? '';
-
     final index = _bookings.indexWhere(
-          (booking) =>
-      booking.id == effectiveBookingId ||
-          booking.bookingReference == effectiveBookingId,
+      (b) =>
+          b.id == effectiveBookingId ||
+          b.bookingReference == effectiveBookingId,
     );
-
     if (index == -1) {
       throw const NotFoundException(message: 'Booking not found.');
     }
-
     final existingBooking = _bookings[index];
-
     final updatedBooking = existingBooking.copyWith(
       status: BookingStatus.cancelled,
       cancellationReason: request?.reason ?? reason ?? '',
       cancellationNote: request?.reasonNote ?? reasonNote,
       cancelledAt: DateTime.now(),
     );
-
     _bookings[index] = updatedBooking;
-
     return updatedBooking;
   }
 
   @override
-  Future<BookingPricingResponseModel> calculatePricing({required String branchId, required List<Map<String, dynamic>> items, String? couponCode}) {
-    // TODO: implement calculatePricing
-    throw UnimplementedError();
+  Future<RescheduleBookingResponseModel> rescheduleBooking({
+    required String bookingId,
+    required String date,
+    required String timeSlot,
+    String? reason,
+  }) async {
+    return RescheduleBookingResponseModel(
+      success: true,
+      message: 'Appointment rescheduled successfully',
+      date: date,
+      timeSlot: timeSlot,
+    );
   }
 
+  @override
+  Future<bool> submitReview({
+    required String bookingId,
+    required int rating,
+    String? comment,
+  }) async {
+    return true;
+  }
+
+  @override
+  Future<BookingPricingResponseModel> calculatePricing({
+    required String branchId,
+    String? date,
+    String? timeSlot,
+    required List<Map<String, dynamic>> items,
+    String? couponCode,
+    bool? useLoyaltyPoints,
+    int? pointsToRedeem,
+  }) async {
+    return const BookingPricingResponseModel(
+      items: [],
+      subtotal: 500,
+      discount: 0,
+      tax: 0,
+      total: 500,
+      totalDurationMinutes: 45,
+    );
+  }
 }

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -16,6 +15,23 @@ class BookingSummarySuccessCard extends StatelessWidget {
     required this.booking,
     required this.summary,
   });
+
+  String _formatPaymentMethodName(String method) {
+    final lower = method.toLowerCase().trim();
+    if (lower.contains('cash') ||
+        lower.contains('salon') ||
+        lower.contains('cod') ||
+        lower.contains('offline')) {
+      return 'Pay at Salon';
+    }
+    if (lower.contains('upi')) {
+      return 'UPI Payment';
+    }
+    if (lower.contains('card')) {
+      return 'Credit / Debit Card';
+    }
+    return 'Online Payment';
+  }
 
   IconData _getPaymentIcon(String type) {
     final value = type.toLowerCase();
@@ -175,7 +191,7 @@ class BookingSummarySuccessCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            appointment.paymentMethod,
+                            _formatPaymentMethodName(appointment.paymentMethod),
                             style: AppTypography.bodySmall.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
@@ -184,9 +200,14 @@ class BookingSummarySuccessCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            'Status: ${appointment.paymentStatus}',
+                            'Status: ${appointment.paymentStatus.toUpperCase()}',
                             style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textSecondary,
+                              color:
+                                  appointment.paymentStatus.toLowerCase() ==
+                                      'paid'
+                                  ? AppColors.success
+                                  : AppColors.warning,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -206,9 +227,7 @@ class BookingSummarySuccessCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    AppFormatters.formatCurrency(
-                      appointment.totalAmount,
-                    ),
+                    AppFormatters.formatCurrency(appointment.totalAmount),
                     style: AppTypography.titleMedium.copyWith(
                       fontWeight: FontWeight.w800,
                       color: AppColors.primary,
@@ -232,11 +251,7 @@ class BookingSummarySuccessCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: AppColors.textTertiary,
-        ),
+        Icon(icon, size: 18, color: AppColors.textTertiary),
         const SizedBox(width: 10),
         Expanded(
           child: Column(

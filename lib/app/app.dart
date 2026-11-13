@@ -29,6 +29,14 @@ import '../features/branches/presentation/providers/branch_provider.dart';
 import '../features/offers/presentation/providers/offer_provider.dart';
 import '../features/subscriptions/data/repositories/subscription_repository.dart';
 import '../features/subscriptions/presentation/providers/subscription_provider.dart';
+import '../features/loyalty/domain/repositories/loyalty_repository.dart';
+import '../features/loyalty/presentation/providers/loyalty_provider.dart';
+import '../features/waitlist/domain/repositories/waitlist_repository.dart';
+import '../features/waitlist/presentation/providers/waitlist_provider.dart';
+import '../features/notifications/domain/repositories/notification_repository.dart';
+import '../features/notifications/presentation/providers/notification_provider.dart';
+import '../features/stylists/domain/repositories/stylist_repository.dart';
+import '../features/stylists/presentation/providers/stylist_provider.dart';
 import 'app_router.dart';
 import 'app_theme.dart';
 
@@ -46,7 +54,10 @@ class ServeCraftApp extends StatelessWidget {
   final BookingRepository bookingRepository;
   final CouponRepository couponRepository;
   final SubscriptionRepository subscriptionRepository;
-
+  final LoyaltyRepository loyaltyRepository;
+  final WaitlistRepository waitlistRepository;
+  final NotificationRepository notificationRepository;
+  final StylistRepository stylistRepository;
 
   const ServeCraftApp({
     super.key,
@@ -63,12 +74,15 @@ class ServeCraftApp extends StatelessWidget {
     required this.bookingRepository,
     required this.couponRepository,
     required this.subscriptionRepository,
+    required this.loyaltyRepository,
+    required this.waitlistRepository,
+    required this.notificationRepository,
+    required this.stylistRepository,
   });
 
   @override
   Widget build(BuildContext context) {
     final appConfig = AppConfig.instance;
-
 
     return MultiProvider(
       providers: [
@@ -80,14 +94,19 @@ class ServeCraftApp extends StatelessWidget {
         Provider<HomeRepository>.value(value: homeRepository),
         Provider<AddressRepository>.value(value: addressRepository),
         Provider<DateTimeRepository>.value(value: dateTimeRepository),
-        Provider<BookingSummaryRepository>.value(value: bookingSummaryRepository),
+        Provider<BookingSummaryRepository>.value(
+          value: bookingSummaryRepository,
+        ),
         Provider<PaymentRepository>.value(value: paymentRepository),
         Provider<BookingRepository>.value(value: bookingRepository),
         Provider<BranchRepository>.value(value: branchRepository),
         Provider<CouponRepository>.value(value: couponRepository),
-        Provider<SubscriptionRepository>.value(
-          value: subscriptionRepository,
-        ),
+        Provider<SubscriptionRepository>.value(value: subscriptionRepository),
+        Provider<LoyaltyRepository>.value(value: loyaltyRepository),
+        Provider<WaitlistRepository>.value(value: waitlistRepository),
+        Provider<NotificationRepository>.value(value: notificationRepository),
+        Provider<StylistRepository>.value(value: stylistRepository),
+
         // Branch Provider
         ChangeNotifierProvider<BranchProvider>(
           create: (_) => BranchProvider(
@@ -98,9 +117,7 @@ class ServeCraftApp extends StatelessWidget {
 
         // Offer & Coupon Provider
         ChangeNotifierProvider<OfferProvider>(
-          create: (_) => OfferProvider(
-            repository: couponRepository,
-          ),
+          create: (_) => OfferProvider(repository: couponRepository),
         ),
 
         // Auth Provider
@@ -120,8 +137,7 @@ class ServeCraftApp extends StatelessWidget {
 
         // Service Details & Package Provider
         ChangeNotifierProvider<ServiceDetailsProvider>(
-          create: (_) =>
-              ServiceDetailsProvider(repository: serviceRepository),
+          create: (_) => ServiceDetailsProvider(repository: serviceRepository),
         ),
 
         // Home Aggregator Provider
@@ -141,8 +157,11 @@ class ServeCraftApp extends StatelessWidget {
 
         // Booking Summary Provider
         ChangeNotifierProvider<BookingSummaryProvider>(
-          create: (_) =>
-              BookingSummaryProvider(repository: bookingSummaryRepository),
+          create: (_) => BookingSummaryProvider(
+            repository: bookingSummaryRepository,
+            bookingRepository: bookingRepository,
+            couponRepository: couponRepository,
+          ),
         ),
 
         // Payment Provider
@@ -162,9 +181,29 @@ class ServeCraftApp extends StatelessWidget {
 
         // Subscription Provider
         ChangeNotifierProvider<SubscriptionProvider>(
-          create: (_) => SubscriptionProvider(
-            repository: subscriptionRepository,
-          ),
+          create: (_) =>
+              SubscriptionProvider(repository: subscriptionRepository),
+        ),
+
+        // Loyalty Rewards Provider
+        ChangeNotifierProvider<LoyaltyProvider>(
+          create: (_) => LoyaltyProvider(repository: loyaltyRepository),
+        ),
+
+        // Waitlist Provider
+        ChangeNotifierProvider<WaitlistProvider>(
+          create: (_) => WaitlistProvider(repository: waitlistRepository),
+        ),
+
+        // Push Notifications Provider
+        ChangeNotifierProvider<NotificationProvider>(
+          create: (_) =>
+              NotificationProvider(repository: notificationRepository),
+        ),
+
+        // Stylist Provider
+        ChangeNotifierProvider<StylistProvider>(
+          create: (_) => StylistProvider(repository: stylistRepository),
         ),
       ],
       child: MaterialApp(

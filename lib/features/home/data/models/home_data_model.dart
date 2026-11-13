@@ -14,17 +14,20 @@ class HomeDataModel {
   });
 
   factory HomeDataModel.fromJson(Map<String, dynamic> json) {
-    final banners = (json['banners'] as List?)
+    final banners =
+        (json['banners'] as List?)
             ?.map((b) => BannerModel.fromJson(b as Map<String, dynamic>))
             .toList() ??
         [];
 
-    final categories = (json['categories'] as List?)
+    final categories =
+        (json['categories'] as List?)
             ?.map((c) => CategoryModel.fromJson(c as Map<String, dynamic>))
             .toList() ??
         [];
 
-    final popularServices = (json['popularServices'] as List?)
+    final popularServices =
+        (json['popularServices'] as List?)
             ?.map((s) => ServiceModel.fromJson(s as Map<String, dynamic>))
             .toList() ??
         [];

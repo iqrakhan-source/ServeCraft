@@ -56,7 +56,9 @@ class AddressProvider extends ChangeNotifier {
             _selectedAddress = defaultAddress;
           } else {
             // Update selected address object with latest data
-            _selectedAddress = result.firstWhere((a) => a.id == _selectedAddress!.id);
+            _selectedAddress = result.firstWhere(
+              (a) => a.id == _selectedAddress!.id,
+            );
           }
         } else {
           _selectedAddress = defaultAddress;

@@ -18,17 +18,12 @@ class BookingConfirmationScreen extends StatelessWidget {
   final CreateBookingResponseModel? booking;
   final BookingSummaryModel? summary;
 
-  const BookingConfirmationScreen({
-    super.key,
-    this.booking,
-    this.summary,
-  });
+  const BookingConfirmationScreen({super.key, this.booking, this.summary});
 
   void _navigateToHome(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      AppRoutes.mainNav,
-          (route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(AppRoutes.mainNav, (route) => false);
   }
 
   void _navigateToMyBookings(BuildContext context) {
@@ -60,83 +55,82 @@ class BookingConfirmationScreen extends StatelessWidget {
         body: effectiveBooking == null || effectiveSummary == null
             ? _buildEmptyState(context)
             : Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 24,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 24,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check_circle_rounded,
+                            size: 40,
+                            color: AppColors.success,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Booking Confirmed',
+                          style: AppTypography.titleLarge.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                            fontSize: 22,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Your service has been successfully scheduled.',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+
+                        BookingConfirmationCard(
+                          bookingReference:
+                              effectiveBooking.appointment.appointmentCode,
+                          statusText: effectiveBooking.appointment.status,
+                        ),
+                        const SizedBox(height: 16),
+
+                        BookingSummarySuccessCard(
+                          booking: effectiveBooking,
+                          summary: effectiveSummary,
+                        ),
+                        const SizedBox(height: 16),
+
+                        const BookingNextSteps(),
+                        const SizedBox(height: 32),
+
+                        AppButton(
+                          text: 'Back to Home',
+                          onPressed: () => _navigateToHome(context),
+                        ),
+                        const SizedBox(height: 12),
+
+                        AppButton(
+                          text: 'View My Bookings',
+                          variant: AppButtonVariant.secondary,
+                          onPressed: () => _navigateToMyBookings(context),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.check_circle_rounded,
-                      size: 40,
-                      color: AppColors.success,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Booking Confirmed',
-                    style: AppTypography.titleLarge.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                      fontSize: 22,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Your service has been successfully scheduled.',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-
-                  BookingConfirmationCard(
-                    bookingReference:
-                    effectiveBooking.appointment.appointmentCode,
-                    statusText:
-                    effectiveBooking.appointment.status,
-                  ),
-                  const SizedBox(height: 16),
-
-                  BookingSummarySuccessCard(
-                    booking: effectiveBooking,
-                    summary: effectiveSummary,
-                  ),
-                  const SizedBox(height: 16),
-
-                  const BookingNextSteps(),
-                  const SizedBox(height: 32),
-
-                  AppButton(
-                    text: 'Back to Home',
-                    onPressed: () => _navigateToHome(context),
-                  ),
-                  const SizedBox(height: 12),
-
-                  AppButton(
-                    text: 'View My Bookings',
-                    variant: AppButtonVariant.secondary,
-                    onPressed: () => _navigateToMyBookings(context),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

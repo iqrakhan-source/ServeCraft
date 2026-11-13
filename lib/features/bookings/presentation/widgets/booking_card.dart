@@ -10,11 +10,7 @@ class BookingCard extends StatelessWidget {
   final BookingModel booking;
   final VoidCallback onTap;
 
-  const BookingCard({
-    super.key,
-    required this.booking,
-    required this.onTap,
-  });
+  const BookingCard({super.key, required this.booking, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +136,7 @@ class BookingCard extends StatelessWidget {
                 ],
               ),
               Row(
-               // mainAxisSize: MainAxisSize.min,
+                // mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(

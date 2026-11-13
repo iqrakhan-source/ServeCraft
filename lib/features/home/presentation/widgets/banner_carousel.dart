@@ -95,12 +95,14 @@ class BannerCarousel extends StatelessWidget {
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.secondary
-                                        .withValues(alpha: 0.2),
+                                    color: AppColors.secondary.withValues(
+                                      alpha: 0.2,
+                                    ),
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
-                                      color: AppColors.secondary
-                                          .withValues(alpha: 0.5),
+                                      color: AppColors.secondary.withValues(
+                                        alpha: 0.5,
+                                      ),
                                       width: 1.0,
                                     ),
                                   ),

@@ -75,10 +75,7 @@ class FeaturedServicesSection extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.border,
-                      width: 1.0,
-                    ),
+                    border: Border.all(color: AppColors.border, width: 1.0),
                     boxShadow: const [
                       BoxShadow(
                         color: AppColors.shadow,

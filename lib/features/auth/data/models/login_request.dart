@@ -3,15 +3,12 @@ class LoginRequest {
   final String? email;
   final String password;
 
-  LoginRequest({
-    this.phone,
-    this.email,
-    required this.password,
-  }) : assert(
-  (phone != null && phone!.isNotEmpty) ||
-      (email != null && email!.isNotEmpty),
-  'Phone or email is required',
-  );
+  LoginRequest({this.phone, this.email, required this.password})
+    : assert(
+        (phone != null && phone.isNotEmpty) ||
+            (email != null && email.isNotEmpty),
+        'Phone or email is required',
+      );
 
   Map<String, dynamic> toJson() {
     return {

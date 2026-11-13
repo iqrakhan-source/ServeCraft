@@ -15,8 +15,7 @@ class ResetPasswordScreen extends StatefulWidget {
   final String? email;
   final String resetToken;
 
-
-  const ResetPasswordScreen({super.key, this.email,required this.resetToken});
+  const ResetPasswordScreen({super.key, this.email, this.resetToken = ''});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -24,6 +23,7 @@ class ResetPasswordScreen extends StatefulWidget {
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _tokenController;
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -32,7 +32,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    _tokenController = TextEditingController(text: widget.resetToken);
+  }
+
+  @override
   void dispose() {
+    _tokenController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -50,11 +57,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     });
   }
 
-
   Future<void> _handleResetPassword() async {
     FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate() || _isLoading) {
+      return;
+    }
+
+    final token = _tokenController.text.trim();
+    if (token.isEmpty) {
+      context.showErrorSnackBar('Please enter your password reset token.');
       return;
     }
 
@@ -64,7 +76,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     try {
       final success = await context.read<AuthProvider>().resetPassword(
-        resetToken: widget.resetToken,
+        resetToken: token,
         newPassword: _newPasswordController.text,
       );
 
@@ -75,16 +87,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           context: context,
           title: 'Password Updated',
           message:
-          'Your password has been reset successfully. You can now log in with your new credentials.',
+              'Your password has been reset successfully. You can now log in with your new credentials.',
           buttonText: 'Back to Sign In',
         );
 
         if (!mounted) return;
 
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.login,
-              (route) => false,
-        );
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
       } else {
         context.showErrorSnackBar(
           context.read<AuthProvider>().errorMessage ??
@@ -140,10 +151,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primaryDark,
-                      ],
+                      colors: [AppColors.primary, AppColors.primaryDark],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
@@ -181,6 +189,26 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ),
                 ),
                 const SizedBox(height: 36),
+
+                // Reset Token Field
+                AppTextField(
+                  controller: _tokenController,
+                  label: 'Reset Token / OTP Code',
+                  hint: 'Paste the reset token from your email',
+                  prefixIcon: const Icon(
+                    Icons.security_rounded,
+                    color: AppColors.textTertiary,
+                    size: 20,
+                  ),
+                  textInputAction: TextInputAction.next,
+                  validator: (val) {
+                    if (val == null || val.trim().isEmpty) {
+                      return 'Please enter the reset token';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 18),
 
                 // New Password Field
                 AppTextField(

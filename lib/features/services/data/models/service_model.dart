@@ -93,15 +93,13 @@ class ServiceModel {
 
     final parsedPackages = json['packages'] is List
         ? (json['packages'] as List)
-        .whereType<Map<String, dynamic>>()
-        .map(ServicePackageModel.fromJson)
-        .toList()
+              .whereType<Map<String, dynamic>>()
+              .map(ServicePackageModel.fromJson)
+              .toList()
         : <ServicePackageModel>[];
 
     final parsedInclusions = json['inclusions'] is List
-        ? (json['inclusions'] as List)
-        .map((item) => item.toString())
-        .toList()
+        ? (json['inclusions'] as List).map((item) => item.toString()).toList()
         : <String>[];
 
     return ServiceModel(
@@ -109,16 +107,15 @@ class ServiceModel {
       categoryId: parsedCategoryId,
       name: json['name'] as String? ?? '',
       description: json['description'] as String? ?? '',
-      image: json['image'] as String?,
+      image: (json['imageUrl'] ?? json['image']) as String?,
       rating: (json['rating'] as num?)?.toDouble() ?? 4.8,
       reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
       startingPrice: (rawPrice as num?)?.toDouble() ?? 0.0,
       duration: parsedDuration,
-      isActive: json['active'] as bool? ??
-          json['isActive'] as bool? ??
-          true,
+      isActive: json['active'] as bool? ?? json['isActive'] as bool? ?? true,
       packages: parsedPackages,
-      genderTarget: json['genderTarget'] as String? ?? 'all',
+      genderTarget: (json['gender'] ?? json['genderTarget'] ?? 'all')
+          .toString(),
       inclusions: parsedInclusions,
     );
   }

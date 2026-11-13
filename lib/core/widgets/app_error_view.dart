@@ -33,11 +33,7 @@ class AppErrorView extends StatelessWidget {
                 color: AppColors.errorLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 48,
-                color: AppColors.error,
-              ),
+              child: Icon(icon, size: 48, color: AppColors.error),
             ),
             const SizedBox(height: 18),
             Text(
@@ -59,10 +55,17 @@ class AppErrorView extends StatelessWidget {
               const SizedBox(height: 24),
               AppButton(
                 text: AppStrings.retry,
-                icon: const Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
+                icon: const Icon(
+                  Icons.refresh_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
                 onPressed: onRetry,
                 isFullWidth: false,
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 12,
+                ),
               ),
             ],
           ],

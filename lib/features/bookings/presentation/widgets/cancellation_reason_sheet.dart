@@ -11,10 +11,7 @@ import '../providers/booking_provider.dart';
 class CancellationReasonSheet extends StatefulWidget {
   final BookingModel booking;
 
-  const CancellationReasonSheet({
-    super.key,
-    required this.booking,
-  });
+  const CancellationReasonSheet({super.key, required this.booking});
 
   static Future<bool?> show(
     BuildContext context, {
@@ -30,7 +27,8 @@ class CancellationReasonSheet extends StatefulWidget {
   }
 
   @override
-  State<CancellationReasonSheet> createState() => _CancellationReasonSheetState();
+  State<CancellationReasonSheet> createState() =>
+      _CancellationReasonSheetState();
 }
 
 class _CancellationReasonSheetState extends State<CancellationReasonSheet> {
@@ -66,8 +64,8 @@ class _CancellationReasonSheetState extends State<CancellationReasonSheet> {
       reasonNote: _selectedReason == 'Other'
           ? _noteController.text.trim()
           : (_noteController.text.trim().isNotEmpty
-              ? _noteController.text.trim()
-              : null),
+                ? _noteController.text.trim()
+                : null),
     );
 
     final result = await provider.cancelBooking(request: request);

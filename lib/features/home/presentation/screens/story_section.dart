@@ -11,25 +11,25 @@ class CuratedStoriesSection extends StatelessWidget {
       'title': 'Fresh Spaces',
       'subtitle': 'Home Cleaning',
       'image':
-      'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500',
+          'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500',
     },
     {
       'title': 'Cool Comfort',
       'subtitle': 'AC Service',
       'image':
-      'https://images.unsplash.com/photo-1631545806609-7c8d7e5f4b5f?w=500',
+          'https://images.unsplash.com/photo-1631545806609-7c8d7e5f4b5f?w=500',
     },
     {
       'title': 'Perfect Finish',
       'subtitle': 'Home Painting',
       'image':
-      'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=500',
+          'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=500',
     },
     {
       'title': 'Little Fixes',
       'subtitle': 'Electrical',
       'image':
-      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500',
+          'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500',
     },
   ];
 
@@ -82,9 +82,7 @@ class CuratedStoriesSection extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => StoryViewerScreen(
-                          initialIndex: index,
-                        ),
+                        builder: (_) => StoryViewerScreen(initialIndex: index),
                       ),
                     );
                   },
@@ -127,10 +125,7 @@ class _StoryCard extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 gradient: const LinearGradient(
-                  colors: [
-                    AppColors.primary,
-                    AppColors.secondary,
-                  ],
+                  colors: [AppColors.primary, AppColors.secondary],
                 ),
               ),
               child: ClipRRect(

@@ -36,11 +36,7 @@ class AppEmptyState extends StatelessWidget {
                 color: AppColors.primaryLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: iconSize,
-                color: AppColors.primary,
-              ),
+              child: Icon(icon, size: iconSize, color: AppColors.primary),
             ),
             const SizedBox(height: 20),
             Text(
@@ -66,7 +62,10 @@ class AppEmptyState extends StatelessWidget {
                 text: actionText!,
                 onPressed: onActionPressed,
                 isFullWidth: false,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
             ],
           ],

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
@@ -11,11 +10,7 @@ class SummaryServiceCard extends StatelessWidget {
   final ServiceModel service;
   final ServicePackageModel? package;
 
-  const SummaryServiceCard({
-    super.key,
-    required this.service,
-    this.package,
-  });
+  const SummaryServiceCard({super.key, required this.service, this.package});
 
   @override
   Widget build(BuildContext context) {

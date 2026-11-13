@@ -210,9 +210,7 @@ class TimeSlotGrid extends StatelessWidget {
               border: Border.all(
                 color: isSelected
                     ? AppColors.primary
-                    : (isAvailable
-                        ? AppColors.border
-                        : AppColors.borderSubtle),
+                    : (isAvailable ? AppColors.border : AppColors.borderSubtle),
                 width: isSelected ? 1.5 : 1.0,
               ),
               boxShadow: isSelected
@@ -234,7 +232,6 @@ class TimeSlotGrid extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -250,8 +247,7 @@ class TimeSlotGrid extends StatelessWidget {
                         size: 12,
                         color: AppColors.textTertiary,
                       ),
-                    if (isSelected || !isAvailable)
-                      const SizedBox(width: 4),
+                    if (isSelected || !isAvailable) const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         slot.formattedLabel,
@@ -261,10 +257,11 @@ class TimeSlotGrid extends StatelessWidget {
                           color: isSelected
                               ? Colors.white
                               : (isAvailable
-                              ? AppColors.textPrimary
-                              : AppColors.textTertiary),
-                          fontWeight:
-                          isSelected ? FontWeight.w800 : FontWeight.w600,
+                                    ? AppColors.textPrimary
+                                    : AppColors.textTertiary),
+                          fontWeight: isSelected
+                              ? FontWeight.w800
+                              : FontWeight.w600,
                           fontSize: 12,
                         ),
                       ),
@@ -279,8 +276,8 @@ class TimeSlotGrid extends StatelessWidget {
                     color: isSelected
                         ? Colors.white.withValues(alpha: 0.85)
                         : (isAvailable
-                            ? AppColors.success
-                            : AppColors.textTertiary),
+                              ? AppColors.success
+                              : AppColors.textTertiary),
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
                   ),

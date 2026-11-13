@@ -26,8 +26,10 @@ abstract class AppStrings {
 
   // Auth
   static const String loginTitle = 'Welcome to Luxe';
-  static const String loginSubtitle = 'Enter your mobile number to access appointments & exclusive offers';
-  static const String emailLoginSubtitle = 'Sign in to access appointments, rewards & bespoke services';
+  static const String loginSubtitle =
+      'Enter your mobile number to access appointments & exclusive offers';
+  static const String emailLoginSubtitle =
+      'Sign in to access appointments, rewards & bespoke services';
   static const String emailLabel = 'Email Address';
   static const String emailHint = 'alex@example.com';
   static const String passwordLabel = 'Password';
@@ -41,32 +43,40 @@ abstract class AppStrings {
   static const String dontHaveAccount = "Don't have an account?";
   static const String alreadyHaveAccount = 'Already have an account?';
   static const String signUpTitle = 'Create Account';
-  static const String signUpSubtitle = 'Sign up to book top stylists, view curated packages & earn rewards';
+  static const String signUpSubtitle =
+      'Sign up to book top stylists, view curated packages & earn rewards';
   static const String forgotPasswordTitle = 'Forgot Password';
-  static const String forgotPasswordSubtitle = 'Enter your registered email address and we will send a verification code to reset your password.';
+  static const String forgotPasswordSubtitle =
+      'Enter your registered email address and we will send a verification code to reset your password.';
   static const String sendResetCode = 'Send Verification Code';
   static const String verifyCodeTitle = 'Verify Code';
-  static const String verifyCodeSubtitle = 'Enter the 6-digit verification code sent to';
+  static const String verifyCodeSubtitle =
+      'Enter the 6-digit verification code sent to';
   static const String resetPasswordTitle = 'Reset Password';
-  static const String resetPasswordSubtitle = 'Create a new, secure password for your Luxe account';
+  static const String resetPasswordSubtitle =
+      'Create a new, secure password for your Luxe account';
   static const String newPasswordLabel = 'New Password';
   static const String resetPasswordBtn = 'Reset Password';
   static const String phoneHint = '10-digit mobile number';
   static const String phoneLabel = 'Phone Number';
   static const String sendOtp = 'Send Verification Code';
   static const String otpTitle = 'Verify Mobile';
-  static const String otpSubtitle = 'Enter the 6-digit verification code sent to';
+  static const String otpSubtitle =
+      'Enter the 6-digit verification code sent to';
   static const String resendOtp = 'Resend Code';
   static const String verifyOtp = 'Verify & Continue';
   static const String completeProfileTitle = 'Complete Your Profile';
-  static const String completeProfileSubtitle = 'Personalize your salon experience and help us tailor treatments to you';
+  static const String completeProfileSubtitle =
+      'Personalize your salon experience and help us tailor treatments to you';
   static const String fullNameHint = 'Full Name';
 
   // Error messages
   static const String commonError = 'Something went wrong. Please try again.';
-  static const String networkError = 'No internet connection. Check your network.';
+  static const String networkError =
+      'No internet connection. Check your network.';
   static const String timeoutError = 'Request timed out. Please try again.';
-  static const String sessionExpired = 'Your session has expired. Please sign in again.';
+  static const String sessionExpired =
+      'Your session has expired. Please sign in again.';
   static const String emptyData = 'No items found.';
 
   // Status Strings

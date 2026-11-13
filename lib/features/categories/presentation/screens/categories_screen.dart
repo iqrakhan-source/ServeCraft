@@ -86,21 +86,25 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           final filteredCategories = _searchQuery.isEmpty
               ? allCategories
               : allCategories
-                  .where((c) =>
-                      c.name
-                          .toLowerCase()
-                          .contains(_searchQuery.toLowerCase()) ||
-                      c.description
-                          .toLowerCase()
-                          .contains(_searchQuery.toLowerCase()))
-                  .toList();
+                    .where(
+                      (c) =>
+                          c.name.toLowerCase().contains(
+                            _searchQuery.toLowerCase(),
+                          ) ||
+                          c.description.toLowerCase().contains(
+                            _searchQuery.toLowerCase(),
+                          ),
+                    )
+                    .toList();
 
           return Column(
             children: [
               // Search categories input
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 color: AppColors.surface,
                 child: TextField(
                   controller: _searchController,
@@ -144,18 +148,19 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 child: filteredCategories.isEmpty
                     ? const AppEmptyState(
                         title: 'No Categories Found',
-                        subtitle: 'Try searching for hair, facial, spa, or nails.',
+                        subtitle:
+                            'Try searching for hair, facial, spa, or nails.',
                       )
                     : GridView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: filteredCategories.length,
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 14,
-                          mainAxisSpacing: 14,
-                          childAspectRatio: 0.7,
-                        ),
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 14,
+                              mainAxisSpacing: 14,
+                              childAspectRatio: 0.7,
+                            ),
                         itemBuilder: (context, index) {
                           final category = filteredCategories[index];
                           final icon = _getCategoryIcon(category.icon);
@@ -195,8 +200,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                       Stack(
                                         children: [
                                           ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                             child: AppNetworkImage(
                                               imageUrl: category.image,
                                               height: 105,
@@ -226,11 +232,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                       const SizedBox(height: 10),
                                       Text(
                                         category.name,
-                                        style:
-                                            AppTypography.titleSmall.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 13,
-                                        ),
+                                        style: AppTypography.titleSmall
+                                            .copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 13,
+                                            ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -21,17 +22,19 @@ class ProfileScreen extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.currentUser;
 
-    final displayName = user?.name.isNotEmpty == true ? user!.name : 'Sophia Reynolds';
-    final displayPhone =
-        user?.phone.isNotEmpty == true ? AppFormatters.formatPhone(user!.phone) : '+91 98765 43210';
-    final displayEmail =
-        user?.email.isNotEmpty == true ? user!.email : 'sophia.reynolds@example.com';
+    final displayName = user?.name.isNotEmpty == true
+        ? user!.name
+        : 'Sophia Reynolds';
+    final displayPhone = user?.phone.isNotEmpty == true
+        ? AppFormatters.formatPhone(user!.phone)
+        : '+91 98765 43210';
+    final displayEmail = user?.email.isNotEmpty == true
+        ? user!.email
+        : 'sophia.reynolds@example.com';
     final displayGender = (user?.gender != null && user!.gender!.isNotEmpty)
         ? user.gender!
         : 'Not specified';
-    final displayDob = (user?.dateOfBirth != null && user!.dateOfBirth!.isNotEmpty)
-        ? user.dateOfBirth!
-        : 'Not specified';
+    final displayDob = _formatDateOfBirth(user?.dateOfBirth);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -60,11 +63,13 @@ class ProfileScreen extends StatelessWidget {
                       CircleAvatar(
                         radius: 44,
                         backgroundColor: AppColors.primaryLight,
-                        backgroundImage: (user?.profileImage != null &&
+                        backgroundImage:
+                            (user?.profileImage != null &&
                                 user!.profileImage!.startsWith('http'))
                             ? NetworkImage(user.profileImage!)
                             : null,
-                        child: (user?.profileImage == null ||
+                        child:
+                            (user?.profileImage == null ||
                                 !user!.profileImage!.startsWith('http'))
                             ? Text(
                                 displayName.substring(0, 1).toUpperCase(),
@@ -124,7 +129,9 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.surfaceMuted,
                           borderRadius: BorderRadius.circular(20),
@@ -132,8 +139,11 @@ class ProfileScreen extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.person_outline_rounded,
-                                size: 14, color: AppColors.primary),
+                            const Icon(
+                              Icons.person_outline_rounded,
+                              size: 14,
+                              color: AppColors.primary,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               displayGender,
@@ -148,7 +158,9 @@ class ProfileScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.surfaceMuted,
                           borderRadius: BorderRadius.circular(20),
@@ -156,8 +168,11 @@ class ProfileScreen extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.cake_outlined,
-                                size: 14, color: AppColors.primary),
+                            const Icon(
+                              Icons.cake_outlined,
+                              size: 14,
+                              color: AppColors.primary,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               displayDob,
@@ -177,8 +192,11 @@ class ProfileScreen extends StatelessWidget {
                   AppButton(
                     text: 'Edit Profile',
                     variant: AppButtonVariant.secondary,
-                    icon: const Icon(Icons.edit_outlined,
-                        size: 16, color: AppColors.primary),
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -206,17 +224,27 @@ class ProfileScreen extends StatelessWidget {
                         color: AppColors.primaryLight,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.calendar_today_outlined,
-                          size: 20, color: AppColors.primary),
+                      child: const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
                     ),
-                    title: Text('My Appointments',
-                        style: AppTypography.titleSmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                        )),
-                    subtitle: Text('Upcoming, completed & cancelled visits',
-                        style: AppTypography.bodySmall),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        size: 14, color: AppColors.textTertiary),
+                    title: Text(
+                      'My Appointments',
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Upcoming, completed & cancelled visits',
+                      style: AppTypography.bodySmall,
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    ),
                     onTap: () {
                       Navigator.of(context).pushNamed(AppRoutes.myBookings);
                     },
@@ -230,17 +258,27 @@ class ProfileScreen extends StatelessWidget {
                         color: AppColors.secondaryLight,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.notifications_none_rounded,
-                          size: 20, color: AppColors.secondary),
+                      child: const Icon(
+                        Icons.notifications_none_rounded,
+                        size: 20,
+                        color: AppColors.secondary,
+                      ),
                     ),
-                    title: Text('Notifications',
-                        style: AppTypography.titleSmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                        )),
-                    subtitle: Text('Booking alerts, stylist updates & offers',
-                        style: AppTypography.bodySmall),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        size: 14, color: AppColors.textTertiary),
+                    title: Text(
+                      'Notifications',
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Booking alerts, stylist updates & offers',
+                      style: AppTypography.bodySmall,
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    ),
                     onTap: () {
                       Navigator.of(context).pushNamed(AppRoutes.notifications);
                     },
@@ -254,17 +292,27 @@ class ProfileScreen extends StatelessWidget {
                         color: AppColors.primaryLight,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.storefront_outlined,
-                          size: 20, color: AppColors.primary),
+                      child: const Icon(
+                        Icons.storefront_outlined,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
                     ),
-                    title: Text('Salon Branches',
-                        style: AppTypography.titleSmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                        )),
-                    subtitle: Text('Explore active salon lounges & locations',
-                        style: AppTypography.bodySmall),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        size: 14, color: AppColors.textTertiary),
+                    title: Text(
+                      'Salon Branches',
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Explore active salon lounges & locations',
+                      style: AppTypography.bodySmall,
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    ),
                     onTap: () {
                       Navigator.of(context).pushNamed(
                         AppRoutes.branchSelection,
@@ -281,17 +329,27 @@ class ProfileScreen extends StatelessWidget {
                         color: AppColors.surfaceMuted,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.local_offer_outlined,
-                          size: 20, color: AppColors.textSecondary),
+                      child: const Icon(
+                        Icons.local_offer_outlined,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                    title: Text('Coupons & Offers',
-                        style: AppTypography.titleSmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                        )),
-                    subtitle: Text('Exclusive salon discounts & gift packages',
-                        style: AppTypography.bodySmall),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        size: 14, color: AppColors.textTertiary),
+                    title: Text(
+                      'Coupons & Offers',
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Exclusive salon discounts & gift packages',
+                      style: AppTypography.bodySmall,
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    ),
                     onTap: () {
                       Navigator.of(context).pushNamed(AppRoutes.offers);
                     },
@@ -331,6 +389,75 @@ class ProfileScreen extends StatelessWidget {
                       Navigator.of(context).pushNamed(AppRoutes.subscriptions);
                     },
                   ),
+                  const Divider(),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF3E0),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.stars_rounded,
+                        size: 20,
+                        color: Color(0xFFE65100),
+                      ),
+                    ),
+                    title: Text(
+                      'Loyalty Rewards',
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Cashback points, tier status & passbook',
+                      style: AppTypography.bodySmall,
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    ),
+                    onTap: () {
+                      Navigator.of(context).pushNamed(AppRoutes.loyaltyWallet);
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0F2F1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.hourglass_top_rounded,
+                        size: 20,
+                        color: Color(0xFF00695C),
+                      ),
+                    ),
+                    title: Text(
+                      'Branch Waitlist',
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Track queue status for busy salon branches',
+                      style: AppTypography.bodySmall,
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    ),
+                    onTap: () {
+                      Navigator.of(context).pushNamed(AppRoutes.waitlist);
+                    },
+                  ),
+                  const Divider(),
 
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -340,17 +467,27 @@ class ProfileScreen extends StatelessWidget {
                         color: AppColors.surfaceMuted,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.settings_outlined,
-                          size: 20, color: AppColors.textSecondary),
+                      child: const Icon(
+                        Icons.settings_outlined,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                    title: Text('App Settings & Preferences',
-                        style: AppTypography.titleSmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                        )),
-                    subtitle: Text('Language, notifications, privacy',
-                        style: AppTypography.bodySmall),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        size: 14, color: AppColors.textTertiary),
+                    title: Text(
+                      'App Settings & Preferences',
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Language, notifications, privacy',
+                      style: AppTypography.bodySmall,
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    ),
                     onTap: () => _showSettingsSheet(context),
                   ),
                 ],
@@ -362,8 +499,11 @@ class ProfileScreen extends StatelessWidget {
             AppButton(
               text: 'Sign Out',
               variant: AppButtonVariant.dangerOutline,
-              icon: const Icon(Icons.logout_rounded,
-                  size: 18, color: AppColors.error),
+              icon: const Icon(
+                Icons.logout_rounded,
+                size: 18,
+                color: AppColors.error,
+              ),
               onPressed: () => _confirmLogout(context),
             ),
             const SizedBox(height: 20),
@@ -393,36 +533,43 @@ class ProfileScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Preferences & Settings',
-                  style: AppTypography.titleLarge.copyWith(
-                    fontWeight: FontWeight.w700,
-                  )),
+              Text(
+                'Preferences & Settings',
+                style: AppTypography.titleLarge.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 16),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text('Appointment Reminders',
-                    style: AppTypography.bodyMedium),
-                subtitle: Text('Receive SMS/push 2 hours before slot',
-                    style: AppTypography.bodySmall),
+                title: Text(
+                  'Appointment Reminders',
+                  style: AppTypography.bodyMedium,
+                ),
+                subtitle: Text(
+                  'Receive SMS/push 2 hours before slot',
+                  style: AppTypography.bodySmall,
+                ),
                 value: true,
                 activeThumbColor: AppColors.primary,
                 onChanged: (val) {},
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text('Promotional Offers',
-                    style: AppTypography.bodyMedium),
-                subtitle: Text('Notifications for weekend deals & coupons',
-                    style: AppTypography.bodySmall),
+                title: Text(
+                  'Promotional Offers',
+                  style: AppTypography.bodyMedium,
+                ),
+                subtitle: Text(
+                  'Notifications for weekend deals & coupons',
+                  style: AppTypography.bodySmall,
+                ),
                 value: true,
                 activeThumbColor: AppColors.primary,
                 onChanged: (val) {},
               ),
               const SizedBox(height: 16),
-              AppButton(
-                text: 'Done',
-                onPressed: () => Navigator.pop(ctx),
-              ),
+              AppButton(text: 'Done', onPressed: () => Navigator.pop(ctx)),
             ],
           ),
         );
@@ -443,11 +590,31 @@ class ProfileScreen extends StatelessWidget {
       final authProvider = context.read<AuthProvider>();
       await authProvider.logout();
       if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.mobileLogin,
-          (route) => false,
-        );
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRoutes.mobileLogin, (route) => false);
       }
     }
+  }
+
+  /// Formats Date of Birth into Indian display format (dd/MM/yyyy)
+  String _formatDateOfBirth(String? dob) {
+    if (dob == null || dob.trim().isEmpty) {
+      return 'Not specified';
+    }
+    final trimmed = dob.trim();
+    final parsed = DateTime.tryParse(trimmed);
+    if (parsed != null) {
+      return DateFormat('dd/MM/yyyy').format(parsed);
+    }
+    try {
+      final parsedSlash = DateFormat('dd/MM/yyyy').parseStrict(trimmed);
+      return DateFormat('dd/MM/yyyy').format(parsedSlash);
+    } catch (_) {}
+    try {
+      final parsedDash = DateFormat('dd-MM-yyyy').parseStrict(trimmed);
+      return DateFormat('dd/MM/yyyy').format(parsedDash);
+    } catch (_) {}
+    return trimmed;
   }
 }

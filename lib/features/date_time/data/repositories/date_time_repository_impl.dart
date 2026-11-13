@@ -1,4 +1,3 @@
-
 import '../../domain/repositories/date_time_repository.dart';
 import '../datasources/date_time_remote_data_source.dart';
 import '../models/service_date_model.dart';
@@ -14,11 +13,17 @@ class DateTimeRepositoryImpl implements DateTimeRepository {
     required String serviceId,
     String? packageId,
     required String branchId,
+    String? categoryId,
+    int? duration,
+    String? stylistId,
   }) {
     return remoteDataSource.getAvailableDates(
       serviceId: serviceId,
       branchId: branchId,
       packageId: packageId,
+      categoryId: categoryId,
+      duration: duration,
+      stylistId: stylistId,
     );
   }
 

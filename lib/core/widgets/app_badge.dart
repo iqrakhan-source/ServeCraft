@@ -65,11 +65,7 @@ class AppBadge extends StatelessWidget {
         bg = AppColors.surfaceMuted;
     }
 
-    return AppBadge(
-      label: display,
-      textColor: text,
-      backgroundColor: bg,
-    );
+    return AppBadge(label: display, textColor: text, backgroundColor: bg);
   }
 
   /// Factory for Payment Status badge
@@ -104,11 +100,7 @@ class AppBadge extends StatelessWidget {
         bg = AppColors.surfaceMuted;
     }
 
-    return AppBadge(
-      label: display,
-      textColor: text,
-      backgroundColor: bg,
-    );
+    return AppBadge(label: display, textColor: text, backgroundColor: bg);
   }
 
   @override
@@ -122,10 +114,7 @@ class AppBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            icon!,
-            const SizedBox(width: 4),
-          ],
+          if (icon != null) ...[icon!, const SizedBox(width: 4)],
           Text(
             label,
             style: AppTypography.labelSmall.copyWith(

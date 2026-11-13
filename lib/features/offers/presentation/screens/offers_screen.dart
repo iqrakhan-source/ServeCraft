@@ -12,11 +12,9 @@ import '../providers/offer_provider.dart';
 
 class OffersScreen extends StatefulWidget {
   final bool isSelectionMode;
+  final String? branchId;
 
-  const OffersScreen({
-    super.key,
-    this.isSelectionMode = false,
-  });
+  const OffersScreen({super.key, this.isSelectionMode = false, this.branchId});
 
   @override
   State<OffersScreen> createState() => _OffersScreenState();
@@ -30,7 +28,7 @@ class _OffersScreenState extends State<OffersScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      context.read<OfferProvider>().loadCoupons();
+      context.read<OfferProvider>().loadCoupons(branchId: widget.branchId);
     });
   }
 
@@ -49,15 +47,10 @@ class _OffersScreenState extends State<OffersScreen> {
     );
   }
 
-  Widget _buildBody(
-      OfferProvider offerProvider,
-      List<CouponModel> offers,
-      ) {
+  Widget _buildBody(OfferProvider offerProvider, List<CouponModel> offers) {
     // Loading state
     if (offerProvider.isLoading && offers.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     // Error state
@@ -76,24 +69,19 @@ class _OffersScreenState extends State<OffersScreen> {
               const SizedBox(height: 12),
               const Text(
                 'Unable to load offers',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Text(
                 offerProvider.error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                ),
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 16),
               AppButton(
                 text: 'Retry',
                 onPressed: () {
-                  offerProvider.loadCoupons();
+                  offerProvider.loadCoupons(branchId: widget.branchId);
                 },
               ),
             ],
@@ -116,9 +104,7 @@ class _OffersScreenState extends State<OffersScreen> {
             SizedBox(height: 12),
             Text(
               'No offers available right now.',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -129,8 +115,7 @@ class _OffersScreenState extends State<OffersScreen> {
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: offers.length,
-      separatorBuilder: (context, index) =>
-      const SizedBox(height: 16),
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         final coupon = offers[index];
 
@@ -177,10 +162,7 @@ class _OffersScreenState extends State<OffersScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              const Divider(
-                height: 1,
-                color: AppColors.border,
-              ),
+              const Divider(height: 1, color: AppColors.border),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -188,15 +170,11 @@ class _OffersScreenState extends State<OffersScreen> {
                   // Promo code copy
                   InkWell(
                     onTap: () {
-                      Clipboard.setData(
-                        ClipboardData(text: coupon.code),
-                      );
+                      Clipboard.setData(ClipboardData(text: coupon.code));
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(
-                            'Code ${coupon.code} copied!',
-                          ),
+                          content: Text('Code ${coupon.code} copied!'),
                           duration: const Duration(seconds: 1),
                           backgroundColor: AppColors.primary,
                         ),

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:prop_crm/features/auth/data/datasources/auth_remote_data_source.dart';
-import 'package:prop_crm/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:prop_crm/features/auth/presentation/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -74,7 +72,10 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 24.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -91,10 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.primary,
-                            AppColors.primaryDark,
-                          ],
+                          colors: [AppColors.primary, AppColors.primaryDark],
                         ),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
@@ -119,7 +117,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Icon(
                               Icons.auto_awesome_rounded,
                               size: 12,
-                              color: AppColors.secondary.withValues(alpha: 0.95),
+                              color: AppColors.secondary.withValues(
+                                alpha: 0.95,
+                              ),
                             ),
                           ),
                         ],
@@ -203,10 +203,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
+                        Navigator.of(
+                          context,
+                        ).pushNamed(AppRoutes.forgotPassword);
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 4,
+                        ),
                         visualDensity: VisualDensity.compact,
                       ),
                       child: Text(
@@ -221,7 +226,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
 
                   // Primary Sign In Button
-
                   AppButton(
                     text: AppStrings.signIn,
                     isLoading: _isLoading,
@@ -237,7 +241,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       try {
                         debugPrint('[LOGIN UI] Login button pressed');
-                        debugPrint('[LOGIN UI] Email: ${_emailController.text.trim()}');
+                        debugPrint(
+                          '[LOGIN UI] Email: ${_emailController.text.trim()}',
+                        );
 
                         final authProvider = Provider.of<AuthProvider>(
                           context,
@@ -250,12 +256,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
 
                         debugPrint('[LOGIN UI] Success: $success');
-                        debugPrint('[LOGIN UI] Error: ${authProvider.errorMessage}');
+                        debugPrint(
+                          '[LOGIN UI] Error: ${authProvider.errorMessage}',
+                        );
                         debugPrint(
                           '[LOGIN UI] Profile incomplete: ${authProvider.isProfileIncomplete}',
                         );
 
-                        if (!mounted) return;
+                        if (!context.mounted) return;
 
                         if (success) {
                           final nextRoute = authProvider.isProfileIncomplete
@@ -266,7 +274,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           Navigator.of(context).pushNamedAndRemoveUntil(
                             nextRoute,
-                                (route) => false,
+                            (route) => false,
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -282,10 +290,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         debugPrint('[LOGIN UI] Exception: $e');
                         debugPrintStack(stackTrace: stackTrace);
 
-                        if (!mounted) return;
+                        if (!context.mounted) return;
 
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Unable to log in. Please try again.')),
+                          const SnackBar(
+                            content: Text(
+                              'Unable to log in. Please try again.',
+                            ),
+                          ),
                         );
                       } finally {
                         if (mounted) {
@@ -293,7 +305,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         }
                       }
                     },
-
                   ),
 
                   const SizedBox(height: 28),
@@ -302,10 +313,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     children: [
                       const Expanded(
-                        child: Divider(
-                          color: AppColors.border,
-                          thickness: 1,
-                        ),
+                        child: Divider(color: AppColors.border, thickness: 1),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 14.0),
@@ -318,10 +326,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const Expanded(
-                        child: Divider(
-                          color: AppColors.border,
-                          thickness: 1,
-                        ),
+                        child: Divider(color: AppColors.border, thickness: 1),
                       ),
                     ],
                   ),
@@ -357,7 +362,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Subtle dev tip banner for prototype preview
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceMuted,
                       borderRadius: BorderRadius.circular(10),

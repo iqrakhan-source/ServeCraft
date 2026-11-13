@@ -29,6 +29,76 @@ class SalonNotificationModel {
     this.appointmentId,
   });
 
+  SalonNotificationModel copyWith({
+    String? id,
+    String? title,
+    String? message,
+    String? timestamp,
+    NotificationType? type,
+    bool? isRead,
+    String? appointmentId,
+  }) {
+    return SalonNotificationModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      message: message ?? this.message,
+      timestamp: timestamp ?? this.timestamp,
+      type: type ?? this.type,
+      isRead: isRead ?? this.isRead,
+      appointmentId: appointmentId ?? this.appointmentId,
+    );
+  }
+
+  factory SalonNotificationModel.fromJson(Map<String, dynamic> json) {
+    final title = (json['title'] ?? '').toString();
+    final lowerTitle = title.toLowerCase();
+
+    NotificationType type = NotificationType.bookingConfirmed;
+    if (lowerTitle.contains('cancel')) {
+      type = NotificationType.appointmentCancelled;
+    } else if (lowerTitle.contains('reschedule')) {
+      type = NotificationType.appointmentRescheduled;
+    } else if (lowerTitle.contains('complete')) {
+      type = NotificationType.appointmentCompleted;
+    } else if (lowerTitle.contains('reject') ||
+        lowerTitle.contains('decline')) {
+      type = NotificationType.appointmentRejected;
+    } else if (lowerTitle.contains('offer') ||
+        lowerTitle.contains('promo') ||
+        lowerTitle.contains('discount')) {
+      type = NotificationType.offerPromo;
+    } else if (lowerTitle.contains('assign') || lowerTitle.contains('accept')) {
+      type = NotificationType.appointmentAccepted;
+    }
+
+    final rawCreated = json['createdAt']?.toString();
+    String timeStr = 'Just now';
+    if (rawCreated != null) {
+      final parsed = DateTime.tryParse(rawCreated);
+      if (parsed != null) {
+        final diff = DateTime.now().difference(parsed);
+        if (diff.inMinutes < 60) {
+          timeStr = '${diff.inMinutes.clamp(1, 59)}m ago';
+        } else if (diff.inHours < 24) {
+          timeStr = '${diff.inHours}h ago';
+        } else {
+          timeStr = '${diff.inDays}d ago';
+        }
+      }
+    }
+
+    return SalonNotificationModel(
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      title: title,
+      message: (json['message'] ?? '').toString(),
+      timestamp: timeStr,
+      type: type,
+      isRead: json['isRead'] as bool? ?? false,
+      appointmentId: (json['appointmentId'] ?? json['appointment']?['_id'])
+          ?.toString(),
+    );
+  }
+
   IconData get icon {
     switch (type) {
       case NotificationType.bookingConfirmed:

@@ -1,4 +1,3 @@
-
 import 'package:prop_crm/features/addresses/data/models/address_model.dart';
 import 'package:prop_crm/features/branches/data/models/branch_model.dart';
 import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
@@ -19,6 +18,10 @@ class BookingSummaryModel {
   final PricingBreakdown pricing;
   final CouponModel? appliedCoupon;
   final String? specialInstructions;
+  final String? stylistId;
+  final String? stylistName;
+  final String? chairNumber;
+  final String? productId;
 
   const BookingSummaryModel({
     required this.service,
@@ -30,23 +33,27 @@ class BookingSummaryModel {
     required this.pricing,
     this.appliedCoupon,
     this.specialInstructions,
+    this.stylistId,
+    this.stylistName,
+    this.chairNumber,
+    this.productId,
   });
 
   // Package and address are optional.
   // Service, branch, date, time slot and valid pricing are required.
   bool get isValid =>
       service.id.trim().isNotEmpty &&
-          branch != null &&
-          branch!.id.trim().isNotEmpty &&
-          timeSlot.id.trim().isNotEmpty &&
-          scheduledDate.isAvailable &&
-          timeSlot.isAvailable &&
-          pricing.totalAmount > 0;
+      branch != null &&
+      branch!.id.trim().isNotEmpty &&
+      timeSlot.id.trim().isNotEmpty &&
+      scheduledDate.isAvailable &&
+      timeSlot.isAvailable &&
+      pricing.totalAmount > 0;
 
   // Formatted appointment schedule
   String get formattedSchedule =>
       '${scheduledDate.dayName}, ${scheduledDate.dayNumber} '
-          '${scheduledDate.monthName} • ${timeSlot.formattedLabel}';
+      '${scheduledDate.monthName} • ${timeSlot.formattedLabel}';
 
   BookingSummaryModel copyWith({
     ServiceModel? service,
@@ -62,6 +69,14 @@ class BookingSummaryModel {
     bool clearAppliedCoupon = false,
     String? specialInstructions,
     bool clearSpecialInstructions = false,
+    String? stylistId,
+    bool clearStylistId = false,
+    String? stylistName,
+    bool clearStylistName = false,
+    String? chairNumber,
+    bool clearChairNumber = false,
+    String? productId,
+    bool clearProductId = false,
   }) {
     return BookingSummaryModel(
       service: service ?? this.service,
@@ -77,42 +92,38 @@ class BookingSummaryModel {
       specialInstructions: clearSpecialInstructions
           ? null
           : (specialInstructions ?? this.specialInstructions),
+      stylistId: clearStylistId ? null : (stylistId ?? this.stylistId),
+      stylistName: clearStylistName ? null : (stylistName ?? this.stylistName),
+      chairNumber: clearChairNumber ? null : (chairNumber ?? this.chairNumber),
+      productId: clearProductId ? null : (productId ?? this.productId),
     );
   }
 
-  factory BookingSummaryModel.fromJson(
-      Map<String, dynamic> json,
-      ) {
+  factory BookingSummaryModel.fromJson(Map<String, dynamic> json) {
     return BookingSummaryModel(
-      service: ServiceModel.fromJson(
-        json['service'] as Map<String, dynamic>,
-      ),
+      service: ServiceModel.fromJson(json['service'] as Map<String, dynamic>),
 
       package: json['package'] != null
           ? ServicePackageModel.fromJson(
-        json['package'] as Map<String, dynamic>,
-      )
+              json['package'] as Map<String, dynamic>,
+            )
           : null,
 
       address: json['address'] != null
-          ? AddressModel.fromJson(
-        json['address'] as Map<String, dynamic>,
-      )
+          ? AddressModel.fromJson(json['address'] as Map<String, dynamic>)
           : const AddressModel(
-        id: 'branch_loc',
-        userId: 'salon',
-        label: 'Salon Branch',
-        houseNumber: '',
-        addressLine: 'Salon Branch Location',
-        city: '',
-        state: '',
-        pincode: '',
-      ),
+              id: 'branch_loc',
+              userId: 'salon',
+              label: 'Salon Branch',
+              houseNumber: '',
+              addressLine: 'Salon Branch Location',
+              city: '',
+              state: '',
+              pincode: '',
+            ),
 
       branch: json['branch'] != null
-          ? BranchModel.fromJson(
-        json['branch'] as Map<String, dynamic>,
-      )
+          ? BranchModel.fromJson(json['branch'] as Map<String, dynamic>)
           : null,
 
       scheduledDate: ServiceDateModel.fromJson(
@@ -128,13 +139,14 @@ class BookingSummaryModel {
       ),
 
       appliedCoupon: json['appliedCoupon'] != null
-          ? CouponModel.fromJson(
-        json['appliedCoupon'] as Map<String, dynamic>,
-      )
+          ? CouponModel.fromJson(json['appliedCoupon'] as Map<String, dynamic>)
           : null,
 
-      specialInstructions:
-      json['specialInstructions'] as String?,
+      specialInstructions: json['specialInstructions'] as String?,
+      stylistId: json['stylistId'] as String?,
+      stylistName: json['stylistName'] as String?,
+      chairNumber: json['chairNumber'] as String?,
+      productId: json['productId'] as String?,
     );
   }
 
@@ -142,40 +154,45 @@ class BookingSummaryModel {
     return {
       'service': service.toJson(),
 
-      if (package != null)
-        'package': package!.toJson(),
+      if (package != null) 'package': package!.toJson(),
 
       'address': address.toJson(),
 
-      if (branch != null)
-        'branch': branch!.toJson(),
+      if (branch != null) 'branch': branch!.toJson(),
 
       'scheduledDate': scheduledDate.toJson(),
       'timeSlot': timeSlot.toJson(),
       'pricing': pricing.toJson(),
 
-      if (appliedCoupon != null)
-        'appliedCoupon': appliedCoupon!.toJson(),
+      if (appliedCoupon != null) 'appliedCoupon': appliedCoupon!.toJson(),
 
       if (specialInstructions != null)
         'specialInstructions': specialInstructions,
+      if (stylistId != null) 'stylistId': stylistId,
+      if (stylistName != null) 'stylistName': stylistName,
+      if (chairNumber != null) 'chairNumber': chairNumber,
+      if (productId != null) 'productId': productId,
     };
   }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is BookingSummaryModel &&
-              runtimeType == other.runtimeType &&
-              service == other.service &&
-              package == other.package &&
-              branch == other.branch &&
-              address == other.address &&
-              scheduledDate == other.scheduledDate &&
-              timeSlot == other.timeSlot &&
-              pricing == other.pricing &&
-              appliedCoupon == other.appliedCoupon &&
-              specialInstructions == other.specialInstructions;
+      other is BookingSummaryModel &&
+          runtimeType == other.runtimeType &&
+          service == other.service &&
+          package == other.package &&
+          branch == other.branch &&
+          address == other.address &&
+          scheduledDate == other.scheduledDate &&
+          timeSlot == other.timeSlot &&
+          pricing == other.pricing &&
+          appliedCoupon == other.appliedCoupon &&
+          specialInstructions == other.specialInstructions &&
+          stylistId == other.stylistId &&
+          stylistName == other.stylistName &&
+          chairNumber == other.chairNumber &&
+          productId == other.productId;
 
   @override
   int get hashCode => Object.hash(
@@ -188,5 +205,9 @@ class BookingSummaryModel {
     pricing,
     appliedCoupon,
     specialInstructions,
+    stylistId,
+    stylistName,
+    chairNumber,
+    productId,
   );
 }

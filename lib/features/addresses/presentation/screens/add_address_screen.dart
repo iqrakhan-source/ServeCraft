@@ -11,10 +11,7 @@ import '../providers/address_provider.dart';
 class AddAddressScreen extends StatefulWidget {
   final AddressModel? existingAddress;
 
-  const AddAddressScreen({
-    super.key,
-    this.existingAddress,
-  });
+  const AddAddressScreen({super.key, this.existingAddress});
 
   @override
   State<AddAddressScreen> createState() => _AddAddressScreenState();
@@ -49,12 +46,15 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
         _selectedLabelType = 'Other';
         _customLabelController = TextEditingController(text: existing.label);
       }
-      _houseNumberController =
-          TextEditingController(text: existing.houseNumber);
-      _addressLineController =
-          TextEditingController(text: existing.addressLine);
-      _landmarkController =
-          TextEditingController(text: existing.landmark ?? '');
+      _houseNumberController = TextEditingController(
+        text: existing.houseNumber,
+      );
+      _addressLineController = TextEditingController(
+        text: existing.addressLine,
+      );
+      _landmarkController = TextEditingController(
+        text: existing.landmark ?? '',
+      );
       _cityController = TextEditingController(text: existing.city);
       _stateController = TextEditingController(text: existing.state);
       _pincodeController = TextEditingController(text: existing.pincode);
@@ -189,8 +189,9 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                         color: isSelected
                             ? AppColors.primary
                             : AppColors.textSecondary,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                       side: BorderSide(
                         color: isSelected

@@ -89,10 +89,7 @@ class CategoryStrip extends StatelessWidget {
                 onTap: () {
                   Navigator.of(context).pushNamed(
                     AppRoutes.serviceListing,
-                    arguments: {
-                      'categoryId': cat.id,
-                      'categoryName': cat.name,
-                    },
+                    arguments: {'categoryId': cat.id, 'categoryName': cat.name},
                   );
                 },
                 borderRadius: BorderRadius.circular(12),

@@ -22,23 +22,16 @@ class ServiceListingScreen extends StatefulWidget {
   });
 
   @override
-  State<ServiceListingScreen> createState() =>
-      _ServiceListingScreenState();
+  State<ServiceListingScreen> createState() => _ServiceListingScreenState();
 }
 
 class _ServiceListingScreenState extends State<ServiceListingScreen> {
-  final TextEditingController _searchController =
-  TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   String _selectedFilter = 'All';
   String _searchQuery = '';
 
-  final List<String> _filters = [
-    'All',
-    'Popular',
-    'Top Rated',
-    'Under ₹1,000',
-  ];
+  final List<String> _filters = ['All', 'Popular', 'Top Rated', 'Under ₹1,000'];
 
   @override
   void initState() {
@@ -59,26 +52,22 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
     super.dispose();
   }
 
-  List<ServiceModel> _filterServices(
-      List<ServiceModel> allServices,
-      ) {
+  List<ServiceModel> _filterServices(List<ServiceModel> allServices) {
     return allServices.where((service) {
       final name = service.name.toLowerCase();
-      final description =
-      service.description.toLowerCase();
+      final description = service.description.toLowerCase();
       final query = _searchQuery.toLowerCase();
 
-      final matchesQuery = query.isEmpty ||
-          name.contains(query) ||
-          description.contains(query);
+      final matchesQuery =
+          query.isEmpty || name.contains(query) || description.contains(query);
 
       if (!matchesQuery) return false;
 
       switch (_selectedFilter) {
         case 'Popular':
-// The current ServiceModel does not expose a popular field.
-// Add that field to the model to filter by the API's
-// actual "popular" value.
+          // The current ServiceModel does not expose a popular field.
+          // Add that field to the model to filter by the API's
+          // actual "popular" value.
           return true;
 
         case 'Top Rated':
@@ -94,10 +83,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
     }).toList();
   }
 
-  void _openServiceDetails(
-      BuildContext context,
-      ServiceModel service,
-      ) {
+  void _openServiceDetails(BuildContext context, ServiceModel service) {
     Navigator.pushNamed(
       context,
       AppRoutes.serviceDetails,
@@ -113,18 +99,12 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(
-        title: title,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: title, showBackButton: true),
       body: Column(
         children: [
-// Search bar
+          // Search bar
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 10,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             color: AppColors.surface,
             child: TextField(
               controller: _searchController,
@@ -146,17 +126,14 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                 ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                  icon: const Icon(
-                    Icons.clear_rounded,
-                    size: 18,
-                  ),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {
-                      _searchQuery = '';
-                    });
-                  },
-                )
+                        icon: const Icon(Icons.clear_rounded, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                      )
                     : null,
                 filled: true,
                 fillColor: AppColors.surfaceMuted,
@@ -172,7 +149,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
             ),
           ),
 
-// Filters
+          // Filters
           Container(
             color: AppColors.surface,
             padding: const EdgeInsets.only(bottom: 10),
@@ -180,12 +157,9 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
               height: 36,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: _filters.length,
-                separatorBuilder: (_, _) =>
-                const SizedBox(width: 8),
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final filter = _filters[index];
                   final isSelected = _selectedFilter == filter;
@@ -201,8 +175,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                     },
                     selectedColor: AppColors.primary,
                     backgroundColor: AppColors.surfaceMuted,
-                    labelStyle:
-                    AppTypography.labelSmall.copyWith(
+                    labelStyle: AppTypography.labelSmall.copyWith(
                       color: isSelected
                           ? Colors.white
                           : AppColors.textSecondary,
@@ -218,22 +191,17 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                             : AppColors.border,
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                   );
                 },
               ),
             ),
           ),
 
-// Services count
+          // Services count
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             color: AppColors.background,
             child: Text(
               provider.isLoading
@@ -246,26 +214,19 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
             ),
           ),
 
-// API-driven services list
-          Expanded(
-            child: _buildServicesContent(
-              provider,
-              services,
-            ),
-          ),
+          // API-driven services list
+          Expanded(child: _buildServicesContent(provider, services)),
         ],
       ),
     );
   }
 
   Widget _buildServicesContent(
-      ServiceProvider provider,
-      List<ServiceModel> services,
-      ) {
+    ServiceProvider provider,
+    List<ServiceModel> services,
+  ) {
     if (provider.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (provider.hasError) {
@@ -282,8 +243,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                provider.errorMessage ??
-                    'Failed to load services.',
+                provider.errorMessage ?? 'Failed to load services.',
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
@@ -323,21 +283,14 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: services.length,
-      separatorBuilder: (_, _) =>
-      const SizedBox(height: 16),
+      separatorBuilder: (_, _) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
-        return _buildServiceCard(
-          context,
-          services[index],
-        );
+        return _buildServiceCard(context, services[index]);
       },
     );
   }
 
-  Widget _buildServiceCard(
-      BuildContext context,
-      ServiceModel service,
-      ) {
+  Widget _buildServiceCard(BuildContext context, ServiceModel service) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -360,7 +313,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-// Service image and rating
+              // Service image and rating
               Stack(
                 children: [
                   ClipRRect(
@@ -405,9 +358,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.surface.withValues(
-                          alpha: 0.95,
-                        ),
+                        color: AppColors.surface.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -434,7 +385,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                 ],
               ),
 
-// Service details
+              // Service details
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -454,9 +405,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          AppFormatters.formatCurrency(
-                            service.startingPrice,
-                          ),
+                          AppFormatters.formatCurrency(service.startingPrice),
                           style: AppTypography.priceMedium.copyWith(
                             fontWeight: FontWeight.w800,
                             fontSize: 17,
@@ -477,8 +426,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                     ),
                     const SizedBox(height: 12),
                     Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Flexible(
                           child: Row(
@@ -503,7 +451,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                             ],
                           ),
                         ),
-                      //  const SizedBox(width: 2),
+                        //  const SizedBox(width: 2),
                         Flexible(
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -511,10 +459,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                               Flexible(
                                 child: TextButton(
                                   onPressed: () =>
-                                      _openServiceDetails(
-                                        context,
-                                        service,
-                                      ),
+                                      _openServiceDetails(context, service),
                                   child: Text(
                                     'View Details',
                                     style: AppTypography.labelSmall.copyWith(
@@ -528,10 +473,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                                 text: 'Book Now',
                                 isFullWidth: false,
                                 onPressed: () =>
-                                    _openServiceDetails(
-                                      context,
-                                      service,
-                                    ),
+                                    _openServiceDetails(context, service),
                               ),
                             ],
                           ),

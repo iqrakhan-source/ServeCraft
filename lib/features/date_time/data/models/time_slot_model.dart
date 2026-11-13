@@ -1,4 +1,3 @@
-
 class TimeSlotModel {
   final String id;
   final String startTime;
@@ -16,10 +15,12 @@ class TimeSlotModel {
     this.availableCapacity,
   });
 
-  // Exact timeSlot value expected by the booking API.
+  // Exact timeSlot value expected by the booking API (e.g. "09:00", "11:00").
   String get bookingTimeSlot => id;
 
-  String get formattedLabel => displayLabel ?? startTime;
+  String get formattedLabel =>
+      displayLabel ??
+      (startTime.isNotEmpty ? formatTime12Hour(startTime) : startTime);
 
   Map<String, dynamic> toJson() {
     return {
@@ -33,18 +34,55 @@ class TimeSlotModel {
 
   factory TimeSlotModel.fromJson(Map<String, dynamic> json) {
     final timeSlot =
-    (json['timeSlot'] ?? json['slot24'] ?? '').toString();
+        (json['timeSlot'] ??
+                json['slot24'] ??
+                json['slot'] ??
+                json['startTime'] ??
+                json['time'] ??
+                '')
+            .toString();
 
     final capacity =
-    (json['availableCapacity'] as num?)?.toInt();
+        (json['availableCapacity'] as num?)?.toInt() ??
+        (json['availableCount'] as num?)?.toInt();
+
+    final bool? isAvailBool = json['available'] is bool
+        ? json['available'] as bool
+        : (json['isAvailable'] is bool
+              ? json['isAvailable'] as bool
+              : (json['status'] != null
+                    ? json['status'].toString().toLowerCase() == 'available'
+                    : null));
+
+    final bool isAvailable = isAvailBool ?? (capacity == null || capacity > 0);
+
+    final display =
+        json['display']?.toString() ??
+        json['displayLabel']?.toString() ??
+        json['label']?.toString() ??
+        (timeSlot.isNotEmpty ? formatTime12Hour(timeSlot) : null);
+
+    final start = (json['startTime'] ?? timeSlot).toString();
+    final end = (json['endTime'] ?? '').toString();
 
     return TimeSlotModel(
       id: timeSlot,
-      startTime: (json['startTime'] ?? timeSlot).toString(),
-      endTime: (json['endTime'] ?? '').toString(),
-      displayLabel: json['display']?.toString(),
-      isAvailable: capacity == null || capacity > 0,
+      startTime: start,
+      endTime: end,
+      displayLabel: display,
+      isAvailable: isAvailable,
       availableCapacity: capacity,
     );
+  }
+
+  static String formatTime12Hour(String time24) {
+    final parts = time24.split(':');
+    if (parts.isEmpty) return time24;
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = parts.length > 1 ? parts[1].padLeft(2, '0') : '00';
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final hour12 = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    final hourStr = hour12.toString().padLeft(2, '0');
+    return '$hourStr:$minute $period';
   }
 }

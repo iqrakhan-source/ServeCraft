@@ -10,6 +10,8 @@ class SummaryCouponCard extends StatefulWidget {
   final Function(String code) onApplyCoupon;
   final VoidCallback onRemoveCoupon;
   final String? errorMessage;
+  final String? branchId;
+  final bool isLoading;
 
   const SummaryCouponCard({
     super.key,
@@ -17,6 +19,8 @@ class SummaryCouponCard extends StatefulWidget {
     required this.onApplyCoupon,
     required this.onRemoveCoupon,
     this.errorMessage,
+    this.branchId,
+    this.isLoading = false,
   });
 
   @override
@@ -75,11 +79,15 @@ class _SummaryCouponCardState extends State<SummaryCouponCard> {
               ),
               TextButton(
                 onPressed: () async {
-                  final selectedCoupon = await Navigator.of(context).push<CouponModel>(
-                    MaterialPageRoute(
-                      builder: (_) => const OffersScreen(isSelectionMode: true),
-                    ),
-                  );
+                  final selectedCoupon = await Navigator.of(context)
+                      .push<CouponModel>(
+                        MaterialPageRoute(
+                          builder: (_) => OffersScreen(
+                            isSelectionMode: true,
+                            branchId: widget.branchId,
+                          ),
+                        ),
+                      );
                   if (selectedCoupon != null) {
                     widget.onApplyCoupon(selectedCoupon.code);
                   }
@@ -177,11 +185,14 @@ class _SummaryCouponCardState extends State<SummaryCouponCard> {
                 SizedBox(
                   height: 44,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_controller.text.trim().isNotEmpty) {
-                        widget.onApplyCoupon(_controller.text.trim());
-                      }
-                    },
+                    onPressed: widget.isLoading
+                        ? null
+                        : () {
+                            final text = _controller.text.trim();
+                            if (text.isNotEmpty) {
+                              widget.onApplyCoupon(text);
+                            }
+                          },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -191,13 +202,22 @@ class _SummaryCouponCardState extends State<SummaryCouponCard> {
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
-                    child: Text(
-                      'Apply',
-                      style: AppTypography.labelLarge.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    child: widget.isLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Apply',
+                            style: AppTypography.labelLarge.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                   ),
                 ),
               ],

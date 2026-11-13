@@ -1,4 +1,3 @@
-
 import 'package:prop_crm/core/networking/api_client.dart';
 import 'package:prop_crm/features/addresses/data/models/address_model.dart';
 import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';

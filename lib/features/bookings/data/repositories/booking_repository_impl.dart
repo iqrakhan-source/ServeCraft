@@ -5,8 +5,10 @@ import '../../domain/repositories/booking_repository.dart';
 import '../datasources/booking_remote_data_source.dart';
 import '../models/booking_model.dart';
 import '../models/cancel_booking_request_model.dart';
+import '../models/cancel_booking_response_model.dart';
 import '../models/create_booking_request_model.dart';
 import '../models/create_booking_response_model.dart';
+import '../models/reschedule_booking_response_model.dart';
 
 class BookingRepositoryImpl implements BookingRepository {
   final BookingRemoteDataSource remoteDataSource;
@@ -14,8 +16,8 @@ class BookingRepositoryImpl implements BookingRepository {
   BookingRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<List<BookingModel>> getBookings() {
-    return remoteDataSource.getBookings();
+  Future<List<BookingModel>> getBookings({String? status}) {
+    return remoteDataSource.getBookings(status: status);
   }
 
   @override
@@ -37,6 +39,17 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Future<CancelBookingResponseModel> cancelBookingAppointment({
+    required String bookingId,
+    String? reason,
+  }) {
+    return remoteDataSource.cancelBookingAppointment(
+      bookingId: bookingId,
+      reason: reason,
+    );
+  }
+
+  @override
   Future<BookingModel> cancelBooking({
     CancelBookingRequestModel? request,
     String? bookingId,
@@ -54,14 +67,49 @@ class BookingRepositoryImpl implements BookingRepository {
   @override
   Future<BookingPricingResponseModel> calculatePricing({
     required String branchId,
+    String? date,
+    String? timeSlot,
     required List<Map<String, dynamic>> items,
     String? couponCode,
+    bool? useLoyaltyPoints,
+    int? pointsToRedeem,
   }) {
     return remoteDataSource.calculatePricing(
       branchId: branchId,
+      date: date,
+      timeSlot: timeSlot,
       items: items,
       couponCode: couponCode,
+      useLoyaltyPoints: useLoyaltyPoints,
+      pointsToRedeem: pointsToRedeem,
     );
   }
 
+  @override
+  Future<RescheduleBookingResponseModel> rescheduleBooking({
+    required String bookingId,
+    required String date,
+    required String timeSlot,
+    String? reason,
+  }) {
+    return remoteDataSource.rescheduleBooking(
+      bookingId: bookingId,
+      date: date,
+      timeSlot: timeSlot,
+      reason: reason,
+    );
+  }
+
+  @override
+  Future<bool> submitReview({
+    required String bookingId,
+    required int rating,
+    String? comment,
+  }) {
+    return remoteDataSource.submitReview(
+      bookingId: bookingId,
+      rating: rating,
+      comment: comment,
+    );
+  }
 }

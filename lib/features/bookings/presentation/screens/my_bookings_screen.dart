@@ -13,10 +13,7 @@ import '../widgets/booking_card_skeleton.dart';
 class MyBookingsScreen extends StatefulWidget {
   final bool isTab;
 
-  const MyBookingsScreen({
-    super.key,
-    this.isTab = false,
-  });
+  const MyBookingsScreen({super.key, this.isTab = false});
 
   @override
   State<MyBookingsScreen> createState() => _MyBookingsScreenState();
@@ -37,25 +34,20 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     context.read<BookingProvider>().setSelectedBooking(booking);
     Navigator.of(context).pushNamed(
       AppRoutes.bookingDetails,
-      arguments: {
-        'bookingId': booking.id,
-        'booking': booking,
-      },
+      arguments: {'bookingId': booking.id, 'booking': booking},
     );
   }
 
   void _navigateToExplore(BuildContext context) {
     if (widget.isTab) {
       // If we are in the main nav tab, switch back to home or push
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.mainNav,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.mainNav, (route) => false);
     } else {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.mainNav,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.mainNav, (route) => false);
     }
   }
 
@@ -65,10 +57,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(
-        title: 'My Bookings',
-        showBackButton: !widget.isTab,
-      ),
+      appBar: CustomAppBar(title: 'My Bookings', showBackButton: !widget.isTab),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -78,9 +67,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               _buildFilterTabs(provider),
 
               // 2. Main Content Area
-              Expanded(
-                child: _buildContent(context, provider),
-              ),
+              Expanded(child: _buildContent(context, provider)),
             ],
           ),
         ),
@@ -116,9 +103,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         : AppColors.surfaceMuted,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.border,
+                      color: isSelected ? AppColors.primary : AppColors.border,
                       width: 1,
                     ),
                   ),
@@ -217,7 +202,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              provider.bookingsErrorMessage ?? 'Please check your connection and try again.',
+              provider.bookingsErrorMessage ??
+                  'Please check your connection and try again.',
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),

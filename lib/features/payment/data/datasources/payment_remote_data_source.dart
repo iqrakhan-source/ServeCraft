@@ -17,8 +17,9 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
     final data = response.data;
     if (data is List) {
       return data
-          .map((item) =>
-              PaymentMethodModel.fromJson(item as Map<String, dynamic>))
+          .map(
+            (item) => PaymentMethodModel.fromJson(item as Map<String, dynamic>),
+          )
           .toList();
     }
     return [];
@@ -35,14 +36,16 @@ class MockPaymentRemoteDataSource implements PaymentRemoteDataSource {
       PaymentMethodModel(
         id: 'pm_online',
         title: 'Online Payment',
-        subtitle: 'Pay now via UPI (GPay, PhonePe, Paytm), Credit/Debit Card or Net Banking',
+        subtitle:
+            'Pay now via UPI (GPay, PhonePe, Paytm), Credit/Debit Card or Net Banking',
         type: PaymentMethodType.upi,
         isAvailable: true,
       ),
       PaymentMethodModel(
         id: 'pm_salon',
         title: 'Pay at Salon',
-        subtitle: 'Pay at front desk reception after your appointment (Cash, Card, or UPI)',
+        subtitle:
+            'Pay at front desk reception after your appointment (Cash, Card, or UPI)',
         type: PaymentMethodType.cod,
         isAvailable: true,
       ),

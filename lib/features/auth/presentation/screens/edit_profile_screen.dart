@@ -1,10 +1,15 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../data/models/aesthetic_preferences_request.dart';
 import '../providers/auth_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -18,26 +23,49 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
-  String _selectedGender = 'female';
-  String _dateOfBirth = '15 Aug 1996';
+  late TextEditingController _skinToneController;
+  late TextEditingController _hairToneController;
+  late TextEditingController _allergiesController;
 
-  final List<String> _genders = ['female', 'male', 'non-binary', 'Other'];
+  String _selectedGender = 'female';
+  DateTime? _selectedDobDate;
+  File? _selectedImageFile;
+  bool _isUploadingPhoto = false;
+
+  final List<String> _genders = ['female', 'male', 'other'];
 
   @override
   void initState() {
     super.initState();
     final user = context.read<AuthProvider>().currentUser;
-    _nameController =
-        TextEditingController(text: user?.name.isNotEmpty == true ? user!.name : 'Sophia Reynolds');
-    _emailController = TextEditingController(
-        text: user?.email.isNotEmpty == true ? user!.email : 'sophia.reynolds@example.com');
-    _phoneController = TextEditingController(
-        text: user?.phone.isNotEmpty == true ? user!.phone : '+91 98765 43210');
+    _nameController = TextEditingController(text: user?.name ?? '');
+    _emailController = TextEditingController(text: user?.email ?? '');
+    _phoneController = TextEditingController(text: user?.phone ?? '');
+    _skinToneController = TextEditingController();
+    _hairToneController = TextEditingController();
+    _allergiesController = TextEditingController();
+
     if (user?.gender != null && user!.gender!.isNotEmpty) {
-      _selectedGender = user.gender!;
+      final g = user.gender!.toLowerCase();
+      if (_genders.contains(g)) {
+        _selectedGender = g;
+      }
     }
+
     if (user?.dateOfBirth != null && user!.dateOfBirth!.isNotEmpty) {
-      _dateOfBirth = user.dateOfBirth!;
+      final trimmed = user.dateOfBirth!.trim();
+      final parsed = DateTime.tryParse(trimmed);
+      if (parsed != null) {
+        _selectedDobDate = parsed;
+      } else {
+        try {
+          _selectedDobDate = DateFormat('dd/MM/yyyy').parseStrict(trimmed);
+        } catch (_) {
+          try {
+            _selectedDobDate = DateFormat('dd-MM-yyyy').parseStrict(trimmed);
+          } catch (_) {}
+        }
+      }
     }
   }
 
@@ -46,15 +74,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _skinToneController.dispose();
+    _hairToneController.dispose();
+    _allergiesController.dispose();
     super.dispose();
   }
 
   Future<void> _selectDateOfBirth() async {
+    final now = DateTime.now();
+    final initial = _selectedDobDate ?? DateTime(1998, 5, 15);
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime(1996, 8, 15),
-      firstDate: DateTime(1950),
-      lastDate: DateTime.now(),
+      initialDate: initial.isAfter(now) ? now : initial,
+      firstDate: DateTime(1920),
+      lastDate: now,
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -70,13 +103,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
 
     if (picked != null) {
-      final months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-      ];
       setState(() {
-        _dateOfBirth = '${picked.day} ${months[picked.month - 1]} ${picked.year}';
+        _selectedDobDate = picked;
       });
+    }
+  }
+
+  Future<void> _pickAndUploadPhoto() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+
+    if (!mounted) return;
+
+    if (picked != null) {
+      setState(() {
+        _selectedImageFile = File(picked.path);
+        _isUploadingPhoto = true;
+      });
+
+      final authProvider = context.read<AuthProvider>();
+      final photoUrl = await authProvider.uploadProfilePhoto(
+        kIsWeb ? picked.path : File(picked.path),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _isUploadingPhoto = false;
+      });
+
+      if (photoUrl != null && photoUrl.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile photo updated successfully'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
     }
   }
 
@@ -92,14 +159,55 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
+    final phone = _phoneController.text.trim();
+    if (phone.length != 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Phone number must be exactly 10 digits'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     final authProvider = context.read<AuthProvider>();
     final email = _emailController.text.trim();
+    final dobString = _selectedDobDate != null
+        ? DateFormat('yyyy-MM-dd').format(_selectedDobDate!)
+        : null;
+
     final success = await authProvider.completeProfile(
       name: name,
+      phone: phone,
       email: email.isNotEmpty ? email : null,
       gender: _selectedGender,
-      dateOfBirth: _dateOfBirth,
+      dateOfBirth: dobString,
     );
+
+    // Save aesthetic preferences if entered
+    final skinTone = _skinToneController.text.trim();
+    final hairTone = _hairToneController.text.trim();
+    final allergiesText = _allergiesController.text.trim();
+    if (skinTone.isNotEmpty ||
+        hairTone.isNotEmpty ||
+        allergiesText.isNotEmpty) {
+      final allergies = allergiesText.isNotEmpty
+          ? allergiesText
+                .split(',')
+                .map((s) => s.trim())
+                .where((s) => s.isNotEmpty)
+                .toList()
+          : <String>[];
+
+      await authProvider.updateAestheticPreferences(
+        AestheticPreferencesRequest(
+          email: email.isNotEmpty ? email : null,
+          skinTone: skinTone.isNotEmpty ? skinTone : null,
+          hairTone: hairTone.isNotEmpty ? hairTone : null,
+          allergies: allergies.isNotEmpty ? allergies : null,
+        ),
+      );
+    }
 
     if (!mounted) return;
 
@@ -115,15 +223,40 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Failed to update profile'),
+          content: Text(
+            authProvider.errorMessage ?? 'Failed to update profile',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
     }
   }
 
+  String? _formatDisplayDob(String? dob) {
+    if (dob == null || dob.trim().isEmpty) return null;
+    final trimmed = dob.trim();
+    final parsed = DateTime.tryParse(trimmed);
+    if (parsed != null) {
+      return DateFormat('dd/MM/yyyy').format(parsed);
+    }
+    try {
+      final parsedSlash = DateFormat('dd/MM/yyyy').parseStrict(trimmed);
+      return DateFormat('dd/MM/yyyy').format(parsedSlash);
+    } catch (_) {}
+    try {
+      final parsedDash = DateFormat('dd-MM-yyyy').parseStrict(trimmed);
+      return DateFormat('dd/MM/yyyy').format(parsedDash);
+    } catch (_) {}
+    return trimmed;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().currentUser;
+    final dobDisplay = _selectedDobDate != null
+        ? DateFormat('dd/MM/yyyy').format(_selectedDobDate!)
+        : (_formatDisplayDob(user?.dateOfBirth) ?? 'Select Date of Birth');
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(
@@ -137,10 +270,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           border: Border(top: BorderSide(color: AppColors.border)),
         ),
         child: SafeArea(
-          child: AppButton(
-            text: 'Save Changes',
-            onPressed: _handleSave,
-          ),
+          child: AppButton(text: 'Save Changes', onPressed: _handleSave),
         ),
       ),
       body: SingleChildScrollView(
@@ -155,29 +285,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   CircleAvatar(
                     radius: 46,
                     backgroundColor: AppColors.primaryLight,
-                    child: Text(
-                      _nameController.text.isNotEmpty
-                          ? _nameController.text.substring(0, 1).toUpperCase()
-                          : 'S',
-                      style: AppTypography.displayMedium.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    backgroundImage: _selectedImageFile != null && !kIsWeb
+                        ? FileImage(_selectedImageFile!) as ImageProvider
+                        : (user?.profileImage != null &&
+                              user!.profileImage!.startsWith('http'))
+                        ? NetworkImage(user.profileImage!)
+                        : null,
+                    child:
+                        (_selectedImageFile == null &&
+                            (user?.profileImage == null ||
+                                !user!.profileImage!.startsWith('http')))
+                        ? (_isUploadingPhoto
+                              ? const CircularProgressIndicator()
+                              : Text(
+                                  _nameController.text.isNotEmpty
+                                      ? _nameController.text
+                                            .substring(0, 1)
+                                            .toUpperCase()
+                                      : 'A',
+                                  style: AppTypography.displayMedium.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ))
+                        : null,
                   ),
                   Positioned(
                     bottom: 0,
                     right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt_rounded,
-                        size: 16,
-                        color: Colors.white,
+                    child: GestureDetector(
+                      onTap: _pickAndUploadPhoto,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -189,8 +337,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             // Full Name Field
             AppTextField(
               controller: _nameController,
-              label: 'Full Name',
-              hint: 'Sophia Reynolds',
+              label: 'Full Name *',
+              hint: 'Ananya Sharma',
             ),
             const SizedBox(height: 16),
 
@@ -198,23 +346,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             AppTextField(
               controller: _emailController,
               label: 'Email Address',
-              hint: 'sophia.reynolds@example.com',
+              hint: 'ananya.new@example.com',
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 16),
 
-            // Phone Field (Read-only representation)
+            // Phone Field
             AppTextField(
               controller: _phoneController,
-              label: 'Phone Number',
-              hint: '+91 98765 43210',
-              enabled: false,
+              label: 'Phone Number (10 digits) *',
+              hint: '9876543210',
+              keyboardType: TextInputType.phone,
+              maxLength: 10,
             ),
             const SizedBox(height: 20),
 
             // Gender Selection
             Text(
-              'Gender',
+              'Gender *',
               style: AppTypography.labelLarge.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
@@ -226,7 +375,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               children: _genders.map((gender) {
                 final isSelected = _selectedGender == gender;
                 return ChoiceChip(
-                  label: Text(gender),
+                  label: Text(gender.toUpperCase()),
                   selected: isSelected,
                   onSelected: (selected) {
                     setState(() {
@@ -252,7 +401,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             // Date of Birth
             Text(
-              'Date of Birth',
+              'Date of Birth (DD/MM/YYYY) *',
               style: AppTypography.labelLarge.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
@@ -263,8 +412,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               onTap: _selectDateOfBirth,
               borderRadius: BorderRadius.circular(12),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(12),
@@ -274,7 +425,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      _dateOfBirth,
+                      dobDisplay,
                       style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
@@ -288,6 +439,40 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ],
                 ),
               ),
+            ),
+            const SizedBox(height: 28),
+
+            // Aesthetic Preferences Card (Section 2.5)
+            Text(
+              'Stylist Consultation & Preferences',
+              style: AppTypography.titleMedium.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Help your stylist personalize treatments to your skin and hair tone.',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 14),
+            AppTextField(
+              controller: _skinToneController,
+              label: 'Skin Tone (Optional)',
+              hint: 'e.g. Fair, Wheatish, Dusky',
+            ),
+            const SizedBox(height: 14),
+            AppTextField(
+              controller: _hairToneController,
+              label: 'Hair Texture / Tone (Optional)',
+              hint: 'e.g. Curly, Dry, Straight, Wavy',
+            ),
+            const SizedBox(height: 14),
+            AppTextField(
+              controller: _allergiesController,
+              label: 'Allergies (Optional, comma-separated)',
+              hint: 'e.g. ammonia, bleach, parabens',
             ),
             const SizedBox(height: 24),
           ],

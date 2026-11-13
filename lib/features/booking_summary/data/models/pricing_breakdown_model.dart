@@ -11,14 +11,13 @@ class PricingBreakdown {
     required this.taxRate,
     required this.taxAmount,
     required this.totalAmount,
-
   });
 
   /// Check if a discount is applied
   bool get hasDiscount => discount > 0.0;
 
-  /// Default mock tax rate (18% GST)
-  static const double defaultTaxRate = 0.18;
+  /// Default tax rate (Zero GST per API contract)
+  static const double defaultTaxRate = 0.0;
 
   /// Calculates pricing with exact integer rupee precision to eliminate floating-point inaccuracies
   factory PricingBreakdown.calculate({
@@ -41,7 +40,9 @@ class PricingBreakdown {
 
     // 4. Compute final total: package price - discount + tax
     final calculatedTotal = cleanPackagePrice - cleanDiscount + roundedTax;
-    final cleanTotal = calculatedTotal > 0 ? calculatedTotal.roundToDouble() : 0.0;
+    final cleanTotal = calculatedTotal > 0
+        ? calculatedTotal.roundToDouble()
+        : 0.0;
 
     return PricingBreakdown(
       packagePrice: cleanPackagePrice.roundToDouble(),

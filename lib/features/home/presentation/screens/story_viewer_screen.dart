@@ -7,10 +7,7 @@ import 'package:prop_crm/core/constants/app_typography.dart';
 class StoryViewerScreen extends StatefulWidget {
   final int initialIndex;
 
-  const StoryViewerScreen({
-    super.key,
-    this.initialIndex = 0,
-  });
+  const StoryViewerScreen({super.key, this.initialIndex = 0});
 
   @override
   State<StoryViewerScreen> createState() => _StoryViewerScreenState();
@@ -24,34 +21,31 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
     {
       'title': 'Fresh Spaces',
       'subtitle': 'Home Cleaning',
-      'description':
-      'Give your home the fresh, spotless feeling it deserves.',
+      'description': 'Give your home the fresh, spotless feeling it deserves.',
       'image':
-      'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1200',
+          'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1200',
     },
     {
       'title': 'Cool Comfort',
       'subtitle': 'AC Service',
-      'description':
-      'Keep your home comfortable with professional AC care.',
+      'description': 'Keep your home comfortable with professional AC care.',
       'image':
-      'https://images.unsplash.com/photo-1631545806609-7c8d7e5f4b5f?w=1200',
+          'https://images.unsplash.com/photo-1631545806609-7c8d7e5f4b5f?w=1200',
     },
     {
       'title': 'Perfect Finish',
       'subtitle': 'Home Painting',
-      'description':
-      'Transform your walls with a finish that feels brand new.',
+      'description': 'Transform your walls with a finish that feels brand new.',
       'image':
-      'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=1200',
+          'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=1200',
     },
     {
       'title': 'Little Fixes',
       'subtitle': 'Electrical',
       'description':
-      'Reliable electrical services from verified professionals.',
+          'Reliable electrical services from verified professionals.',
       'image':
-      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1200',
+          'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1200',
     },
   ];
 
@@ -59,10 +53,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
   void initState() {
     super.initState();
 
-    _currentIndex = widget.initialIndex.clamp(
-      0,
-      _stories.length - 1,
-    );
+    _currentIndex = widget.initialIndex.clamp(0, _stories.length - 1);
 
     _startTimer();
   }
@@ -70,10 +61,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
   void _startTimer() {
     _storyTimer?.cancel();
 
-    _storyTimer = Timer(
-      const Duration(seconds: 5),
-      _nextStory,
-    );
+    _storyTimer = Timer(const Duration(seconds: 5), _nextStory);
   }
 
   void _nextStory() {
@@ -136,7 +124,6 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
             // --------------------------------------------------
             // STORY IMAGE
             // --------------------------------------------------
-
             Image.network(
               story['image']!,
               fit: BoxFit.cover,
@@ -157,7 +144,6 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
             // --------------------------------------------------
             // DARK GRADIENT
             // --------------------------------------------------
-
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -169,11 +155,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                       Colors.transparent,
                       Colors.black.withValues(alpha: 0.75),
                     ],
-                    stops: const [
-                      0.0,
-                      0.45,
-                      1.0,
-                    ],
+                    stops: const [0.0, 0.45, 1.0],
                   ),
                 ),
               ),
@@ -182,46 +164,31 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
             // --------------------------------------------------
             // TOP CONTENT
             // --------------------------------------------------
-
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  12,
-                  10,
-                  12,
-                  0,
-                ),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
                 child: Column(
                   children: [
                     // Progress indicators
                     Row(
-                      children: List.generate(
-                        _stories.length,
-                            (index) {
-                          final isCompleted =
-                              index < _currentIndex;
+                      children: List.generate(_stories.length, (index) {
+                        final isCompleted = index < _currentIndex;
 
-                          final isCurrent =
-                              index == _currentIndex;
+                        final isCurrent = index == _currentIndex;
 
-                          return Expanded(
-                            child: Container(
-                              height: 3,
-                              margin:
-                              const EdgeInsets.symmetric(
-                                horizontal: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isCompleted || isCurrent
-                                    ? Colors.white
-                                    : Colors.white38,
-                                borderRadius:
-                                BorderRadius.circular(10),
-                              ),
+                        return Expanded(
+                          child: Container(
+                            height: 3,
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            decoration: BoxDecoration(
+                              color: isCompleted || isCurrent
+                                  ? Colors.white
+                                  : Colors.white38,
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      }),
                     ),
 
                     const SizedBox(height: 14),
@@ -234,8 +201,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.18),
-                            borderRadius:
-                            BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
                             Icons.auto_awesome_rounded,
@@ -248,21 +214,18 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
 
                         Expanded(
                           child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Luxe Salon & Spa',
-                                style: AppTypography.titleSmall
-                                    .copyWith(
+                                style: AppTypography.titleSmall.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
                               Text(
                                 'Curated for you',
-                                style: AppTypography.bodySmall
-                                    .copyWith(
+                                style: AppTypography.bodySmall.copyWith(
                                   color: Colors.white70,
                                 ),
                               ),
@@ -290,7 +253,6 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
             // --------------------------------------------------
             // BOTTOM CONTENT
             // --------------------------------------------------
-
             Positioned(
               left: 20,
               right: 20,
@@ -298,8 +260,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
               child: SafeArea(
                 top: false,
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -308,8 +269,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius:
-                        BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         story['subtitle']!,
@@ -356,14 +316,12 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                           foregroundColor: AppColors.primary,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                            BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                         child: Text(
                           'Explore ${story['subtitle']}',
-                          style:
-                          AppTypography.buttonMedium.copyWith(
+                          style: AppTypography.buttonMedium.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w800,
                           ),

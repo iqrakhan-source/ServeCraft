@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -115,15 +114,17 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!mounted) return;
 
       if (success) {
-        debugPrint(
-            'REGISTER [UI]: Registration succeeded. Navigating to Complete Profile.');
-        context.showSuccessSnackBar(
-          'Account created successfully.',
-        );
+        debugPrint('REGISTER [UI]: Registration succeeded.');
+        context.showSuccessSnackBar('Account created successfully.');
 
-        Navigator.of(context).pushReplacementNamed(
-          AppRoutes.completeProfile,
-        );
+        final isComplete = authProvider.isProfileComplete;
+        if (isComplete) {
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil(AppRoutes.mainNav, (route) => false);
+        } else {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.completeProfile);
+        }
       } else {
         debugPrint(
           'REGISTER [UI]: Registration failed. Remaining on SignupScreen. '
@@ -138,8 +139,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
       debugPrint('REGISTER [UI]: Registration caught exception: $e');
       context.showErrorSnackBar(
-        authProvider.errorMessage ??
-            'Registration failed. Please try again.',
+        authProvider.errorMessage ?? 'Registration failed. Please try again.',
       );
     } finally {
       if (mounted) {
@@ -184,17 +184,12 @@ class _SignupScreenState extends State<SignupScreen> {
             size: 20,
           ),
           tooltip: 'Back to Login',
-          onPressed: isSubmitting
-              ? null
-              : () => Navigator.of(context).pop(),
+          onPressed: isSubmitting ? null : () => Navigator.of(context).pop(),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           child: Form(
             key: _formKey,
             child: Column(
@@ -208,10 +203,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primaryDark,
-                      ],
+                      colors: [AppColors.primary, AppColors.primaryDark],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
@@ -236,9 +228,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         child: Icon(
                           Icons.auto_awesome_rounded,
                           size: 10,
-                          color: AppColors.secondary.withValues(
-                            alpha: 0.95,
-                          ),
+                          color: AppColors.secondary.withValues(alpha: 0.95),
                         ),
                       ),
                     ],
@@ -297,10 +287,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   validator: (value) =>
-                      AppValidators.validateEmail(
-                        value,
-                        isRequired: true,
-                      ),
+                      AppValidators.validateEmail(value, isRequired: true),
                 ),
 
                 const SizedBox(height: 18),
@@ -328,31 +315,19 @@ class _SignupScreenState extends State<SignupScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Gender',
                     border: OutlineInputBorder(),
-                    prefixIcon: Icon(
-                      Icons.person_outline_rounded,
-                    ),
+                    prefixIcon: Icon(Icons.person_outline_rounded),
                   ),
                   items: const [
-                    DropdownMenuItem(
-                      value: 'female',
-                      child: Text('female'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'male',
-                      child: Text('male'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'other',
-                      child: Text('Other'),
-                    ),
+                    DropdownMenuItem(value: 'female', child: Text('female')),
+                    DropdownMenuItem(value: 'male', child: Text('male')),
+                    DropdownMenuItem(value: 'other', child: Text('Other')),
                   ],
                   onChanged: isSubmitting
                       ? null
                       : (value) {
-                    setState(() => _selectedGender = value);
-                  },
-                  validator: (value) =>
-                  value == null || value.isEmpty
+                          setState(() => _selectedGender = value);
+                        },
+                  validator: (value) => value == null || value.isEmpty
                       ? 'Please select your gender'
                       : null,
                 ),
@@ -417,8 +392,9 @@ class _SignupScreenState extends State<SignupScreen> {
                                 Expanded(
                                   child: Text(
                                     _selectedDateOfBirth != null
-                                        ? DateFormat('dd MMM yyyy')
-                                            .format(_selectedDateOfBirth!)
+                                        ? DateFormat(
+                                            'dd MMM yyyy',
+                                          ).format(_selectedDateOfBirth!)
                                         : 'Select date of birth',
                                     style: AppTypography.bodyLarge.copyWith(
                                       color: _selectedDateOfBirth != null
@@ -507,8 +483,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _obscureConfirmPassword =
-                        !_obscureConfirmPassword;
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
                       });
                     },
                   ),
@@ -516,13 +491,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   onSubmitted: (_) {
                     if (!isSubmitting) _handleSignup();
                   },
-                  validator: (value) =>
-                      AppValidators.validateConfirmPassword(
-                        value,
-                        _passwordController.text,
-                      ),
+                  validator: (value) => AppValidators.validateConfirmPassword(
+                    value,
+                    _passwordController.text,
+                  ),
                 ),
-
 
                 const SizedBox(height: 28),
 

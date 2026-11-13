@@ -18,14 +18,10 @@ import '../providers/service_details_provider.dart';
 class ServiceDetailsScreen extends StatefulWidget {
   final String serviceId;
 
-  const ServiceDetailsScreen({
-    super.key,
-    required this.serviceId,
-  });
+  const ServiceDetailsScreen({super.key, required this.serviceId});
 
   @override
-  State<ServiceDetailsScreen> createState() =>
-      _ServiceDetailsScreenState();
+  State<ServiceDetailsScreen> createState() => _ServiceDetailsScreenState();
 }
 
 class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
@@ -39,7 +35,9 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
       final provider = context.read<ServiceDetailsProvider>();
 
       // Retrieve navigation arguments; may contain the full ServiceModel.
-      final args = (ModalRoute.of(context)?.settings.arguments ?? {}) as Map<String, dynamic>;
+      final args =
+          (ModalRoute.of(context)?.settings.arguments ?? {})
+              as Map<String, dynamic>;
       final ServiceModel? passedService = args['service'] as ServiceModel?;
 
       if (passedService != null) {
@@ -65,7 +63,6 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
       // ============================================================
       // STICKY BOTTOM ACTION
       // ============================================================
-
       bottomNavigationBar: provider.service == null
           ? null
           : _buildBottomActionBar(provider),
@@ -74,16 +71,14 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
         builder: (context) {
           if (provider.isLoading) {
             return const Center(
-              child: AppLoadingIndicator(
-                message: 'Loading service...',
-              ),
+              child: AppLoadingIndicator(message: 'Loading service...'),
             );
           }
 
           if (provider.hasError) {
             return AppErrorView(
-              message: provider.errorMessage ??
-                  'Could not load service details',
+              message:
+                  provider.errorMessage ?? 'Could not load service details',
               onRetry: () {
                 provider.fetchServiceDetails(widget.serviceId);
               },
@@ -93,9 +88,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
           final service = provider.service;
 
           if (service == null) {
-            return const AppErrorView(
-              message: 'Service not found',
-            );
+            return const AppErrorView(message: 'Service not found');
           }
 
           return CustomScrollView(
@@ -104,7 +97,6 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
               // ======================================================
               // HERO IMAGE
               // ======================================================
-
               SliverAppBar(
                 expandedHeight: 280,
                 pinned: true,
@@ -159,11 +151,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                                 Colors.transparent,
                                 Colors.black.withValues(alpha: 0.45),
                               ],
-                              stops: const [
-                                0.0,
-                                0.45,
-                                1.0,
-                              ],
+                              stops: const [0.0, 0.45, 1.0],
                             ),
                           ),
                         ),
@@ -210,22 +198,15 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
               // ======================================================
               // SERVICE INFORMATION
               // ======================================================
-
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    18,
-                    20,
-                    18,
-                    0,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(18, 20, 18, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // ------------------------------------------------
                       // TITLE
                       // ------------------------------------------------
-
                       Text(
                         service.name,
                         style: AppTypography.displayMedium.copyWith(
@@ -240,7 +221,6 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       // ------------------------------------------------
                       // RATING + REVIEWS + TIME
                       // ------------------------------------------------
-
                       Row(
                         children: [
                           Container(
@@ -284,14 +264,10 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                           ),
 
                           const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 9,
-                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 9),
                             child: Text(
                               '•',
-                              style: TextStyle(
-                                color: AppColors.textTertiary,
-                              ),
+                              style: TextStyle(color: AppColors.textTertiary),
                             ),
                           ),
 
@@ -316,12 +292,15 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       // Branch Selection Context
                       Consumer<BranchProvider>(
                         builder: (context, branchProv, _) {
-                          final currentBranch = branchProv.selectedBranch?.name ??
+                          final currentBranch =
+                              branchProv.selectedBranch?.name ??
                               'Downtown Luxury Lounge';
                           return Container(
                             margin: const EdgeInsets.only(top: 14),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 10),
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.primaryLight,
                               borderRadius: BorderRadius.circular(12),
@@ -335,14 +314,18 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => const BranchSelectionScreen(
-                                        isSelectionMode: true),
+                                      isSelectionMode: true,
+                                    ),
                                   ),
                                 );
                               },
                               child: Row(
                                 children: [
-                                  const Icon(Icons.storefront_rounded,
-                                      size: 18, color: AppColors.primary),
+                                  const Icon(
+                                    Icons.storefront_rounded,
+                                    size: 18,
+                                    color: AppColors.primary,
+                                  ),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Column(
@@ -351,26 +334,30 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                                       children: [
                                         Text(
                                           'Available at Salon Branch',
-                                          style: AppTypography.labelSmall.copyWith(
-                                            color: AppColors.textTertiary,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                          style: AppTypography.labelSmall
+                                              .copyWith(
+                                                color: AppColors.textTertiary,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
                                           '$currentBranch (Change)',
-                                          style:
-                                              AppTypography.bodySmall.copyWith(
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                          style: AppTypography.bodySmall
+                                              .copyWith(
+                                                color: AppColors.primary,
+                                                fontWeight: FontWeight.w700,
+                                              ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  const Icon(Icons.arrow_forward_ios_rounded,
-                                      size: 12, color: AppColors.primary),
+                                  const Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 12,
+                                    color: AppColors.primary,
+                                  ),
                                 ],
                               ),
                             ),
@@ -383,7 +370,6 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       // ------------------------------------------------
                       // PRICE
                       // ------------------------------------------------
-
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
@@ -394,9 +380,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                             ),
                           ),
                           Text(
-                            AppFormatters.formatCurrency(
-                              service.startingPrice,
-                            ),
+                            AppFormatters.formatCurrency(service.startingPrice),
                             style: AppTypography.priceLarge.copyWith(
                               color: AppColors.textPrimary,
                               fontSize: 22,
@@ -415,7 +399,6 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       // =================================================
                       // WHAT YOU'LL GET
                       // =================================================
-
                       Text(
                         "What you'll get",
                         style: AppTypography.titleLarge.copyWith(
@@ -433,7 +416,6 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       // =================================================
                       // ABOUT SERVICE
                       // =================================================
-
                       Text(
                         'About this service',
                         style: AppTypography.titleLarge.copyWith(
@@ -461,12 +443,10 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       // =================================================
                       // PACKAGES
                       // =================================================
-
                       if (service.packages.isNotEmpty) ...[
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               'Choose a package',
@@ -486,26 +466,21 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
 
                         const SizedBox(height: 14),
 
-                        ...service.packages.map(
-                              (package) {
-                            final isSelected =
-                                provider.selectedPackage?.id ==
-                                    package.id;
+                        ...service.packages.map((package) {
+                          final isSelected =
+                              provider.selectedPackage?.id == package.id;
 
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: 12,
-                              ),
-                              child: _buildPackageCard(
-                                package: package,
-                                isSelected: isSelected,
-                                onTap: () {
-                                  provider.selectPackage(package);
-                                },
-                              ),
-                            );
-                          },
-                        ),
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _buildPackageCard(
+                              package: package,
+                              isSelected: isSelected,
+                              onTap: () {
+                                provider.selectPackage(package);
+                              },
+                            ),
+                          );
+                        }),
                       ],
 
                       // =================================================
@@ -515,7 +490,6 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       // =================================================
                       // PRODUCTS & ADD-ONS
                       // =================================================
-
                       if (provider.isProductsLoading) ...[
                         const Center(
                           child: Padding(
@@ -527,7 +501,8 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           child: Text(
-                            provider.productsErrorMessage ?? 'Could not load products.',
+                            provider.productsErrorMessage ??
+                                'Could not load products.',
                             style: AppTypography.bodyMedium.copyWith(
                               color: AppColors.error,
                             ),
@@ -551,7 +526,8 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                             padding: const EdgeInsets.only(bottom: 12),
                             child: _buildProductCard(
                               product: prod,
-                              isSelected: provider.selectedProduct?.id == prod.id,
+                              isSelected:
+                                  provider.selectedProduct?.id == prod.id,
                               onTap: () {
                                 provider.selectProduct(prod);
                               },
@@ -568,13 +544,11 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                         ),
                       ],
 
-
                       const SizedBox(height: 14),
 
                       // =================================================
                       // WHY SERVECRAFT
                       // =================================================
-
                       _buildWhyServeCraftCard(),
 
                       const SizedBox(height: 110),
@@ -625,11 +599,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
   // ================================================================
 
   Widget _buildDivider() {
-    return const Divider(
-      height: 1,
-      thickness: 1,
-      color: AppColors.border,
-    );
+    return const Divider(height: 1, thickness: 1, color: AppColors.border);
   }
 
   // ================================================================
@@ -638,30 +608,20 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
 
   Widget _buildIncludedGrid() {
     final items = [
-      {
-        'icon': Icons.verified_user_outlined,
-        'title': 'Verified professional',
-      },
+      {'icon': Icons.verified_user_outlined, 'title': 'Verified professional'},
       {
         'icon': Icons.cleaning_services_outlined,
         'title': 'Professional equipment',
       },
-      {
-        'icon': Icons.schedule_outlined,
-        'title': 'On-time service',
-      },
-      {
-        'icon': Icons.support_agent_outlined,
-        'title': 'Service support',
-      },
+      {'icon': Icons.schedule_outlined, 'title': 'On-time service'},
+      {'icon': Icons.support_agent_outlined, 'title': 'Service support'},
     ];
 
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: items.length,
-      gridDelegate:
-      const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
@@ -671,16 +631,11 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
         final item = items[index];
 
         return Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppColors.border,
-            ),
+            border: Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
@@ -737,21 +692,15 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primaryLight
-                : AppColors.surface,
+            color: isSelected ? AppColors.primaryLight : AppColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected
-                  ? AppColors.primary
-                  : AppColors.border,
+              color: isSelected ? AppColors.primary : AppColors.border,
               width: isSelected ? 1.5 : 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: isSelected
-                    ? AppColors.shadowMedium
-                    : AppColors.shadow,
+                color: isSelected ? AppColors.shadowMedium : AppColors.shadow,
                 blurRadius: isSelected ? 10 : 5,
                 offset: const Offset(0, 2),
               ),
@@ -763,7 +712,6 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
               // --------------------------------------------------------
               // HEADER
               // --------------------------------------------------------
-
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -781,13 +729,11 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
 
                   Expanded(
                     child: Column(
-                      crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           package.name,
-                          style:
-                          AppTypography.titleMedium.copyWith(
+                          style: AppTypography.titleMedium.copyWith(
                             fontWeight: FontWeight.w800,
                             fontSize: 15,
                             color: isSelected
@@ -808,8 +754,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                             const SizedBox(width: 4),
                             Text(
                               package.duration,
-                              style:
-                              AppTypography.bodySmall.copyWith(
+                              style: AppTypography.bodySmall.copyWith(
                                 color: AppColors.textSecondary,
                               ),
                             ),
@@ -822,11 +767,8 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                   const SizedBox(width: 10),
 
                   Text(
-                    AppFormatters.formatCurrency(
-                      package.price,
-                    ),
-                    style:
-                    AppTypography.priceMedium.copyWith(
+                    AppFormatters.formatCurrency(package.price),
+                    style: AppTypography.priceMedium.copyWith(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
                       color: isSelected
@@ -842,7 +784,6 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
               // --------------------------------------------------------
               // DESCRIPTION
               // --------------------------------------------------------
-
               Padding(
                 padding: const EdgeInsets.only(left: 32),
                 child: Text(
@@ -858,26 +799,18 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
               // --------------------------------------------------------
               // FEATURES
               // --------------------------------------------------------
-
               if (package.features.isNotEmpty) ...[
                 const SizedBox(height: 12),
 
-                const Divider(
-                  height: 1,
-                  color: AppColors.border,
-                ),
+                const Divider(height: 1, color: AppColors.border),
 
                 const SizedBox(height: 10),
 
                 ...package.features.map(
-                      (feature) => Padding(
-                    padding: const EdgeInsets.only(
-                      left: 32,
-                      bottom: 6,
-                    ),
+                  (feature) => Padding(
+                    padding: const EdgeInsets.only(left: 32, bottom: 6),
                     child: Row(
-                      crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Icon(
                           Icons.check_rounded,
@@ -888,8 +821,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                         Expanded(
                           child: Text(
                             feature,
-                            style:
-                            AppTypography.bodySmall.copyWith(
+                            style: AppTypography.bodySmall.copyWith(
                               color: AppColors.textPrimary,
                               fontSize: 12,
                             ),
@@ -917,9 +849,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -958,8 +888,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
           _buildTrustItem(
             icon: Icons.person_search_outlined,
             title: 'Verified professionals',
-            subtitle:
-            'Trusted service professionals for your home.',
+            subtitle: 'Trusted service professionals for your home.',
           ),
 
           const SizedBox(height: 12),
@@ -967,8 +896,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
           _buildTrustItem(
             icon: Icons.receipt_long_outlined,
             title: 'Transparent pricing',
-            subtitle:
-            'See package pricing before you book.',
+            subtitle: 'See package pricing before you book.',
           ),
 
           const SizedBox(height: 12),
@@ -976,8 +904,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
           _buildTrustItem(
             icon: Icons.support_agent_outlined,
             title: 'Reliable support',
-            subtitle:
-            'We are here if you need help with your booking.',
+            subtitle: 'We are here if you need help with your booking.',
           ),
         ],
       ),
@@ -992,18 +919,13 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: AppColors.primary,
-        ),
+        Icon(icon, size: 20, color: AppColors.primary),
 
         const SizedBox(width: 10),
 
         Expanded(
           child: Column(
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
@@ -1106,9 +1028,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
   // BOTTOM ACTION BAR
   // ================================================================
 
-  Widget _buildBottomActionBar(
-      ServiceDetailsProvider provider,
-      ) {
+  Widget _buildBottomActionBar(ServiceDetailsProvider provider) {
     final service = provider.service!;
 
     final selectedPackage = provider.selectedPackage;
@@ -1116,19 +1036,10 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
     final price = provider.totalPrice;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        18,
-        12,
-        18,
-        10,
-      ),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 10),
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        border: Border(
-          top: BorderSide(
-            color: AppColors.border,
-          ),
-        ),
+        border: Border(top: BorderSide(color: AppColors.border)),
         boxShadow: [
           BoxShadow(
             color: AppColors.shadowMedium,
@@ -1144,11 +1055,9 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
             // --------------------------------------------------------
             // PRICE
             // --------------------------------------------------------
-
             Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   selectedPackage == null
@@ -1177,7 +1086,6 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
             // --------------------------------------------------------
             // CONTINUE
             // --------------------------------------------------------
-
             Expanded(
               child: AppButton(
                 text: 'Book Appointment',
@@ -1188,11 +1096,15 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                   final branchProvider = context.read<BranchProvider>();
                   final selectedBranchId = branchProvider.selectedBranch?.id;
                   if (selectedBranchId == null) {
-                    debugPrint('[SERVICE DETAILS] No branch selected, navigating to BranchSelectionScreen');
+                    debugPrint(
+                      '[SERVICE DETAILS] No branch selected, navigating to BranchSelectionScreen',
+                    );
                     Navigator.of(context).pushNamed(AppRoutes.branchSelection);
                     return;
                   }
-                  debugPrint('[SERVICE DETAILS] Navigating to DateTimeSelectionScreen with branchId: $selectedBranchId');
+                  debugPrint(
+                    '[SERVICE DETAILS] Navigating to DateTimeSelectionScreen with branchId: $selectedBranchId',
+                  );
                   Navigator.of(context).pushNamed(
                     AppRoutes.dateTimeSelection,
                     arguments: {
@@ -1203,6 +1115,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       'productId': provider.selectedProduct?.id,
                       'selectedProduct': provider.selectedProduct,
                       'branchId': selectedBranchId,
+                      'duration': service.durationInMinutes,
                     },
                   );
                 },
@@ -1213,4 +1126,4 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
       ),
     );
   }
-  }
+}

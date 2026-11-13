@@ -1,4 +1,3 @@
-
 class SubscriptionPlanModel {
   final String id;
   final String name;
@@ -34,9 +33,7 @@ class SubscriptionPlanModel {
     required this.isActive,
   });
 
-  factory SubscriptionPlanModel.fromJson(
-      Map<String, dynamic> json,
-      ) {
+  factory SubscriptionPlanModel.fromJson(Map<String, dynamic> json) {
     final branch = json['branchId'];
 
     return SubscriptionPlanModel(
@@ -47,26 +44,23 @@ class SubscriptionPlanModel {
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       validityDays: (json['validityDays'] as num?)?.toInt() ?? 0,
       discountPercentage:
-      (json['discountPercentage'] as num?)?.toDouble() ?? 0.0,
-      benefits: (json['benefits'] as List<dynamic>?)
-          ?.map((item) => item.toString())
-          .toList() ??
+          (json['discountPercentage'] as num?)?.toDouble() ?? 0.0,
+      benefits:
+          (json['benefits'] as List<dynamic>?)
+              ?.map((item) => item.toString())
+              .toList() ??
           [],
-      perks: (json['perks'] as List<dynamic>?)
-          ?.map((item) => item.toString())
-          .toList() ??
+      perks:
+          (json['perks'] as List<dynamic>?)
+              ?.map((item) => item.toString())
+              .toList() ??
           [],
       isGlobal: json['isGlobal'] as bool? ?? false,
-      branchId: branch is Map
-          ? branch['_id']?.toString()
-          : branch?.toString(),
-      branchName:
-      branch is Map ? branch['name']?.toString() : null,
-      branchCode:
-      branch is Map ? branch['code']?.toString() : null,
-      branchCity:
-      branch is Map ? branch['city']?.toString() : null,
-      isActive: json['active'] as bool? ?? false,
+      branchId: branch is Map ? branch['_id']?.toString() : branch?.toString(),
+      branchName: branch is Map ? branch['name']?.toString() : null,
+      branchCode: branch is Map ? branch['code']?.toString() : null,
+      branchCity: branch is Map ? branch['city']?.toString() : null,
+      isActive: json['isActive'] as bool? ?? json['active'] as bool? ?? true,
     );
   }
 }

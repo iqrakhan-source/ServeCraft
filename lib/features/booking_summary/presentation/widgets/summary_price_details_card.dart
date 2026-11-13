@@ -8,10 +8,7 @@ import '../../data/models/pricing_breakdown_model.dart';
 class SummaryPriceDetailsCard extends StatelessWidget {
   final PricingBreakdown pricing;
 
-  const SummaryPriceDetailsCard({
-    super.key,
-    required this.pricing,
-  });
+  const SummaryPriceDetailsCard({super.key, required this.pricing});
 
   @override
   Widget build(BuildContext context) {

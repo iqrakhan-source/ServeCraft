@@ -8,8 +8,10 @@ import 'package:prop_crm/core/widgets/app_card.dart';
 import 'package:prop_crm/core/widgets/app_loading_indicator.dart';
 import 'package:prop_crm/core/widgets/custom_app_bar.dart';
 import 'package:prop_crm/core/constants/route_names.dart';
+import 'package:prop_crm/features/auth/presentation/providers/auth_provider.dart';
 import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
 import 'package:prop_crm/features/date_time/data/models/time_slot_model.dart';
+import 'package:prop_crm/features/payment/data/models/payment_method_model.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/booking_model.dart';
 import '../providers/booking_provider.dart';
@@ -37,7 +39,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         if (widget.initialBooking != null) {
-          context.read<BookingProvider>().setSelectedBooking(widget.initialBooking);
+          context.read<BookingProvider>().setSelectedBooking(
+            widget.initialBooking,
+          );
         }
         if (widget.bookingId.isNotEmpty) {
           context.read<BookingProvider>().loadBookingDetails(widget.bookingId);
@@ -53,7 +57,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+            const Icon(
+              Icons.check_circle_outline,
+              color: Colors.white,
+              size: 18,
+            ),
             const SizedBox(width: 8),
             Text(
               'Booking ID copied to clipboard',
@@ -70,16 +78,21 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Future<void> _handleCancelBooking(BookingModel booking) async {
-    final success =
-        await CancellationReasonSheet.show(context, booking: booking);
+    final success = await CancellationReasonSheet.show(
+      context,
+      booking: booking,
+    );
     if (success == true && mounted) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_outline,
-                  color: Colors.white, size: 18),
+              const Icon(
+                Icons.check_circle_outline,
+                color: Colors.white,
+                size: 18,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Booking cancelled successfully',
@@ -113,7 +126,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           child: _buildBody(context, provider, booking),
         ),
       ),
-      bottomNavigationBar: (booking != null &&
+      bottomNavigationBar:
+          (booking != null &&
               (booking.status == BookingStatus.confirmed ||
                   booking.status == BookingStatus.pending ||
                   booking.status == BookingStatus.rescheduled))
@@ -161,8 +175,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                           child: AppButton(
                             text: 'Reschedule',
                             variant: AppButtonVariant.outline,
-                            onPressed: () =>
-                                _handleRescheduleBooking(booking),
+                            onPressed: () => _handleRescheduleBooking(booking),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -184,14 +197,30 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Future<void> _handleRescheduleBooking(BookingModel booking) async {
+    final branchId = booking.branch?.id ?? booking.branchId;
+    final serviceId = booking.service.id;
+    final duration =
+        booking.durationMinutes ?? booking.service.durationInMinutes;
+
+    debugPrint('========== RESCHEDULE NAVIGATION ==========');
+    debugPrint('Booking ID: ${booking.id}');
+    debugPrint('Branch ID: $branchId');
+    debugPrint('Service ID: $serviceId');
+    debugPrint('Service Name: ${booking.service.name}');
+    debugPrint('Duration: $duration');
+    debugPrint('============================================');
+
     final result = await Navigator.of(context).pushNamed(
       AppRoutes.dateTimeSelection,
       arguments: {
-        'serviceId': booking.service.id,
+        'serviceId': serviceId,
         'serviceName': booking.service.name,
         'packageId': booking.package.id,
         'packageName': booking.package.name,
-        'branchId':booking.branch?.id,
+        'branchId': branchId,
+        'branch': booking.branch,
+        'duration': duration,
+        'isPickerMode': true,
       },
     );
 
@@ -201,10 +230,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
       if (newDate != null && newSlot != null) {
         final updated = await context.read<BookingProvider>().rescheduleBooking(
-              bookingId: booking.id,
-              newDate: newDate,
-              newSlot: newSlot,
-            );
+          bookingId: booking.id,
+          newDate: newDate,
+          newSlot: newSlot,
+        );
 
         if (updated != null && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -304,7 +333,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         bgColor = AppColors.infoLight;
         break;
       case BookingStatus.cancelled:
-        statusDescription = booking.cancellationReason != null &&
+        statusDescription =
+            booking.cancellationReason != null &&
                 booking.cancellationReason!.isNotEmpty
             ? 'This appointment was cancelled. Reason: ${booking.cancellationReason}.'
             : 'This appointment was cancelled. No cancellation fee was incurred.';
@@ -327,10 +357,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: accentColor.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,7 +447,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               color: AppColors.primary,
             ),
             tooltip: 'Copy Reference ID',
-            onPressed: () => _copyToClipboard(context, booking.bookingReference),
+            onPressed: () =>
+                _copyToClipboard(context, booking.bookingReference),
           ),
         ],
       ),
@@ -572,6 +600,33 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Widget _buildCustomerSection(BookingModel booking) {
+    final authUser = context.watch<AuthProvider>().currentUser;
+
+    final customerName = authUser?.name.isNotEmpty == true
+        ? authUser!.name
+        : 'Valued Customer';
+
+    final initials = customerName.trim().isNotEmpty
+        ? customerName
+              .trim()
+              .split(' ')
+              .where((p) => p.isNotEmpty)
+              .map((p) => p[0].toUpperCase())
+              .take(2)
+              .join()
+        : 'CX';
+
+    final contactParts = <String>[];
+    if (authUser?.phone.isNotEmpty == true) {
+      contactParts.add(authUser!.phone);
+    }
+    if (authUser?.email.isNotEmpty == true) {
+      contactParts.add(authUser!.email);
+    }
+    final contactDetails = contactParts.isNotEmpty
+        ? contactParts.join(' • ')
+        : 'Contact details verified';
+
     return AppCard(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -609,13 +664,31 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               CircleAvatar(
                 radius: 20,
                 backgroundColor: AppColors.primaryLight,
-                child: Text(
-                  'SR',
-                  style: AppTypography.titleSmall.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                child:
+                    (authUser?.profileImage != null &&
+                        authUser!.profileImage!.isNotEmpty)
+                    ? ClipOval(
+                        child: Image.network(
+                          authUser.profileImage!,
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Text(
+                            initials,
+                            style: AppTypography.titleSmall.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Text(
+                        initials,
+                        style: AppTypography.titleSmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -623,7 +696,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Sophia Reynolds',
+                      customerName,
                       style: AppTypography.bodyMedium.copyWith(
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -631,7 +704,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '+91 98765 43210 • sophia.reynolds@example.com',
+                      contactDetails,
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -648,7 +721,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
   Widget _buildAddressSection(BookingModel booking) {
     final branchName = booking.branch?.name ?? 'Downtown Luxury Lounge';
-    final branchAddress = booking.branch?.address ??
+    final branchAddress =
+        booking.branch?.address ??
         '104 Royal Palms, Downtown Luxury Avenue, Mumbai';
     final branchHours = booking.branch?.formattedHours ?? '09:00 AM - 09:00 PM';
     final branchPhone = booking.branch?.phone ?? '+91 98765 43210';
@@ -678,14 +752,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 ],
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  'CONFIRMED SALON',
+                  'CONFIRMED',
                   style: AppTypography.labelSmall.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
@@ -759,7 +832,73 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Widget _buildPaymentSection(BookingModel booking) {
-    final isOnline = booking.paymentMethod.type.toFormattedString() != 'cod';
+    final isPayAtSalon =
+        booking.paymentMethod.type == PaymentMethodType.cod ||
+        booking.paymentMethod.title.toLowerCase().contains('salon') ||
+        booking.paymentMethod.title.toLowerCase().contains('cash');
+
+    // Method Title
+    final String methodTitle;
+    if (isPayAtSalon) {
+      methodTitle = 'Pay at Salon';
+    } else if (booking.paymentMethod.type == PaymentMethodType.card) {
+      methodTitle = 'Credit / Debit Card';
+    } else if (booking.paymentMethod.type == PaymentMethodType.upi) {
+      methodTitle = booking.paymentMethod.title.toLowerCase().contains('upi')
+          ? booking.paymentMethod.title
+          : 'Online Payment (UPI)';
+    } else {
+      methodTitle =
+          booking.paymentMethod.title.isNotEmpty &&
+              booking.paymentMethod.title.toLowerCase() != 'payment'
+          ? booking.paymentMethod.title
+          : 'Online Payment';
+    }
+
+    // Method Subtitle
+    final String methodSubtitle;
+    if (isPayAtSalon) {
+      methodSubtitle = 'Pay at Reception Desk (Cash / Card)';
+    } else {
+      methodSubtitle = booking.isPaid
+          ? 'Prepaid Online'
+          : 'Pending Online Payment';
+    }
+
+    // Payment Status badge derived strictly from booking.paymentStatus
+    final statusLower = booking.paymentStatus.toLowerCase().trim();
+    final String statusBadgeText;
+    final Color statusTextColor;
+    final Color statusBgColor;
+
+    if (statusLower == 'paid' ||
+        statusLower == 'completed' ||
+        statusLower == 'success') {
+      statusBadgeText = 'PAID';
+      statusTextColor = AppColors.success;
+      statusBgColor = AppColors.successLight;
+    } else if (statusLower == 'failed') {
+      statusBadgeText = 'FAILED';
+      statusTextColor = AppColors.error;
+      statusBgColor = AppColors.errorLight;
+    } else if (statusLower == 'refunded') {
+      statusBadgeText = 'REFUNDED';
+      statusTextColor = const Color(0xFF6D28D9);
+      statusBgColor = const Color(0xFFEDE9FE);
+    } else {
+      // Pending / Unpaid
+      statusBadgeText = 'PENDING';
+      statusTextColor = AppColors.warning;
+      statusBgColor = AppColors.warningLight;
+    }
+
+    final IconData methodIcon = isPayAtSalon
+        ? Icons.storefront_rounded
+        : (booking.paymentMethod.type == PaymentMethodType.card
+              ? Icons.credit_card_rounded
+              : (booking.paymentMethod.title.toLowerCase().contains('upi')
+                    ? Icons.qr_code_2_rounded
+                    : Icons.payment_rounded));
 
     return AppCard(
       padding: const EdgeInsets.all(16.0),
@@ -779,22 +918,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               Expanded(
                 child: Row(
                   children: [
-                    Icon(
-                      isOnline
-                          ? Icons.credit_card_rounded
-                          : Icons.storefront_rounded,
-                      size: 20,
-                      color: AppColors.primary,
-                    ),
+                    Icon(methodIcon, size: 20, color: AppColors.primary),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            isOnline
-                                ? booking.paymentMethod.title
-                                : 'Pay at Salon (Cash / Card)',
+                            methodTitle,
                             style: AppTypography.bodyMedium.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
@@ -804,9 +935,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            isOnline
-                                ? 'Prepaid Online'
-                                : 'Pay at Reception Desk',
+                            methodSubtitle,
                             style: AppTypography.bodySmall.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -823,18 +952,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isOnline
-                      ? AppColors.successLight
-                      : AppColors.warningLight,
+                  color: statusBgColor,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  isOnline ? 'PAID ONLINE' : 'PAY AT SALON',
+                  statusBadgeText,
                   style: AppTypography.labelSmall.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: isOnline
-                        ? AppColors.success
-                        : AppColors.warning,
+                    color: statusTextColor,
                     fontSize: 10,
                   ),
                 ),
@@ -909,11 +1034,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 
-  Widget _buildPriceRow(
-    String label,
-    String value, {
-    Color? valueColor,
-  }) {
+  Widget _buildPriceRow(String label, String value, {Color? valueColor}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

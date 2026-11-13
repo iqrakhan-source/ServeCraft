@@ -1,27 +1,22 @@
-
 import 'package:prop_crm/core/constants/api_constants.dart';
 import 'package:prop_crm/core/networking/api_client.dart';
 
 import '../models/service_products_response.dart';
 
 abstract class ServiceProductsRemoteDataSource {
-  Future<ServiceProductsResponse> getProductsForService(
-      String serviceId,
-      );
+  Future<ServiceProductsResponse> getProductsForService(String serviceId);
 }
 
 class ServiceProductsRemoteDataSourceImpl
     implements ServiceProductsRemoteDataSource {
   final ApiClient apiService;
 
-  ServiceProductsRemoteDataSourceImpl({
-    required this.apiService,
-  });
+  ServiceProductsRemoteDataSourceImpl({required this.apiService});
 
   @override
   Future<ServiceProductsResponse> getProductsForService(
-      String serviceId,
-      ) async {
+    String serviceId,
+  ) async {
     final id = serviceId.trim();
 
     if (id.isEmpty) {
@@ -32,9 +27,7 @@ class ServiceProductsRemoteDataSourceImpl
       '${ApiConstants.productsForService}/${Uri.encodeComponent(id)}',
       fromJson: (json) {
         if (json is! Map) {
-          throw const FormatException(
-            'Invalid products API response format',
-          );
+          throw const FormatException('Invalid products API response format');
         }
 
         return ServiceProductsResponse.fromJson({
@@ -43,7 +36,6 @@ class ServiceProductsRemoteDataSourceImpl
         });
       },
     );
-
 
     if (response.data == null) {
       throw const ServerException(
@@ -57,9 +49,6 @@ class ServiceProductsRemoteDataSourceImpl
             ? response.message
             : 'Failed to fetch products for service.',
       );
-      // HTTP 200 with a valid response is sufficient here.
-// The API uses count + data.products, not root-level success.
-      return response.data!;
     }
 
     return response.data!;

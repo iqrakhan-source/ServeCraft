@@ -37,13 +37,22 @@ import 'features/branches/data/repositories/branch_repository_impl.dart';
 import 'features/branches/domain/repositories/branch_repository.dart';
 import 'features/services/data/datasources/service_remote_data_source.dart';
 import 'features/services/data/repositories/service_repository_impl.dart';
-import 'features/services/domain/repositories/service_repository.dart';
 import 'package:prop_crm/features/services/data/datasources/service_products_remote_data_source.dart';
-
 import 'features/subscriptions/data/datasources/subscription_remote_data_source.dart';
 import 'features/subscriptions/data/repositories/subscription_repository.dart';
 import 'features/subscriptions/data/repositories/subscription_repository_impl.dart';
-
+import 'features/loyalty/data/datasources/loyalty_remote_data_source.dart';
+import 'features/loyalty/data/repositories/loyalty_repository_impl.dart';
+import 'features/loyalty/domain/repositories/loyalty_repository.dart';
+import 'features/waitlist/data/datasources/waitlist_remote_data_source.dart';
+import 'features/waitlist/data/repositories/waitlist_repository_impl.dart';
+import 'features/waitlist/domain/repositories/waitlist_repository.dart';
+import 'features/notifications/data/datasources/notification_remote_data_source.dart';
+import 'features/notifications/data/repositories/notification_repository_impl.dart';
+import 'features/notifications/domain/repositories/notification_repository.dart';
+import 'features/stylists/data/datasources/stylist_remote_data_source.dart';
+import 'features/stylists/data/repositories/stylist_repository_impl.dart';
+import 'features/stylists/domain/repositories/stylist_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,32 +87,29 @@ void main() async {
   );
 
   // 4. Initialize Data Sources & Repositories
-  final AuthRemoteDataSource authRemoteDataSource =
-      AuthRemoteDataSourceImpl(apiService: apiClient, storageService: storageService);
+  final AuthRemoteDataSource authRemoteDataSource = AuthRemoteDataSourceImpl(
+    apiService: apiClient,
+    storageService: storageService,
+  );
   final AuthRepository authRepository = AuthRepositoryImpl(
     remoteDataSource: authRemoteDataSource,
     storageService: storageService,
   );
 
   final BranchRemoteDataSource branchRemoteDataSource =
-  BranchRemoteDataSourceImpl(apiService: apiClient);
+      BranchRemoteDataSourceImpl(apiService: apiClient);
   final BranchRepository branchRepository = BranchRepositoryImpl(
     remoteDataSource: branchRemoteDataSource,
   );
 
   final CategoryRemoteDataSource categoryRemoteDataSource =
-  CategoryRemoteDataSourceImpl(apiService: apiClient);
+      CategoryRemoteDataSourceImpl(apiService: apiClient);
   final CategoryRepository categoryRepository = CategoryRepositoryImpl(
     remoteDataSource: categoryRemoteDataSource,
   );
 
   final ServiceRemoteDataSource serviceRemoteDataSource =
-  ServiceRemoteDataSourceImpl(apiService: apiClient);
-
-  final ServiceProductsRemoteDataSource productsRemoteDataSource =
-  ServiceProductsRemoteDataSourceImpl(
-    apiService: apiClient,
-  );
+      ServiceRemoteDataSourceImpl(apiService: apiClient);
 
   final serviceRepository = ServiceRepositoryImpl(
     remoteDataSource: serviceRemoteDataSource,
@@ -127,16 +133,13 @@ void main() async {
   );
 
   final DateTimeRemoteDataSource dateTimeRemoteDataSource =
-  DateTimeRemoteDataSourceImpl(
-    apiService: apiClient,
-  );
+      DateTimeRemoteDataSourceImpl(apiService: apiClient);
   final DateTimeRepository dateTimeRepository = DateTimeRepositoryImpl(
     remoteDataSource: dateTimeRemoteDataSource,
   );
 
   final CouponRemoteDataSource couponRemoteDataSource =
-  CouponRemoteDataSourceImpl(apiClient: apiClient);
-
+      CouponRemoteDataSourceImpl(apiClient: apiClient);
   final CouponRepository couponRepository = CouponRepositoryImpl(
     remoteDataSource: couponRemoteDataSource,
   );
@@ -145,8 +148,8 @@ void main() async {
       MockBookingSummaryRemoteDataSource();
   final BookingSummaryRepository bookingSummaryRepository =
       BookingSummaryRepositoryImpl(
-    remoteDataSource: bookingSummaryRemoteDataSource,
-  );
+        remoteDataSource: bookingSummaryRemoteDataSource,
+      );
 
   final PaymentRemoteDataSource paymentRemoteDataSource =
       MockPaymentRemoteDataSource();
@@ -154,27 +157,43 @@ void main() async {
     remoteDataSource: paymentRemoteDataSource,
   );
 
-
   final BookingRemoteDataSource bookingRemoteDataSource =
-  BookingRemoteDataSourceImpl(
-    apiService: apiClient,
-  );
-
+      BookingRemoteDataSourceImpl(apiService: apiClient);
   final BookingRepository bookingRepository = BookingRepositoryImpl(
     remoteDataSource: bookingRemoteDataSource,
   );
 
   final SubscriptionRemoteDataSource subscriptionRemoteDataSource =
-  SubscriptionRemoteDataSourceImpl(
-    apiClient: apiClient,
-  );
-
+      SubscriptionRemoteDataSourceImpl(apiClient: apiClient);
   final SubscriptionRepository subscriptionRepository =
-  SubscriptionRepositoryImpl(
-    remoteDataSource: subscriptionRemoteDataSource,
+      SubscriptionRepositoryImpl(
+        remoteDataSource: subscriptionRemoteDataSource,
+      );
+
+  final LoyaltyRemoteDataSource loyaltyRemoteDataSource =
+      LoyaltyRemoteDataSourceImpl(apiService: apiClient);
+  final LoyaltyRepository loyaltyRepository = LoyaltyRepositoryImpl(
+    remoteDataSource: loyaltyRemoteDataSource,
   );
 
+  final WaitlistRemoteDataSource waitlistRemoteDataSource =
+      WaitlistRemoteDataSourceImpl(apiClient: apiClient);
+  final WaitlistRepository waitlistRepository = WaitlistRepositoryImpl(
+    remoteDataSource: waitlistRemoteDataSource,
+  );
 
+  final NotificationRemoteDataSource notificationRemoteDataSource =
+      NotificationRemoteDataSourceImpl(apiClient: apiClient);
+  final NotificationRepository notificationRepository =
+      NotificationRepositoryImpl(
+        remoteDataSource: notificationRemoteDataSource,
+      );
+
+  final StylistRemoteDataSource stylistRemoteDataSource =
+      StylistRemoteDataSourceImpl(apiClient: apiClient);
+  final StylistRepository stylistRepository = StylistRepositoryImpl(
+    remoteDataSource: stylistRemoteDataSource,
+  );
 
   // 5. Launch application
   runApp(
@@ -192,6 +211,10 @@ void main() async {
       bookingRepository: bookingRepository,
       couponRepository: couponRepository,
       subscriptionRepository: subscriptionRepository,
+      loyaltyRepository: loyaltyRepository,
+      waitlistRepository: waitlistRepository,
+      notificationRepository: notificationRepository,
+      stylistRepository: stylistRepository,
     ),
   );
 }

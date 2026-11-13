@@ -1,9 +1,10 @@
 abstract class AppRoutes {
   static const String splash = '/';
-  
+
   // Auth flow
   static const String login = '/auth/login';
-  static const String mobileLogin = login; // Retained for backward compatibility
+  static const String mobileLogin =
+      login; // Retained for backward compatibility
   static const String signup = '/auth/signup';
   static const String completeProfile = '/auth/complete-profile';
   static const String forgotPassword = '/auth/forgot-password';
@@ -32,6 +33,7 @@ abstract class AppRoutes {
   static const String addressSelection = '/checkout/addresses';
   static const String addAddress = '/checkout/addresses/add';
   static const String dateTimeSelection = '/checkout/date-time';
+  static const String stylistAndChairSelection = '/checkout/stylist-chair';
   static const String bookingSummary = '/checkout/summary';
   static const String payment = '/checkout/payment';
   static const String bookingConfirmation = '/checkout/confirmation';
@@ -46,4 +48,6 @@ abstract class AppRoutes {
   static const String addReview = '/reviews/add';
 
   static const String subscriptions = '/subscriptions';
+  static const String loyaltyWallet = '/loyalty/wallet';
+  static const String waitlist = '/waitlist';
 }

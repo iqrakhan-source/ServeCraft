@@ -1,10 +1,4 @@
-enum ViewStatus {
-  initial,
-  loading,
-  success,
-  empty,
-  error,
-}
+enum ViewStatus { initial, loading, success, empty, error }
 
 class ViewState<T> {
   final ViewStatus status;
@@ -23,18 +17,16 @@ class ViewState<T> {
 
   factory ViewState.loading() => const ViewState._(status: ViewStatus.loading);
 
-  factory ViewState.success(T data) => ViewState._(
-        status: ViewStatus.success,
-        data: data,
-      );
+  factory ViewState.success(T data) =>
+      ViewState._(status: ViewStatus.success, data: data);
 
   factory ViewState.empty() => const ViewState._(status: ViewStatus.empty);
 
   factory ViewState.error(String message, {int? statusCode}) => ViewState._(
-        status: ViewStatus.error,
-        errorMessage: message,
-        statusCode: statusCode,
-      );
+    status: ViewStatus.error,
+    errorMessage: message,
+    statusCode: statusCode,
+  );
 
   bool get isInitial => status == ViewStatus.initial;
   bool get isLoading => status == ViewStatus.loading;

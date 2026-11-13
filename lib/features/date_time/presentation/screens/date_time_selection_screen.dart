@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:prop_crm/core/constants/app_colors.dart';
 import 'package:prop_crm/core/constants/app_typography.dart';
@@ -8,6 +7,7 @@ import 'package:prop_crm/core/widgets/app_card.dart';
 import 'package:prop_crm/core/widgets/app_error_view.dart';
 import 'package:prop_crm/core/widgets/app_loading_indicator.dart';
 import 'package:prop_crm/core/widgets/custom_app_bar.dart';
+import 'package:prop_crm/features/branches/data/models/branch_model.dart';
 import 'package:prop_crm/features/branches/presentation/providers/branch_provider.dart';
 import 'package:prop_crm/features/services/data/models/service_model.dart';
 import 'package:prop_crm/features/services/data/models/service_package_model.dart';
@@ -39,11 +39,10 @@ class DateTimeSelectionScreen extends StatefulWidget {
       _DateTimeSelectionScreenState();
 }
 
-class _DateTimeSelectionScreenState
-    extends State<DateTimeSelectionScreen> {
+class _DateTimeSelectionScreenState extends State<DateTimeSelectionScreen> {
   bool get _isPickerMode {
-    final args = ModalRoute.of(context)?.settings.arguments
-    as Map<String, dynamic>?;
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     return args?['isPickerMode'] as bool? ?? false;
   }
 
@@ -54,27 +53,45 @@ class _DateTimeSelectionScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
 
-      final args = ModalRoute.of(context)?.settings.arguments
-      as Map<String, dynamic>? ?? {};
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ??
+          {};
 
       final branchProvider = context.read<BranchProvider>();
       final selectedBranch = branchProvider.selectedBranch;
 
-      final branchId = selectedBranch?.id ??
-          widget.branchId ??
-          args['branchId'] as String?;
+      // Explicitly passed branch ID from route args or widget parameters takes precedence
+      final explicitBranchId = (widget.branchId?.trim().isNotEmpty == true)
+          ? widget.branchId!.trim()
+          : (args['branchId'] as String?)?.trim();
 
-      final serviceId =
-          widget.serviceId ?? args['serviceId'] as String?;
+      final branchId = (explicitBranchId != null && explicitBranchId.isNotEmpty)
+          ? explicitBranchId
+          : selectedBranch?.id;
 
-      final serviceName =
-          widget.serviceName ?? args['serviceName'] as String?;
+      // Sync BranchProvider if an explicit branch was provided
+      if (explicitBranchId != null && explicitBranchId.isNotEmpty) {
+        if (args['branch'] is BranchModel) {
+          branchProvider.selectBranch(args['branch'] as BranchModel);
+        } else {
+          final matching = branchProvider.branches
+              .where((b) => b.id == explicitBranchId)
+              .firstOrNull;
+          if (matching != null) {
+            branchProvider.selectBranch(matching);
+          }
+        }
+      }
 
-      final packageId =
-          widget.packageId ?? args['packageId'] as String?;
+      final serviceId = widget.serviceId ?? args['serviceId'] as String?;
 
-      final packageName =
-          widget.packageName ?? args['packageName'] as String?;
+      final serviceName = widget.serviceName ?? args['serviceName'] as String?;
+
+      final packageId = widget.packageId ?? args['packageId'] as String?;
+
+      final packageName = widget.packageName ?? args['packageName'] as String?;
+
+      final duration = args['duration'] as int?;
 
       debugPrint('========== DATE SCREEN INIT ==========');
       debugPrint('Selected Branch ID: ${selectedBranch?.id}');
@@ -83,15 +100,22 @@ class _DateTimeSelectionScreenState
       debugPrint('Final Branch ID: $branchId');
       debugPrint('Service ID: $serviceId');
       debugPrint('Package ID: $packageId');
+      debugPrint('Duration: $duration');
       debugPrint('======================================');
 
       if (branchId == null || branchId.trim().isEmpty) {
         debugPrint('[DATE TIME] Branch ID is missing.');
+        context.read<DateTimeProvider>().setError(
+          'Branch ID is missing. Please select a valid salon branch.',
+        );
         return;
       }
 
       if (serviceId == null || serviceId.trim().isEmpty) {
         debugPrint('[DATE TIME] Service ID is missing.');
+        context.read<DateTimeProvider>().setError(
+          'Service ID is missing. Please select a valid service.',
+        );
         return;
       }
 
@@ -103,6 +127,7 @@ class _DateTimeSelectionScreenState
         packageId: packageId,
         packageName: packageName,
         branchId: branchId,
+        duration: duration,
       );
 
       await dateTimeProvider.loadAvailableDates(forceRefresh: true);
@@ -113,11 +138,11 @@ class _DateTimeSelectionScreenState
   Widget build(BuildContext context) {
     final dateTimeProvider = context.watch<DateTimeProvider>();
 
-    final displayServiceName = widget.serviceName ??
-        dateTimeProvider.serviceName ??
-        'Home Service';
+    final displayServiceName =
+        widget.serviceName ?? dateTimeProvider.serviceName ?? 'Home Service';
 
-    final displayPackageName = widget.packageName ??
+    final displayPackageName =
+        widget.packageName ??
         dateTimeProvider.packageName ??
         'No Selected Package';
 
@@ -136,10 +161,11 @@ class _DateTimeSelectionScreenState
 
           if (dateTimeProvider.datesState.isError) {
             return AppErrorView(
-              message: "Couldn't load available times",
-              onRetry: () => dateTimeProvider.loadAvailableDates(
-                forceRefresh: true,
-              ),
+              message:
+                  dateTimeProvider.datesState.errorMessage ??
+                  "Couldn't load available times",
+              onRetry: () =>
+                  dateTimeProvider.loadAvailableDates(forceRefresh: true),
             );
           }
 
@@ -147,6 +173,47 @@ class _DateTimeSelectionScreenState
           final selectedDate = dateTimeProvider.selectedDate;
           final timeSlots = dateTimeProvider.timeSlots;
           final selectedSlot = dateTimeProvider.selectedTimeSlot;
+
+          if (dates.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.event_busy_rounded,
+                      size: 48,
+                      color: AppColors.textTertiary,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No Available Dates',
+                      style: AppTypography.titleMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'There are no available dates for this salon branch right now.',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    AppButton(
+                      text: 'Retry',
+                      isFullWidth: false,
+                      onPressed: () => dateTimeProvider.loadAvailableDates(
+                        forceRefresh: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
 
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -228,25 +295,31 @@ class _DateTimeSelectionScreenState
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Available time slots',
-                        style: AppTypography.titleMedium.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                          color: AppColors.textPrimary,
+                      Expanded(
+                        child: Text(
+                          'Available time slots',
+                          style: AppTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (selectedDate != null)
+                      if (selectedDate != null) ...[
+                        const SizedBox(width: 8),
                         Text(
                           '${selectedDate.dayName}, '
-                              '${selectedDate.dayNumber} '
-                              '${selectedDate.monthName}',
+                          '${selectedDate.dayNumber} '
+                          '${selectedDate.monthName}',
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.textSecondary,
                             fontWeight: FontWeight.w600,
                             fontSize: 12,
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ),
@@ -256,11 +329,10 @@ class _DateTimeSelectionScreenState
                   child: dateTimeProvider.slotsState.isLoading
                       ? _buildSlotsLoadingGrid()
                       : TimeSlotGrid(
-                    slots: timeSlots,
-                    selectedSlot: selectedSlot,
-                    onSlotSelected:
-                    dateTimeProvider.selectTimeSlot,
-                  ),
+                          slots: timeSlots,
+                          selectedSlot: selectedSlot,
+                          onSlotSelected: dateTimeProvider.selectTimeSlot,
+                        ),
                 ),
                 const SizedBox(height: 24),
               ],
@@ -269,18 +341,10 @@ class _DateTimeSelectionScreenState
         },
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 14,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: const BoxDecoration(
           color: AppColors.surface,
-          border: Border(
-            top: BorderSide(
-              color: AppColors.border,
-              width: 1,
-            ),
-          ),
+          border: Border(top: BorderSide(color: AppColors.border, width: 1)),
           boxShadow: [
             BoxShadow(
               color: AppColors.shadowMedium,
@@ -299,121 +363,108 @@ class _DateTimeSelectionScreenState
                 text: 'Continue',
                 onPressed: canContinue
                     ? () {
-                  if (pickerMode) {
-                    Navigator.of(context).pop({
-                      'selectedDate':
-                      dateTimeProvider.selectedDate,
-                      'selectedTimeSlot':
-                      dateTimeProvider.selectedTimeSlot,
-                    });
-                    return;
-                  }
+                        if (pickerMode) {
+                          Navigator.of(context).pop({
+                            'selectedDate': dateTimeProvider.selectedDate,
+                            'selectedTimeSlot':
+                                dateTimeProvider.selectedTimeSlot,
+                          });
+                          return;
+                        }
 
-                  final routeArgs = ModalRoute.of(context)
-                      ?.settings.arguments
-                  as Map<String, dynamic>? ?? {};
+                        final routeArgs =
+                            ModalRoute.of(context)?.settings.arguments
+                                as Map<String, dynamic>? ??
+                            {};
 
-                  final branchProvider =
-                  context.read<BranchProvider>();
-                  final branch =
-                      branchProvider.selectedBranch;
+                        final branchProvider = context.read<BranchProvider>();
+                        final branch = branchProvider.selectedBranch;
 
-                  final finalBranchId =
-                      branch?.id ??
-                          widget.branchId ??
-                          routeArgs['branchId'] as String?;
+                        final finalBranchId =
+                            branch?.id ??
+                            widget.branchId ??
+                            routeArgs['branchId'] as String?;
 
-                  debugPrint(
-                    '[DATE TIME] Final Branch ID: $finalBranchId',
-                  );
+                        debugPrint(
+                          '[DATE TIME] Final Branch ID: $finalBranchId',
+                        );
 
-                  if (finalBranchId == null ||
-                      finalBranchId.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Please select a salon branch again.',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
+                        if (finalBranchId == null || finalBranchId.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Please select a salon branch again.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
 
-                  final serviceProvider =
-                  context.read<ServiceProvider>();
+                        final serviceProvider = context.read<ServiceProvider>();
 
-                  final serviceId =
-                      widget.serviceId ??
-                          dateTimeProvider.serviceId;
+                        final serviceId =
+                            widget.serviceId ?? dateTimeProvider.serviceId;
 
-                  if (serviceId == null || serviceId.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Please select a service again.',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
+                        if (serviceId == null || serviceId.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please select a service again.'),
+                            ),
+                          );
+                          return;
+                        }
 
-                  final matchingServices =
-                  serviceProvider.services
-                      .where((s) => s.id == serviceId);
+                        final matchingServices = serviceProvider.services.where(
+                          (s) => s.id == serviceId,
+                        );
 
-                  if (matchingServices.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'The selected service could not be found. '
-                              'Please select the service again.',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
+                        if (matchingServices.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'The selected service could not be found. '
+                                'Please select the service again.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
 
-                  final ServiceModel service =
-                      matchingServices.first;
+                        final ServiceModel service = matchingServices.first;
 
-                  final packageId =
-                      widget.packageId ??
-                          dateTimeProvider.packageId;
+                        final packageId =
+                            widget.packageId ?? dateTimeProvider.packageId;
 
-                  final matchingPackages = service.packages
-                      .where((p) => p.id == packageId);
+                        final matchingPackages = service.packages.where(
+                          (p) => p.id == packageId,
+                        );
 
-                  final ServicePackageModel? selectedPackage =
-                  matchingPackages.isNotEmpty
-                      ? matchingPackages.first
-                      : null;
+                        final ServicePackageModel? selectedPackage =
+                            matchingPackages.isNotEmpty
+                            ? matchingPackages.first
+                            : null;
 
-                  debugPrint('========== BOOKING DEBUG ==========');
-                  debugPrint('Service ID: ${service.id}');
-                  debugPrint('Service Name: ${service.name}');
-                  debugPrint(
-                    'Package ID: ${selectedPackage?.id}',
-                  );
-                  debugPrint('Branch ID: $finalBranchId');
-                  debugPrint('===================================');
+                        debugPrint('========== BOOKING DEBUG ==========');
+                        debugPrint('Service ID: ${service.id}');
+                        debugPrint('Service Name: ${service.name}');
+                        debugPrint('Package ID: ${selectedPackage?.id}');
+                        debugPrint('Branch ID: $finalBranchId');
+                        debugPrint('===================================');
 
-                  Navigator.of(context).pushNamed(
-                    AppRoutes.bookingSummary,
-                    arguments: {
-                      'service': service,
-                      'package': selectedPackage,
-                      'branch': branch,
-                      'branchId': finalBranchId,
-                      'scheduledDate':
-                      dateTimeProvider.selectedDate,
-                      'timeSlot':
-                      dateTimeProvider.selectedTimeSlot,
-                      'productId': routeArgs['productId'],
-                      'selectedProduct':
-                      routeArgs['selectedProduct'],
-                    },
-                  );
-                }
+                        Navigator.of(context).pushNamed(
+                          AppRoutes.stylistAndChairSelection,
+                          arguments: {
+                            'service': service,
+                            'package': selectedPackage,
+                            'branch': branch,
+                            'branchId': finalBranchId,
+                            'scheduledDate': dateTimeProvider.selectedDate,
+                            'timeSlot': dateTimeProvider.selectedTimeSlot,
+                            'productId': routeArgs['productId'],
+                            'selectedProduct': routeArgs['selectedProduct'],
+                          },
+                        );
+                      }
                     : null,
               ),
               if (!dateTimeProvider.isSelectionComplete) ...[
@@ -454,11 +505,8 @@ class _DateTimeSelectionScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(
               4,
-                  (index) => const AppSkeleton(
-                height: 98,
-                width: 68,
-                borderRadius: 12,
-              ),
+              (index) =>
+                  const AppSkeleton(height: 98, width: 68, borderRadius: 12),
             ),
           ),
           const SizedBox(height: 28),

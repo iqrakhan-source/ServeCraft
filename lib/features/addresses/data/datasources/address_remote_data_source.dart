@@ -24,8 +24,9 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
       fromJson: (json) {
         if (json is List) {
           return json
-              .map((item) =>
-                  AddressModel.fromJson(item as Map<String, dynamic>))
+              .map(
+                (item) => AddressModel.fromJson(item as Map<String, dynamic>),
+              )
               .toList();
         }
         return [];
@@ -168,10 +169,7 @@ class MockAddressRemoteDataSource implements AddressRemoteDataSource {
       }
     }
 
-    final created = address.copyWith(
-      id: newId,
-      isDefault: shouldBeDefault,
-    );
+    final created = address.copyWith(id: newId, isDefault: shouldBeDefault);
     _mockAddresses.add(created);
     return created;
   }
@@ -181,7 +179,9 @@ class MockAddressRemoteDataSource implements AddressRemoteDataSource {
     await Future.delayed(const Duration(milliseconds: 200));
     final index = _mockAddresses.indexWhere((a) => a.id == address.id);
     if (index == -1) {
-      throw NotFoundException(message: 'Address with id ${address.id} not found');
+      throw NotFoundException(
+        message: 'Address with id ${address.id} not found',
+      );
     }
 
     if (address.isDefault) {

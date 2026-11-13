@@ -16,10 +16,7 @@ import 'add_address_screen.dart';
 class AddressesScreen extends StatefulWidget {
   final bool isSelectionMode;
 
-  const AddressesScreen({
-    super.key,
-    this.isSelectionMode = false,
-  });
+  const AddressesScreen({super.key, this.isSelectionMode = false});
 
   @override
   State<AddressesScreen> createState() => _AddressesScreenState();
@@ -35,11 +32,9 @@ class _AddressesScreenState extends State<AddressesScreen> {
   }
 
   void _navigateToAddAddress(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const AddAddressScreen(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const AddAddressScreen()));
   }
 
   void _navigateToEditAddress(BuildContext context, AddressModel address) {
@@ -63,8 +58,9 @@ class _AddressesScreenState extends State<AddressesScreen> {
     );
 
     if (confirmed == true && context.mounted) {
-      final success =
-          await context.read<AddressProvider>().deleteAddress(address.id);
+      final success = await context.read<AddressProvider>().deleteAddress(
+        address.id,
+      );
       if (success && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -103,10 +99,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
 
           if (addressProvider.hasError) {
             return AppErrorView(
-              message: addressProvider.errorMessage ??
+              message:
+                  addressProvider.errorMessage ??
                   'Failed to load saved addresses',
-              onRetry: () =>
-                  addressProvider.fetchAddresses(forceRefresh: true),
+              onRetry: () => addressProvider.fetchAddresses(forceRefresh: true),
             );
           }
 
@@ -121,8 +117,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: () =>
-                addressProvider.fetchAddresses(forceRefresh: true),
+            onRefresh: () => addressProvider.fetchAddresses(forceRefresh: true),
             color: AppColors.primary,
             child: ListView(
               padding: const EdgeInsets.all(16.0),
@@ -197,8 +192,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
       ),
       bottomNavigationBar: widget.isSelectionMode
           ? Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: const BoxDecoration(
                 color: AppColors.surface,
                 border: Border(
@@ -261,9 +255,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
               SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AppSkeleton(height: 16, width: 60, borderRadius: 4),
-                ],
+                children: [AppSkeleton(height: 16, width: 60, borderRadius: 4)],
               ),
             ],
           ),

@@ -25,7 +25,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final PageController _offerPageController = PageController(viewportFraction: 0.92);
+  final PageController _offerPageController = PageController(
+    viewportFraction: 0.92,
+  );
   int _currentOfferPage = 0;
   Timer? _offerTimer;
 
@@ -61,27 +63,32 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Map<String, dynamic>> _categories = [
     {
       'title': 'Hair',
-      'image': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400',
+      'image':
+          'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400',
       'icon': Icons.content_cut_rounded,
     },
     {
       'title': 'Skin',
-      'image': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400',
+      'image':
+          'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400',
       'icon': Icons.face_retouching_natural_rounded,
     },
     {
       'title': 'Makeup',
-      'image': 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=400',
+      'image':
+          'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=400',
       'icon': Icons.auto_awesome_rounded,
     },
     {
       'title': 'Spa',
-      'image': 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400',
+      'image':
+          'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400',
       'icon': Icons.spa_rounded,
     },
     {
       'title': 'Nails',
-      'image': 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=400',
+      'image':
+          'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=400',
       'icon': Icons.brush_rounded,
     },
   ];
@@ -95,7 +102,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'duration': '45 mins',
       'rating': 4.9,
       'reviews': 380,
-      'image': 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600',
+      'image':
+          'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600',
       'category': 'Hair',
     },
     {
@@ -105,7 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'duration': '60 mins',
       'rating': 4.8,
       'reviews': 295,
-      'image': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600',
+      'image':
+          'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600',
       'category': 'Hair',
     },
     {
@@ -115,7 +124,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'duration': '60 mins',
       'rating': 4.9,
       'reviews': 510,
-      'image': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600',
+      'image':
+          'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600',
       'category': 'Skin',
     },
     {
@@ -125,7 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'duration': '60 mins',
       'rating': 4.8,
       'reviews': 240,
-      'image': 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600',
+      'image':
+          'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600',
       'category': 'Spa',
     },
     {
@@ -135,7 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'duration': '75 mins',
       'rating': 4.8,
       'reviews': 190,
-      'image': 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600',
+      'image':
+          'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600',
       'category': 'Nails',
     },
   ];
@@ -175,15 +187,22 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.currentUser;
-    final userName = user?.name.isNotEmpty == true ? user!.name.split(' ').first : 'Sophia';
+    final userName = user?.name.isNotEmpty == true
+        ? user!.name.split(' ').first
+        : 'Sophia';
 
     final branchProvider = context.watch<BranchProvider>();
-    final selectedBranch = branchProvider.selectedBranch ??
-        (branchProvider.branches.isNotEmpty ? branchProvider.branches.first : null);
+    final selectedBranch =
+        branchProvider.selectedBranch ??
+        (branchProvider.branches.isNotEmpty
+            ? branchProvider.branches.first
+            : null);
 
     final bookingProvider = context.watch<BookingProvider>();
     final upcomingBookings = bookingProvider.upcomingBookings;
-    final upcomingBooking = upcomingBookings.isNotEmpty ? upcomingBookings.first : null;
+    final upcomingBooking = upcomingBookings.isNotEmpty
+        ? upcomingBookings.first
+        : null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -213,8 +232,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              const Icon(Icons.auto_awesome_rounded,
-                                  size: 16, color: AppColors.secondary),
+                              const Icon(
+                                Icons.auto_awesome_rounded,
+                                size: 16,
+                                color: AppColors.secondary,
+                              ),
                             ],
                           ),
                           const SizedBox(height: 2),
@@ -224,19 +246,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => const BranchSelectionScreen(
-                                      isSelectionMode: true),
+                                    isSelectionMode: true,
+                                  ),
                                 ),
                               );
                             },
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.location_on_rounded,
-                                    size: 14, color: AppColors.primary),
+                                const Icon(
+                                  Icons.location_on_rounded,
+                                  size: 14,
+                                  color: AppColors.primary,
+                                ),
                                 const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
-                                    selectedBranch?.name ?? 'Downtown Luxury Lounge',
+                                    selectedBranch?.name ??
+                                        'Downtown Luxury Lounge',
                                     style: AppTypography.bodySmall.copyWith(
                                       color: AppColors.textSecondary,
                                       fontWeight: FontWeight.w600,
@@ -245,8 +272,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                const Icon(Icons.keyboard_arrow_down_rounded,
-                                    size: 16, color: AppColors.textTertiary),
+                                const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  size: 16,
+                                  color: AppColors.textTertiary,
+                                ),
                               ],
                             ),
                           ),
@@ -258,10 +288,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     Stack(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.notifications_none_rounded,
-                              size: 24, color: AppColors.textPrimary),
+                          icon: const Icon(
+                            Icons.notifications_none_rounded,
+                            size: 24,
+                            color: AppColors.textPrimary,
+                          ),
                           onPressed: () {
-                            Navigator.pushNamed(context, AppRoutes.notifications);
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.notifications,
+                            );
                           },
                         ),
                         Positioned(
@@ -305,7 +341,10 @@ class _HomeScreenState extends State<HomeScreen> {
             // 2. Search Bar
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 child: InkWell(
                   onTap: () {
                     Navigator.push(
@@ -318,7 +357,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(14),
@@ -333,8 +374,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.search_rounded,
-                            color: AppColors.primary, size: 20),
+                        const Icon(
+                          Icons.search_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
                         const SizedBox(width: 12),
                         Text(
                           'Search services, treatments, styling...',
@@ -397,7 +441,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   itemCount: _categories.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: 12),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 12),
                   itemBuilder: (context, index) {
                     final cat = _categories[index];
                     return _buildCategoryItem(cat);
@@ -415,8 +460,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.local_offer_rounded,
-                            size: 18, color: AppColors.secondary),
+                        const Icon(
+                          Icons.local_offer_rounded,
+                          size: 18,
+                          color: AppColors.secondary,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Exclusive Salon Offers',
@@ -449,7 +497,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: PageView.builder(
                   controller: _offerPageController,
                   itemCount: _mockOffers.length,
-                  onPageChanged: (idx) => setState(() => _currentOfferPage = idx),
+                  onPageChanged: (idx) =>
+                      setState(() => _currentOfferPage = idx),
                   itemBuilder: (context, index) {
                     final offer = _mockOffers[index];
                     return _buildOfferBanner(offer);
@@ -500,7 +549,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   itemCount: _popularServices.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: 14),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 14),
                   itemBuilder: (context, index) {
                     final service = _popularServices[index];
                     return _buildPopularServiceCard(service);
@@ -548,8 +598,9 @@ class _HomeScreenState extends State<HomeScreen> {
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final branches =
-                        branchProvider.branches.where((b) => b.isActive).toList();
+                    final branches = branchProvider.branches
+                        .where((b) => b.isActive)
+                        .toList();
                     if (branches.isEmpty) return const SizedBox.shrink();
                     final branch = branches[index % branches.length];
                     return Padding(
@@ -644,8 +695,11 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 4),
           Row(
             children: [
-              const Icon(Icons.storefront_rounded,
-                  size: 14, color: AppColors.textSecondary),
+              const Icon(
+                Icons.storefront_rounded,
+                size: 14,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
@@ -663,8 +717,11 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 4),
           Row(
             children: [
-              const Icon(Icons.schedule_rounded,
-                  size: 14, color: AppColors.primary),
+              const Icon(
+                Icons.schedule_rounded,
+                size: 14,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 4),
               Text(
                 '${booking.scheduledDate.dayName}, ${booking.scheduledDate.dayNumber} ${booking.scheduledDate.monthName} • ${booking.timeSlot.startTime}',
@@ -683,10 +740,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pushNamed(
                 context,
                 AppRoutes.bookingDetails,
-                arguments: {
-                  'bookingId': booking.id,
-                  'booking': booking,
-                },
+                arguments: {'bookingId': booking.id, 'booking': booking},
               );
             },
           ),
@@ -729,13 +783,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    AppNetworkImage(
-                      imageUrl: cat['image'],
-                      fit: BoxFit.cover,
-                    ),
-                    Container(
-                      color: Colors.black.withValues(alpha: 0.25),
-                    ),
+                    AppNetworkImage(imageUrl: cat['image'], fit: BoxFit.cover),
+                    Container(color: Colors.black.withValues(alpha: 0.25)),
                     Center(
                       child: Icon(
                         cat['icon'] as IconData,
@@ -810,7 +859,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -883,8 +935,9 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(15)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(15),
+                ),
                 child: Stack(
                   children: [
                     AppNetworkImage(
@@ -898,7 +951,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       right: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.surface.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(10),
@@ -906,8 +961,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.star_rounded,
-                                size: 12, color: AppColors.warning),
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 12,
+                              color: AppColors.warning,
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               service['rating'].toString(),
@@ -958,7 +1016,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(8),
@@ -1043,8 +1103,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.star_rounded,
-                              size: 13, color: AppColors.warning),
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 13,
+                            color: AppColors.warning,
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             branch.rating.toStringAsFixed(1),
@@ -1054,8 +1117,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          const Icon(Icons.schedule_rounded,
-                              size: 12, color: AppColors.textTertiary),
+                          const Icon(
+                            Icons.schedule_rounded,
+                            size: 12,
+                            color: AppColors.textTertiary,
+                          ),
                           const SizedBox(width: 3),
                           Text(
                             '${branch.openingTime} - ${branch.closingTime}',
@@ -1069,8 +1135,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 14, color: AppColors.textTertiary),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: AppColors.textTertiary,
+                ),
               ],
             ),
           ),

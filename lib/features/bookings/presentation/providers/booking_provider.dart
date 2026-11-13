@@ -5,6 +5,10 @@ import 'package:prop_crm/features/booking_summary/data/models/booking_summary_mo
 import 'package:prop_crm/features/date_time/data/models/service_date_model.dart';
 import 'package:prop_crm/features/date_time/data/models/time_slot_model.dart';
 import 'package:prop_crm/features/payment/data/models/payment_method_model.dart';
+import 'package:prop_crm/features/services/data/models/service_model.dart';
+import 'package:prop_crm/features/services/data/models/service_package_model.dart';
+import 'package:prop_crm/features/addresses/data/models/address_model.dart';
+import 'package:prop_crm/features/booking_summary/data/models/pricing_breakdown_model.dart';
 import '../../../services/data/models/service_products_response.dart';
 import '../../data/models/booking_model.dart';
 import '../../data/models/booking_pricing_response_model.dart';
@@ -27,14 +31,12 @@ class BookingProvider extends ChangeNotifier {
   final BookingRepository repository;
 
   // Booking creation state
-  ViewState<CreateBookingResponseModel> _bookingState =
-  ViewState.initial();
+  ViewState<CreateBookingResponseModel> _bookingState = ViewState.initial();
 
   CreateBookingResponseModel? _createdBooking;
 
   // Booking pricing state
-  ViewState<BookingPricingResponseModel> _pricingState =
-  ViewState.initial();
+  ViewState<BookingPricingResponseModel> _pricingState = ViewState.initial();
 
   // Bookings list state
   ViewState<List<BookingModel>> _bookingsState = ViewState.initial();
@@ -77,10 +79,12 @@ class BookingProvider extends ChangeNotifier {
   bool get isLoadingBookings => _bookingsState.isLoading;
   String? get bookingsErrorMessage => _bookingsState.errorMessage;
   List<BookingModel> get upcomingBookings => bookings
-      .where((b) =>
-          b.status == BookingStatus.confirmed ||
-          b.status == BookingStatus.pending ||
-          b.status == BookingStatus.rescheduled)
+      .where(
+        (b) =>
+            b.status == BookingStatus.confirmed ||
+            b.status == BookingStatus.pending ||
+            b.status == BookingStatus.rescheduled,
+      )
       .toList();
 
   // Booking details getters
@@ -89,12 +93,10 @@ class BookingProvider extends ChangeNotifier {
   bool get isLoadingDetails => _detailsState.isLoading;
   String? get detailsErrorMessage => _detailsState.errorMessage;
 
-
   // Pricing getters
   ViewState<BookingPricingResponseModel> get pricingState => _pricingState;
 
-  BookingPricingResponseModel? get calculatedPricing =>
-      _pricingState.data;
+  BookingPricingResponseModel? get calculatedPricing => _pricingState.data;
 
   bool get isCalculatingPricing => _pricingState.isLoading;
 
@@ -108,19 +110,17 @@ class BookingProvider extends ChangeNotifier {
         return list;
       case BookingFilter.upcoming:
         return list
-            .where((b) =>
-                b.status == BookingStatus.confirmed ||
-                b.status == BookingStatus.pending ||
-                b.status == BookingStatus.rescheduled)
+            .where(
+              (b) =>
+                  b.status == BookingStatus.confirmed ||
+                  b.status == BookingStatus.pending ||
+                  b.status == BookingStatus.rescheduled,
+            )
             .toList();
       case BookingFilter.completed:
-        return list
-            .where((b) => b.status == BookingStatus.completed)
-            .toList();
+        return list.where((b) => b.status == BookingStatus.completed).toList();
       case BookingFilter.cancelled:
-        return list
-            .where((b) => b.status == BookingStatus.cancelled)
-            .toList();
+        return list.where((b) => b.status == BookingStatus.cancelled).toList();
     }
   }
 
@@ -132,9 +132,12 @@ class BookingProvider extends ChangeNotifier {
   }
 
   /// Loads all bookings for the authenticated user session
-  Future<void> loadBookings({bool forceRefresh = false}) async {
+  Future<void> loadBookings({bool forceRefresh = false, String? status}) async {
     if (isLoadingBookings) return;
-    if (!forceRefresh && _bookingsState.isSuccess && _bookingsState.data != null) {
+    if (!forceRefresh &&
+        _bookingsState.isSuccess &&
+        _bookingsState.data != null &&
+        status == null) {
       return;
     }
 
@@ -142,7 +145,7 @@ class BookingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final list = await repository.getBookings();
+      final list = await repository.getBookings(status: status);
       _bookingsState = ViewState.success(list);
     } catch (e) {
       final appError = ErrorHandler.handleError(e);
@@ -218,7 +221,11 @@ class BookingProvider extends ChangeNotifier {
   Future<BookingPricingResponseModel?> calculatePricing({
     required String branchId,
     required List<Map<String, dynamic>> items,
+    String? date,
+    String? timeSlot,
     String? couponCode,
+    bool? useLoyaltyPoints,
+    int? pointsToRedeem,
   }) async {
     if (_pricingState.isLoading) return null;
 
@@ -236,8 +243,12 @@ class BookingProvider extends ChangeNotifier {
     try {
       final pricing = await repository.calculatePricing(
         branchId: branchId,
+        date: date,
+        timeSlot: timeSlot,
         items: items,
         couponCode: couponCode,
+        useLoyaltyPoints: useLoyaltyPoints,
+        pointsToRedeem: pointsToRedeem,
       );
 
       _pricingState = ViewState.success(pricing);
@@ -261,19 +272,14 @@ class BookingProvider extends ChangeNotifier {
   }) async {
     if (isCreating) return null;
 
-    if (!validateCheckout(
-      summary: summary,
-      paymentMethod: paymentMethod,
-    )) {
+    if (!validateCheckout(summary: summary, paymentMethod: paymentMethod)) {
       return null;
     }
 
     final branchId = summary.branch?.id;
 
     if (branchId == null || branchId.isEmpty) {
-      _bookingState = ViewState.error(
-        'Please select a branch before booking.',
-      );
+      _bookingState = ViewState.error('Please select a branch before booking.');
       notifyListeners();
       return null;
     }
@@ -332,23 +338,36 @@ class BookingProvider extends ChangeNotifier {
   }) async {
     if (isCancelling) return null;
 
-    final effectiveRequest = request ??
+    final effectiveRequest =
+        request ??
         CancelBookingRequestModel(
           bookingId: bookingId ?? '',
           reason: reason ?? '',
           reasonNote: reasonNote,
         );
 
-    final targetBooking = _selectedBooking ??
+    final targetBooking =
+        _selectedBooking ??
         bookings.cast<BookingModel?>().firstWhere(
-              (b) => b?.id == effectiveRequest.bookingId,
-              orElse: () => null,
-            );
+          (b) =>
+              b?.id == effectiveRequest.bookingId ||
+              b?.bookingReference == effectiveRequest.bookingId,
+          orElse: () => null,
+        );
 
-    // Business rule: Check 2-hour cancellation lockout
-    if (targetBooking != null && !targetBooking.isCancellable) {
+    if (targetBooking != null &&
+        targetBooking.status == BookingStatus.cancelled) {
       _cancellationState = ViewState.error(
-        'Appointments cannot be cancelled within 2 hours of the scheduled time.',
+        'This appointment has already been cancelled.',
+      );
+      notifyListeners();
+      return null;
+    }
+
+    if (targetBooking != null &&
+        targetBooking.status == BookingStatus.completed) {
+      _cancellationState = ViewState.error(
+        'Completed appointments cannot be cancelled.',
       );
       notifyListeners();
       return null;
@@ -358,8 +377,18 @@ class BookingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final cancelledResponse = await repository.cancelBooking(
+        request: effectiveRequest,
+      );
+
       final updatedBooking =
-          await repository.cancelBooking(request: effectiveRequest);
+          (targetBooking ?? _selectedBooking)?.copyWith(
+            status: BookingStatus.cancelled,
+            cancellationReason: effectiveRequest.reason,
+            cancellationNote: effectiveRequest.reasonNote,
+            cancelledAt: DateTime.now(),
+          ) ??
+          cancelledResponse;
 
       if (_selectedBooking != null &&
           (_selectedBooking!.id == updatedBooking.id ||
@@ -398,14 +427,16 @@ class BookingProvider extends ChangeNotifier {
     required String bookingId,
     required ServiceDateModel newDate,
     required TimeSlotModel newSlot,
+    String? reason,
   }) async {
     if (isRescheduling) return null;
 
-    final targetBooking = _selectedBooking ??
+    final targetBooking =
+        _selectedBooking ??
         bookings.cast<BookingModel?>().firstWhere(
-              (b) => b?.id == bookingId,
-              orElse: () => null,
-            );
+          (b) => b?.id == bookingId,
+          orElse: () => null,
+        );
 
     // Business rule: Check 2-hour rescheduling lockout
     if (targetBooking != null && !targetBooking.isReschedulable) {
@@ -420,13 +451,72 @@ class BookingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      final updatedBooking = (targetBooking ?? _selectedBooking)!.copyWith(
-        scheduledDate: newDate,
-        timeSlot: newSlot,
-        status: BookingStatus.rescheduled,
-        rescheduledAt: DateTime.now(),
+      final dateStr = newDate.date.toIso8601String().split('T').first;
+      final timeStr = newSlot.bookingTimeSlot;
+
+      await repository.rescheduleBooking(
+        bookingId: bookingId,
+        date: dateStr,
+        timeSlot: timeStr,
+        reason: reason,
       );
+
+      final updatedBooking =
+          (targetBooking ?? _selectedBooking)?.copyWith(
+            scheduledDate: newDate,
+            timeSlot: newSlot,
+            status: BookingStatus.rescheduled,
+            rescheduledAt: DateTime.now(),
+          ) ??
+          BookingModel(
+            id: bookingId,
+            bookingReference: bookingId,
+            status: BookingStatus.rescheduled,
+            service: const ServiceModel(
+              id: '',
+              categoryId: '',
+              name: 'Salon Service',
+              description: '',
+              startingPrice: 0,
+              duration: '45 mins',
+            ),
+            package: const ServicePackageModel(
+              id: '',
+              serviceId: '',
+              name: 'Standard',
+              description: '',
+              price: 0,
+              duration: '45 mins',
+              features: [],
+            ),
+            address: const AddressModel(
+              id: '',
+              userId: '',
+              label: '',
+              houseNumber: '',
+              addressLine: '',
+              city: '',
+              state: '',
+              pincode: '',
+            ),
+            scheduledDate: newDate,
+            timeSlot: newSlot,
+            paymentMethod: const PaymentMethodModel(
+              id: '',
+              title: '',
+              subtitle: '',
+              type: PaymentMethodType.upi,
+            ),
+            pricing: const PricingBreakdown(
+              packagePrice: 0,
+              discount: 0,
+              taxRate: 0,
+              taxAmount: 0,
+              totalAmount: 0,
+            ),
+            createdAt: DateTime.now(),
+            rescheduledAt: DateTime.now(),
+          );
 
       if (_selectedBooking != null && _selectedBooking!.id == bookingId) {
         _selectedBooking = updatedBooking;
@@ -450,6 +540,23 @@ class BookingProvider extends ChangeNotifier {
       _rescheduleState = ViewState.error(appError.message);
       notifyListeners();
       return null;
+    }
+  }
+
+  /// Submits customer review and rating for an appointment
+  Future<bool> submitReview({
+    required String bookingId,
+    required int rating,
+    String? comment,
+  }) async {
+    try {
+      return await repository.submitReview(
+        bookingId: bookingId,
+        rating: rating,
+        comment: comment,
+      );
+    } catch (_) {
+      return false;
     }
   }
 

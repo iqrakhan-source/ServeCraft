@@ -12,19 +12,13 @@ import '../providers/branch_provider.dart';
 class BranchDetailsScreen extends StatelessWidget {
   final BranchModel branch;
 
-  const BranchDetailsScreen({
-    super.key,
-    required this.branch,
-  });
+  const BranchDetailsScreen({super.key, required this.branch});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(
-        title: branch.name,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: branch.name, showBackButton: true),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: const BoxDecoration(
@@ -42,8 +36,10 @@ class BranchDetailsScreen extends StatelessWidget {
           child: AppButton(
             text: 'Select Branch & Continue',
             onPressed: () {
-              final branchProvider =
-                  Provider.of<BranchProvider>(context, listen: false);
+              final branchProvider = Provider.of<BranchProvider>(
+                context,
+                listen: false,
+              );
               branchProvider.selectBranch(branch);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -74,8 +70,10 @@ class BranchDetailsScreen extends StatelessWidget {
                   top: 16,
                   right: 16,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surface.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(20),
@@ -83,8 +81,11 @@ class BranchDetailsScreen extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.star_rounded,
-                            size: 16, color: AppColors.warning),
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 16,
+                          color: AppColors.warning,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${branch.rating} (${branch.reviewCount})',
@@ -120,7 +121,9 @@ class BranchDetailsScreen extends StatelessWidget {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: branch.isActive
                               ? AppColors.successLight
@@ -152,8 +155,11 @@ class BranchDetailsScreen extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.location_on_outlined,
-                            size: 20, color: AppColors.primary),
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -191,8 +197,11 @@ class BranchDetailsScreen extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.phone_outlined,
-                            size: 20, color: AppColors.primary),
+                        const Icon(
+                          Icons.phone_outlined,
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -240,8 +249,11 @@ class BranchDetailsScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.schedule_rounded,
-                                size: 18, color: AppColors.primary),
+                            const Icon(
+                              Icons.schedule_rounded,
+                              size: 18,
+                              color: AppColors.primary,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'Open Today: ${branch.openingTime} - ${branch.closingTime}',
@@ -253,11 +265,17 @@ class BranchDetailsScreen extends StatelessWidget {
                           ],
                         ),
                         const Divider(height: 20),
-                        _buildWorkingDayRow('Monday - Friday',
-                            '${branch.openingTime} - ${branch.closingTime}', true),
+                        _buildWorkingDayRow(
+                          'Monday - Friday',
+                          '${branch.openingTime} - ${branch.closingTime}',
+                          true,
+                        ),
                         const SizedBox(height: 6),
-                        _buildWorkingDayRow('Saturday - Sunday',
-                            '${branch.openingTime} - ${branch.closingTime}', true),
+                        _buildWorkingDayRow(
+                          'Saturday - Sunday',
+                          '${branch.openingTime} - ${branch.closingTime}',
+                          true,
+                        ),
                       ],
                     ),
                   ),
@@ -277,7 +295,9 @@ class BranchDetailsScreen extends StatelessWidget {
                     children: branch.amenities.map((amenity) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
                           borderRadius: BorderRadius.circular(20),
@@ -286,8 +306,11 @@ class BranchDetailsScreen extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.check_circle_outline_rounded,
-                                size: 14, color: AppColors.primary),
+                            const Icon(
+                              Icons.check_circle_outline_rounded,
+                              size: 14,
+                              color: AppColors.primary,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               amenity,
@@ -446,8 +469,11 @@ class BranchDetailsScreen extends StatelessWidget {
                     arguments: {'serviceId': serviceId},
                   );
                 },
-                child: const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 14, color: AppColors.primary),
+                child: const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: AppColors.primary,
+                ),
               ),
             ],
           ),

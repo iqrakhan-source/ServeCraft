@@ -9,10 +9,7 @@ import 'home_screen.dart';
 class MainNavScreen extends StatefulWidget {
   final int initialIndex;
 
-  const MainNavScreen({
-    super.key,
-    this.initialIndex = 0,
-  });
+  const MainNavScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainNavScreen> createState() => _MainNavScreenState();
@@ -38,16 +35,11 @@ class _MainNavScreenState extends State<MainNavScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: tabs,
-      ),
+      body: IndexedStack(index: _currentIndex, children: tabs),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: AppColors.surface,
-          border: Border(
-            top: BorderSide(color: AppColors.border, width: 1.0),
-          ),
+          border: Border(top: BorderSide(color: AppColors.border, width: 1.0)),
           boxShadow: [
             BoxShadow(
               color: AppColors.shadow,

@@ -18,7 +18,8 @@ class FoundationShowcaseScreen extends StatefulWidget {
   const FoundationShowcaseScreen({super.key});
 
   @override
-  State<FoundationShowcaseScreen> createState() => _FoundationShowcaseScreenState();
+  State<FoundationShowcaseScreen> createState() =>
+      _FoundationShowcaseScreenState();
 }
 
 class _FoundationShowcaseScreenState extends State<FoundationShowcaseScreen> {
@@ -67,11 +68,16 @@ class _FoundationShowcaseScreenState extends State<FoundationShowcaseScreen> {
               decoration: BoxDecoration(
                 color: AppColors.secondaryLight,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.secondary.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded, color: AppColors.secondary),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: AppColors.secondary,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -95,13 +101,22 @@ class _FoundationShowcaseScreenState extends State<FoundationShowcaseScreen> {
                 children: [
                   Text('Display Medium', style: AppTypography.displayMedium),
                   const SizedBox(height: 4),
-                  Text('Body Large - Inter font family', style: AppTypography.bodyLarge),
+                  Text(
+                    'Body Large - Inter font family',
+                    style: AppTypography.bodyLarge,
+                  ),
                   const Divider(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Currency Formatter:', style: AppTypography.bodyMedium),
-                      Text(AppFormatters.formatCurrency(1499), style: AppTypography.priceMedium),
+                      Text(
+                        'Currency Formatter:',
+                        style: AppTypography.bodyMedium,
+                      ),
+                      Text(
+                        AppFormatters.formatCurrency(1499),
+                        style: AppTypography.priceMedium,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -109,7 +124,10 @@ class _FoundationShowcaseScreenState extends State<FoundationShowcaseScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Date Formatter:', style: AppTypography.bodyMedium),
-                      Text(AppFormatters.formatDate(DateTime.now()), style: AppTypography.titleSmall),
+                      Text(
+                        AppFormatters.formatDate(DateTime.now()),
+                        style: AppTypography.titleSmall,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -117,7 +135,10 @@ class _FoundationShowcaseScreenState extends State<FoundationShowcaseScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Phone Formatter:', style: AppTypography.bodyMedium),
-                      Text(AppFormatters.formatPhone('9876543210'), style: AppTypography.titleSmall),
+                      Text(
+                        AppFormatters.formatPhone('9876543210'),
+                        style: AppTypography.titleSmall,
+                      ),
                     ],
                   ),
                 ],
@@ -181,7 +202,10 @@ class _FoundationShowcaseScreenState extends State<FoundationShowcaseScreen> {
               controller: _nameController,
               label: 'Customer Full Name',
               hint: 'e.g. Alex Morgan',
-              prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.textTertiary),
+              prefixIcon: const Icon(
+                Icons.person_outline_rounded,
+                color: AppColors.textTertiary,
+              ),
             ),
             const SizedBox(height: 28),
 
@@ -227,7 +251,10 @@ class _FoundationShowcaseScreenState extends State<FoundationShowcaseScreen> {
             const SizedBox(height: 28),
 
             // Error View Example
-            Text('Error & Empty State Components', style: AppTypography.titleLarge),
+            Text(
+              'Error & Empty State Components',
+              style: AppTypography.titleLarge,
+            ),
             const SizedBox(height: 12),
             AppCard(
               child: AppErrorView(
@@ -242,7 +269,8 @@ class _FoundationShowcaseScreenState extends State<FoundationShowcaseScreen> {
                 title: 'No Bookings Yet',
                 subtitle: 'Your active and past bookings will appear here.',
                 actionText: 'Browse Services',
-                onActionPressed: () => context.showSnackBar('Navigating to categories...'),
+                onActionPressed: () =>
+                    context.showSnackBar('Navigating to categories...'),
               ),
             ),
             const SizedBox(height: 40),

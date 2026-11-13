@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:prop_crm/core/base/view_state.dart';
 import 'package:prop_crm/core/error/error_handler.dart';
@@ -25,10 +24,7 @@ class DateTimeProvider extends ChangeNotifier {
   int? _duration;
   String? _stylistId;
 
-  DateTimeProvider({
-    required this.repository,
-    this.storageService,
-  });
+  DateTimeProvider({required this.repository, this.storageService});
 
   ViewState<List<ServiceDateModel>> get datesState => _datesState;
   ViewState<List<TimeSlotModel>> get slotsState => _slotsState;
@@ -54,12 +50,17 @@ class DateTimeProvider extends ChangeNotifier {
   // Both a valid date and an available time slot must be selected.
   bool get isSelectionComplete =>
       _selectedDate != null &&
-          _selectedDate!.isAvailable &&
-          _selectedTimeSlot != null &&
-          _selectedTimeSlot!.isAvailable;
+      _selectedDate!.isAvailable &&
+      _selectedTimeSlot != null &&
+      _selectedTimeSlot!.isAvailable;
 
   int? get duration => _duration;
   String? get stylistId => _stylistId;
+
+  void setError(String message) {
+    _datesState = ViewState.error(message);
+    notifyListeners();
+  }
 
   // Initialize booking context.
   void initContext({
@@ -71,32 +72,25 @@ class DateTimeProvider extends ChangeNotifier {
     int? duration,
     String? stylistId,
   }) {
-    final newServiceId = serviceId ?? _serviceId;
-    final newBranchId = branchId ?? _branchId;
-
-    // Clear previous selections when service or branch changes.
-    if (_serviceId != newServiceId || _branchId != newBranchId) {
-      _selectedDate = null;
-      _selectedTimeSlot = null;
-      _datesState = ViewState.initial();
-      _slotsState = ViewState.initial();
-    }
-
-    _serviceId = newServiceId;
+    _serviceId = serviceId ?? _serviceId;
     _serviceName = serviceName ?? _serviceName;
-
-    // Null is valid: a service may have no selected package.
     _packageId = packageId;
     _packageName = packageName;
-
-    _branchId = newBranchId;
+    _branchId = branchId ?? _branchId;
     _duration = duration ?? _duration;
     _stylistId = stylistId ?? _stylistId;
 
+    _selectedDate = null;
+    _selectedTimeSlot = null;
+    _datesState = ViewState.loading();
+    _slotsState = ViewState.initial();
+
     debugPrint('========== DATE TIME CONTEXT ==========');
     debugPrint('Service ID: $_serviceId');
+    debugPrint('Service Name: $_serviceName');
     debugPrint('Package ID: $_packageId');
     debugPrint('Branch ID: $_branchId');
+    debugPrint('Duration: $_duration');
     debugPrint('=======================================');
 
     notifyListeners();
@@ -107,9 +101,7 @@ class DateTimeProvider extends ChangeNotifier {
     String? serviceId,
     String? packageId,
     bool forceRefresh = false,
-
   }) async {
-
     final sId = serviceId ?? _serviceId;
     final pId = packageId ?? _packageId;
     final bId = _branchId;
@@ -128,11 +120,10 @@ class DateTimeProvider extends ChangeNotifier {
       return;
     }
 
-    if (!forceRefresh &&
-        _datesState.isSuccess &&
-        availableDates.isNotEmpty) {
+    if (!forceRefresh && _datesState.isSuccess && availableDates.isNotEmpty) {
       debugPrint(
-          '[DATE TIME] Returning cached dates: ${availableDates.length}',);
+        '[DATE TIME] Returning cached dates: ${availableDates.length}',
+      );
       return;
     }
 
@@ -148,6 +139,8 @@ class DateTimeProvider extends ChangeNotifier {
         serviceId: sId,
         branchId: bId,
         packageId: pId,
+        duration: _duration,
+        stylistId: _stylistId,
       );
 
       if (dates.isEmpty) {
@@ -170,7 +163,7 @@ class DateTimeProvider extends ChangeNotifier {
         }
 
         targetDate ??= dates.firstWhere(
-              (date) => date.isAvailable,
+          (date) => date.isAvailable,
           orElse: () => dates.first,
         );
 
@@ -233,9 +226,7 @@ class DateTimeProvider extends ChangeNotifier {
     if (_branchId == null || _branchId!.trim().isEmpty) {
       debugPrint('ERROR: Branch ID is missing.');
 
-      _slotsState = ViewState.error(
-        'Please select a valid salon branch.',
-      );
+      _slotsState = ViewState.error('Please select a valid salon branch.');
       notifyListeners();
       return;
     }

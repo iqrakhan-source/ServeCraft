@@ -66,7 +66,10 @@ class PaymentMethodTile extends StatelessWidget {
             onTap: isAvailable ? onTap : null,
             borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 14.0,
+              ),
               child: Row(
                 children: [
                   // Payment Icon
@@ -77,8 +80,8 @@ class PaymentMethodTile extends StatelessWidget {
                       color: isSelected
                           ? AppColors.primary
                           : (isAvailable
-                              ? AppColors.primaryLight
-                              : AppColors.surfaceMuted),
+                                ? AppColors.primaryLight
+                                : AppColors.surfaceMuted),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -87,8 +90,8 @@ class PaymentMethodTile extends StatelessWidget {
                       color: isSelected
                           ? Colors.white
                           : (isAvailable
-                              ? AppColors.primary
-                              : AppColors.textTertiary),
+                                ? AppColors.primary
+                                : AppColors.textTertiary),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -101,8 +104,9 @@ class PaymentMethodTile extends StatelessWidget {
                         Text(
                           method.title,
                           style: AppTypography.titleSmall.copyWith(
-                            fontWeight:
-                                isSelected ? FontWeight.w700 : FontWeight.w600,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w600,
                             color: isAvailable
                                 ? AppColors.textPrimary
                                 : AppColors.textTertiary,
@@ -134,8 +138,8 @@ class PaymentMethodTile extends StatelessWidget {
                         color: isSelected
                             ? AppColors.primary
                             : (isAvailable
-                                ? AppColors.border
-                                : AppColors.textTertiary.withAlpha(80)),
+                                  ? AppColors.border
+                                  : AppColors.textTertiary.withAlpha(80)),
                         width: isSelected ? 6.5 : 2.0,
                       ),
                       color: isSelected ? Colors.white : Colors.transparent,
